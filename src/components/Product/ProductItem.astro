@@ -1,0 +1,58 @@
+---  
+import Heading from "../ui/Heading.astro";
+import ImageFeatureSlider from "./ImageFeatureSlider.astro";
+
+interface Props {
+  id: number;
+  slugAsParams?: string;
+  slug: string;
+  published: boolean;
+  name: string;
+  quantity?: number;
+  dimensions: string;
+  weight: number;
+  artisan: string;
+  code: string;
+  description: string;
+  images?: string;
+  subDirectory?: string;
+  category: string;
+  material: string;
+  colour: string | string[];
+  mrp: number;
+  gst?: number;
+  courier?: string | null;
+  total?: number;
+  sku?: string | null;
+  barcode?: string | null;
+}
+
+const { id, slug, images, subDirectory, name, category, description, total } = Astro.props;
+
+const categoryClass =
+  category === "Macrame"
+    ? "badge-error"
+    : category === "Stitching"
+      ? "badge-accent"
+      : "";
+---
+
+<a href={slug}>
+  <div class="relative">
+    <ImageFeatureSlider subDirectory={images} />
+
+    <div
+      class={`badge absolute bottom-2 right-2 z-10 ${categoryClass}`}
+    >
+      {category}
+    </div>
+  </div>
+  <Heading size="sm">{name}</Heading>
+  <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 mb-2">
+    {description}
+  </p>
+  <p class="text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+    Rs. {total}
+  </p>
+  <!-- <Button class="mt-3"> Learn more </Button> -->
+</a>

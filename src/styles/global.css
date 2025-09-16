@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: manobal --default, manobal --prefersdark;
+}
+
+/* @custom-variant dark (&:where([data-theme=forest], [data-theme=forest] *)); */
+
+@plugin "daisyui/theme" {
+  name: "manobal";
+  default: true;
+  prefersdark: true;
+  color-scheme: "light";
+  --color-base-100: oklch(98% 0.002 247.839);
+  --color-base-200: oklch(92% 0.006 264.531);
+  --color-base-300: oklch(70% 0.022 261.325);
+  --color-base-content: oklch(21% 0.034 264.665);
+  --color-primary: oklch(87% 0.169 91.605);
+  --color-primary-content: oklch(98% 0.022 95.277);
+  --color-secondary: oklch(71% 0.202 349.761);
+  --color-secondary-content: oklch(40% 0.153 2.432);
+  --color-accent: oklch(77% 0.152 181.912);
+  --color-accent-content: oklch(27% 0.046 192.524);
+  --color-neutral: oklch(27% 0.033 256.848);
+  --color-neutral-content: oklch(98% 0.002 247.839);
+  --color-info: oklch(62% 0.214 259.815);
+  --color-info-content: oklch(97% 0.014 254.604);
+  --color-success: oklch(72% 0.219 149.579);
+  --color-success-content: oklch(98% 0.018 155.826);
+  --color-warning: oklch(70% 0.213 47.604);
+  --color-warning-content: oklch(98% 0.016 73.684);
+  --color-error: oklch(57% 0.245 27.325);
+  --color-error-content: oklch(88% 0.062 18.334);
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+
+/* quicksand-regular - latin */
+@font-face {
+  font-display: swap; 
+  font-family: "Quicksand";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/quicksand-v36-latin-regular.woff2") format("woff2");
+}
+
+@theme {
+  --font-quicksand: "Quicksand", "sans-serif";
+}
+
+::selection {
+  background: #fdcf2b;
+  color: #fff;
+}
+
+.password-input {
+  display: none !important;
+  visibility: hidden;
+}

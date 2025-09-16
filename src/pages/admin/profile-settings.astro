@@ -1,0 +1,505 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Paragraph from "@/components/ui/Paragraph.astro";
+import { getUser } from "@/lib/auth-utils";
+
+const user = await getUser(Astro);
+
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+
+if (!user.emailVerified) {
+  return Astro.redirect("/emailVerification");
+}
+---
+
+<Layout title="Profile Settings">
+  <ProfileLayout>
+    <Container width="marginy">
+      <div class="max-w-4xl mt-20 lg:mt-0 mx-auto">
+        <div class="mb-8">
+          <Heading size="xl" class="mb-2">Profile Settings</Heading>
+          <Paragraph class="opacity-70">Manage your account information and security settings</Paragraph>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Profile Information Section -->
+          <div class="card bg-base-200 shadow-sm">
+            <div class="card-body">
+              <h2 class="card-title mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Profile Information
+              </h2>
+
+              <form id="profileForm" class="space-y-4">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Full Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={user.name}
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Email Address</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={user.email}
+                    class="input input-bordered w-full"
+                    disabled
+                  />
+                  <label class="label">
+                    <span class="label-text-alt">Email cannot be changed</span>
+                  </label>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Profile Image URL (Optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    name="image"
+                    value={user.image || ""}
+                    placeholder="https://example.com/avatar.jpg"
+                    class="input input-bordered w-full"
+                  />
+                </div>
+
+                <div id="profileSuccessAlert" class="alert alert-success hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span id="profileSuccessMessage">Profile updated successfully!</span>
+                </div>
+
+                <div id="profileErrorAlert" class="alert alert-error hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span id="profileErrorMessage"></span>
+                </div>
+
+                <div class="card-actions justify-end">
+                  <button type="submit" id="profileSubmitBtn" class="btn btn-primary">
+                    Save Profile
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Security Settings Section -->
+          <div class="card bg-base-200 shadow-sm">
+            <div class="card-body">
+              <h2 class="card-title mb-6 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Change Password
+              </h2>
+
+              <form id="passwordForm" class="space-y-4">
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Current Password</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">New Password</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    class="input input-bordered w-full"
+                    required
+                    minlength="6"
+                  />
+                  <label class="label">
+                    <span class="label-text-alt">Minimum 6 characters</span>
+                  </label>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Confirm New Password</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    class="input input-bordered w-full"
+                    required
+                    minlength="6"
+                  />
+                </div>
+
+                <div id="passwordSuccessAlert" class="alert alert-success hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Password updated successfully!</span>
+                </div>
+
+                <div id="passwordErrorAlert" class="alert alert-error hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span id="passwordErrorMessage"></span>
+                </div>
+
+                <div class="card-actions justify-end">
+                  <button type="submit" id="passwordSubmitBtn" class="btn btn-primary">
+                    Update Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card bg-base-200 shadow-sm mt-8 border-l-4 border-l-error">
+          <div class="card-body">
+            <h2 class="card-title text-error mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              Danger Zone
+            </h2>
+
+            <div class="alert alert-warning mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+              </svg>
+              <span>Account deletion is permanent and cannot be undone.</span>
+            </div>
+
+            <div class="card-actions justify-end">
+              <button
+                class="btn btn-error"
+                onclick="deleteAccountModal.showModal()"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Account Modal -->
+      <dialog id="deleteAccountModal" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg text-error mb-4">Delete Account</h3>
+          <p class="py-4">
+            Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete:
+          </p>
+          <ul class="list-disc list-inside mb-4 space-y-1 opacity-70">
+            <li>Your profile information</li>
+            <li>All your data and preferences</li>
+            <li>Access to your admin account</li>
+          </ul>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn">Cancel</button>
+            </form>
+            <button id="confirmDeleteBtn" class="btn btn-error">
+              Delete Forever
+            </button>
+          </div>
+        </div>
+      </dialog>
+    </Container>
+  </ProfileLayout>
+</Layout>
+
+<!-- Toast Container -->
+<div class="toast toast-top toast-end z-50" id="toast-container"></div>
+
+<script>
+  // Toast Manager
+  class ToastManager {
+    private container: HTMLElement;
+
+    constructor() {
+      this.container = document.getElementById('toast-container') || this.createContainer();
+    }
+
+    createContainer(): HTMLElement {
+      const container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = 'toast toast-top toast-end z-50';
+      document.body.appendChild(container);
+      return container;
+    }
+
+    show(message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info', duration: number = 4000): void {
+      const toast = document.createElement('div');
+
+      let alertClass = '';
+      let icon = '';
+
+      switch (type) {
+        case 'success':
+          alertClass = 'alert-success';
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case 'error':
+          alertClass = 'alert-error';
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case 'warning':
+          alertClass = 'alert-warning';
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
+          break;
+        default:
+          alertClass = 'alert-info';
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+      }
+
+      toast.className = `alert ${alertClass} shadow-lg mb-2`;
+      toast.innerHTML = `
+        <div class="flex items-center">
+          ${icon}
+          <span class="ml-2">${message}</span>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+
+      this.container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, duration);
+    }
+  }
+
+  const toastManager = new ToastManager();
+
+  // Define types for Better Auth response
+  interface BetterAuthResponse<T = any> {
+    data?: T;
+    error?:
+      | {
+          code?: string;
+          message?: string;
+        }
+      | string;
+  }
+
+  function getErrorMessage(error: any): string {
+    if (typeof error === "string") {
+      return error;
+    }
+
+    if (error && typeof error === "object") {
+      if ("message" in error && typeof error.message === "string") {
+        return error.message;
+      }
+
+      // Handle Better Auth error structure
+      if ("code" in error || "message" in error) {
+        const msg = error.message;
+        return typeof msg === "string" ? msg : "An error occurred";
+      }
+    }
+
+    return "An unknown error occurred";
+  }
+
+  // Profile form handler
+  document.getElementById("profileForm")?.addEventListener("submit", async (e: Event) => {
+    e.preventDefault();
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = formData.get("name") as string;
+    const image = formData.get("image") as string;
+
+    const submitBtn = document.getElementById("profileSubmitBtn") as HTMLButtonElement;
+    const errorAlert = document.getElementById("profileErrorAlert") as HTMLElement;
+    const successAlert = document.getElementById("profileSuccessAlert") as HTMLElement;
+    const errorMessage = document.getElementById("profileErrorMessage") as HTMLElement;
+
+    // Show loading state
+    submitBtn?.classList.add("loading");
+    if (submitBtn) submitBtn.disabled = true;
+    errorAlert?.classList.add("hidden");
+    successAlert?.classList.add("hidden");
+
+    try {
+      console.log("Attempting to update user with:", { name, image });
+
+      // Prepare update data
+      const updateData: { name: string; image?: string } = { name };
+      if (image && image.trim() !== "") {
+        updateData.image = image;
+      }
+
+      // Dynamic import of auth client
+      const { updateUser } = await import("@/lib/auth-client");
+
+      // Call updateUser and cast to expected response type
+      const result = await updateUser(updateData);
+
+      console.log("Update result:", result);
+
+      // Check for success
+      if (result?.data && !result?.error) {
+        successAlert?.classList.remove("hidden");
+        toastManager.show("Profile updated successfully!", "success");
+        setTimeout(() => window.location.reload(), 1500);
+      } else if (result?.error) {
+        const errorMsg = getErrorMessage(result.error);
+        console.error("Update failed:", result.error);
+        if (errorMessage) errorMessage.textContent = errorMsg;
+        errorAlert?.classList.remove("hidden");
+        toastManager.show("Profile update failed", "error");
+      } else {
+        // Fallback for unexpected response format
+        console.error("Unexpected response format:", result);
+        if (errorMessage) errorMessage.textContent = "Update failed with unexpected response";
+        errorAlert?.classList.remove("hidden");
+        toastManager.show("Update failed with unexpected response", "error");
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      const errorMsg = getErrorMessage(error);
+      if (errorMessage) errorMessage.textContent = errorMsg;
+      errorAlert?.classList.remove("hidden");
+      toastManager.show("Profile update failed", "error");
+    } finally {
+      submitBtn?.classList.remove("loading");
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  // Password form handler
+  document.getElementById("passwordForm")?.addEventListener("submit", async (e: Event) => {
+    e.preventDefault();
+
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const currentPassword = formData.get("currentPassword") as string;
+    const newPassword = formData.get("newPassword") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    const submitBtn = document.getElementById("passwordSubmitBtn") as HTMLButtonElement;
+    const errorAlert = document.getElementById("passwordErrorAlert") as HTMLElement;
+    const successAlert = document.getElementById("passwordSuccessAlert") as HTMLElement;
+    const errorMessage = document.getElementById("passwordErrorMessage") as HTMLElement;
+
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      if (errorMessage) errorMessage.textContent = "New passwords do not match";
+      errorAlert?.classList.remove("hidden");
+      toastManager.show("New passwords do not match", "error");
+      return;
+    }
+
+    // Show loading state
+    submitBtn?.classList.add("loading");
+    if (submitBtn) submitBtn.disabled = true;
+    errorAlert?.classList.add("hidden");
+    successAlert?.classList.add("hidden");
+
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+        credentials: "include",
+      });
+
+      const result = await response.json();
+
+      if (response.ok && !result.error) {
+        successAlert?.classList.remove("hidden");
+        toastManager.show("Password updated successfully!", "success");
+        form.reset();
+      } else {
+        const errorMsg = result.error?.message || "Password update failed";
+        if (errorMessage) errorMessage.textContent = errorMsg;
+        errorAlert?.classList.remove("hidden");
+        toastManager.show(errorMsg, "error");
+      }
+    } catch (error) {
+      const errorMsg = "An error occurred. Please try again.";
+      if (errorMessage) errorMessage.textContent = errorMsg;
+      errorAlert?.classList.remove("hidden");
+      toastManager.show(errorMsg, "error");
+    } finally {
+      submitBtn?.classList.remove("loading");
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  // Delete account handler
+  document.getElementById("confirmDeleteBtn")?.addEventListener("click", async () => {
+    try {
+      const response = await fetch("/api/auth/delete-account", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        toastManager.show("Account deleted successfully. Redirecting...", "success");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      } else {
+        toastManager.show("Failed to delete account. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Delete account failed:", error);
+      toastManager.show("Failed to delete account. Please try again.", "error");
+    }
+  });
+</script>
+
+<style>
+  .input-group input:focus {
+    outline: none;
+    border-color: oklch(var(--p));
+  }
+</style>

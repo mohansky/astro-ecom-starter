@@ -1,0 +1,75 @@
+---
+import Heading from "./Heading.astro";
+import Paragraph from "./Paragraph.astro";
+
+// src/components/ui/UserCard.astro
+export interface Props {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+    emailVerified: boolean;
+    createdAt: string | Date;
+    updatedAt: Date;
+  };
+}
+
+const { user } = Astro.props;
+---
+
+<div class="card bg-base-200/30 rounded-box shadow-sm">
+  <div class="card-body flex flex-col lg:flex-row justify-between gap-6">
+    <div class="flex-1 max-w-md">
+      <Heading size="xl" class="mb-4">Welcome back!</Heading>
+      <Paragraph> Hello {user.name}, you're successfully logged in.</Paragraph> 
+      <div class="flex flex-row items-center gap-3 my-3">
+        <div class="avatar">
+          <div
+            class="w-12 h-12 rounded-full bg-primary text-primary-content flex items-center justify-center"
+          >
+            {
+              user.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  class="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span class="text-lg font-semibold capitalize">
+                  {user.name?.charAt(0) || "U"}
+                </span>
+              )
+            }
+          </div>
+        </div>
+        <Paragraph>{user.email}</Paragraph>
+      </div>
+      <div class="stats flex flex-row gap-6">
+        <div class="stat">
+          <Heading size="xxs" fontweight="light" class="opacity-50"
+            >Account Status</Heading
+          >
+          <Heading size="xl" fontweight="black" class="text-primary"
+            >Active</Heading
+          >
+          <Heading size="xxs" fontweight="light" class="opacity-50"
+            >Since {new Date(user.createdAt).toLocaleDateString()}</Heading
+          >
+        </div>
+
+        <div class="stat">
+          <Heading size="xxs" fontweight="light" class="opacity-50"
+            >Email Status</Heading
+          >
+          <Heading size="xl" fontweight="black" class="text-accent"
+            >{user.emailVerified ? "Verified" : "Pending"}</Heading
+          >
+          <Heading size="xxs" fontweight="light" class="opacity-50"
+            >{user.emailVerified ? "All good!" : "Check your inbox"}</Heading
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

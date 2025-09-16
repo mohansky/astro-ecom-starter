@@ -1,0 +1,98 @@
+site:
+  name: Manobal
+  title: Manobal | Empowering Women. Reviving Craft.
+  description: Empowering Women. Reviving Craft.
+  basepath: https://manobal.com/
+  ogImageURL: ./images/manobal-logo.png
+  keywords:
+    - Macrame
+    - Stitching
+    - Craft work
+
+  author:
+    name: Mohan Kumar
+    email: mohansky@gmail.com
+    url: https://www.mohankumar.dev
+
+  footnote1: Manobal | Empowering Women. Reviving Craft.
+  footnote: Manobal | Empowering Women. Reviving Craft.
+  copyright: Manobal | Empowering Women. Reviving Craft.
+  email: mohansky@gmail.com
+
+  hero:
+    - bgImage: ./images/hero.jpg
+      title: Manobal
+      subtitle: Empowering Women. Reviving Craft.
+      btnLink: /#contact
+      btnText: Contact
+
+  introTitle: Empowering Women. Reviving Craft.
+  introText:
+    There are many variations of passages of Lorem Ipsum available, but the
+    majority have suffered alteration in some form, by injected humour, or
+    randomised words which dont look even slightly believable. If you are going
+    to use a passage of Lorem Ipsum, you need to be sure there isnt anything
+    embarrassing hidden in the middle of text. All the Lorem Ipsum generators on
+    the Internet tend to repeat predefined chunks as necessary, making this the
+    first true generator on the Internet. It uses a dictionary of over 200 Latin
+    words, combined with a handful of model sentence structures, to generate
+    Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore
+    always free from repetition, injected humour, or non-characteristic words
+    etc.
+  introImage: ./images/hero.jpg
+
+  peopleTitle: The People
+  peopleImage: ./images/people/people.jpg
+  peopleSubtitle: Lorem Ipsum
+  peopleText: It is a long established fact that a reader will be distracted
+    by the readable content of a page when looking at its layout.
+    The point of using Lorem Ipsum is that it has a more-or-less
+    normal distribution of letters, as opposed to using, content
+    here, making it look like readable English. Many desktop
+    publishing packages.
+  people:
+    - name: Lorem Ipsum
+      title: Founder 
+      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
+      image: ./images/people/people1.jpg
+    - name: Lorem Ipsum
+      title: Sales & Marketing
+      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
+      image: ./images/people/people2.jpg
+    - name: Lorem Ipsum
+      title: Operations
+      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
+      image: ./images/people/people3.jpg
+
+  links:
+    - text: Home
+      link: /
+    - text: Shop
+      link: /shop
+    - text: About Us
+      link: /about-us
+
+  socialTitle: Follow us on
+  socials:
+    - link: https://www.facebook.com/@manobal
+      icon: fa:facebook
+      text: Facebook
+    - link: https://www.instagram.com/@manobal
+      icon: fa:instagram
+      text: Instagram
+    - link: https://www.whatsapp.com/@manobal
+      icon: fa:whatsapp
+      text: Whatsapp
+
+  contactTitle: Contact
+  contactSubtitle: Manubal
+  contactdetails:
+    - link: tel:+919876543210
+      icon: ph:phone
+      text: +91 987 654 3210
+    - link: mailto:mail@manubal.com
+      icon: ph:envelope
+      text: mail@manubal.com
+    - link: "#"
+      icon: ph:map-pin
+      text: Maharastra, India

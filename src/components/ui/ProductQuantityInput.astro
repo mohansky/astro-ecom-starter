@@ -1,0 +1,177 @@
+---
+// src/components/ProductQuantityInput.astro
+// For product detail pages to add items with specific quantities
+
+interface Props {
+  id: number | string;
+  name: string;
+  price: number;
+  weight: number;
+  image?: string;
+  className?: string;
+  buttonVariant?: "primary" | "secondary" | "outline" | "ghost";
+  buttonSize?: "lg" | "md" | "sm" | "xs";
+}
+
+const { 
+  id, 
+  name, 
+  price, 
+  weight,
+  image, 
+  className = "", 
+  buttonVariant = "primary",
+  buttonSize = "md"
+} = Astro.props;
+
+const variantClass = 
+  buttonVariant === "primary" ? "btn-primary" : 
+  buttonVariant === "secondary" ? "btn-secondary" : 
+  buttonVariant === "outline" ? "btn-outline" :
+  buttonVariant === "ghost" ? "btn-ghost" : "btn-primary";
+
+const sizeClass = 
+  buttonSize === "lg" ? "btn-lg" : 
+  buttonSize === "md" ? "" : 
+  buttonSize === "sm" ? "btn-sm" :
+  buttonSize === "xs" ? "btn-xs" : "";
+---
+
+<div class={`product-quantity-input flex items-center gap-2 ${className}`}>
+  <div class="join">
+    <button type="button" class="quantity-decrease join-item btn btn-outline">-</button>
+    <input 
+      type="number" 
+      min="1" 
+      value="1" 
+      class="quantity-input join-item input input-bordered w-16 text-center" 
+    />
+    <button type="button" class="quantity-increase join-item btn btn-outline">+</button>
+  </div>
+  
+  <button 
+    class={`add-to-cart-with-quantity btn ${variantClass} ${sizeClass}`}
+    data-id={id.toString()}
+    data-name={name}
+    data-price={price}
+    data-weight={weight}
+    data-image={image}
+    aria-label="Add to cart"
+  >
+    <slot>Add to Cart</slot>
+  </button>
+</div>
+
+<script is:inline>
+  // Client-side addToCart function
+  function addToCart(item) {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingItem = cart.find(cartItem => cartItem.id === item.id);
+
+      if (existingItem) {
+        existingItem.quantity = (existingItem.quantity || 0) + 1;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Dispatch cart updated event
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { cart } }));
+
+      return true;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      return false;
+    }
+  }
+
+  function initQuantityInputs() {
+    document.querySelectorAll('.product-quantity-input').forEach(container => {
+      const decreaseButton = container.querySelector('.quantity-decrease');
+      const increaseButton = container.querySelector('.quantity-increase');
+      const quantityInput = container.querySelector('.quantity-input');
+      const addButton = container.querySelector('.add-to-cart-with-quantity');
+
+      if (!decreaseButton || !increaseButton || !quantityInput || !addButton) return;
+
+      // Decrease quantity button
+      decreaseButton.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+          quantityInput.value = (currentValue - 1).toString();
+        }
+      });
+
+      // Increase quantity button
+      increaseButton.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        quantityInput.value = (currentValue + 1).toString();
+      });
+
+      // Add to cart with quantity
+      addButton.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const target = e.currentTarget;
+        const id = target.dataset.id;
+        const name = target.dataset.name;
+        const price = parseFloat(target.dataset.price || '0');
+        const weight = parseFloat(target.dataset.weight || '0');
+        const image = target.dataset.image;
+        const quantity = parseInt(quantityInput.value);
+
+        if (id && name && quantity >= 1) {
+          // Add the item with the specified quantity
+          let success = true;
+          for (let i = 0; i < quantity; i++) {
+            if (!addToCart({ id, name, price, weight, image })) {
+              success = false;
+              break;
+            }
+          }
+
+          if (success) {
+            // Show feedback
+            const originalText = target.innerHTML;
+            target.textContent = `${quantity} Added!`;
+            target.classList.add('btn-success');
+
+            setTimeout(() => {
+              target.innerHTML = originalText;
+              target.classList.remove('btn-success');
+            }, 1500);
+
+            // Reset quantity
+            quantityInput.value = '1';
+          } else {
+            // Show error feedback
+            const originalText = target.innerHTML;
+            target.textContent = 'Error!';
+            target.classList.add('btn-error');
+
+            setTimeout(() => {
+              target.innerHTML = originalText;
+              target.classList.remove('btn-error');
+            }, 2000);
+          }
+        }
+      });
+
+      // Ensure quantity input only accepts positive integers
+      quantityInput.addEventListener('input', () => {
+        const value = parseInt(quantityInput.value);
+        if (isNaN(value) || value < 1) {
+          quantityInput.value = '1';
+        }
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initQuantityInputs);
+
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initQuantityInputs);
+</script>

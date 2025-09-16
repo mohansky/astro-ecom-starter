@@ -1,0 +1,623 @@
+---
+// src/pages/admin/orders/index.astro
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Paragraph from "@/components/ui/Paragraph.astro";
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { formatCurrency, formatDateTime } from "@/lib/helpers";
+import { getAllOrders } from "@/lib/orders";
+
+// Fetch all orders
+const orders = await getAllOrders();
+
+// Status badge colors
+const statusColors: Record<string, string> = {
+  pending: "badge-warning",
+  processing: "badge-info",
+  shipped: "badge-success",
+  delivered: "badge-accent",
+  cancelled: "badge-error",
+};
+
+// Function to get status color or fallback
+function getStatusColor(status: string): string {
+  return statusColors[status] || "bg-gray-100 text-gray-800";
+}
+
+// Get unique statuses for filter dropdown
+const uniqueStatuses = [...new Set(orders.map(order => order.status))];
+
+// Calculate status counts
+const statusCounts = orders.reduce((acc, order) => {
+  acc[order.status] = (acc[order.status] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+---
+
+<Layout>
+  <ProfileLayout title="Order Management">
+    <Container width="marginy">
+      <div class="card">
+        <div class="card-body">
+          <div class="flex flex-col gap-6">
+            <!-- Order Statistics -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Total Orders and Revenue -->
+              <div class="stats shadow">
+                <div class="stat">
+                  <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Total Orders</Heading
+                  > 
+                  <Heading size="xl" fontweight="bold" class="text-info"
+                    ><span id="orders-count">{orders.length}</span></Heading
+                  > 
+                  <div class="mt-3">
+                    <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Total Revenue</Heading
+                  > 
+                    <Heading size="xl" fontweight="bold" class="text-accent">
+                      
+                    <span id="orders-total" class="font-semibold">
+                      {
+                        formatCurrency(
+                          orders.map((order) => order.total).reduce((a, b) => a + b, 0)
+                        )
+                      }
+                    </span>
+                    </Heading>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Status Breakdown -->
+              <div class="stats shadow">
+                <div class="stat">
+                  <Heading size="xxs" fontweight="light" class="opacity-50"
+                    >Orders by Status</Heading
+                  >
+                  <div class="stat-value text-sm grid lg:grid-cols-3 gap-6 mt-2">
+                    {Object.entries(statusCounts).map(([status, count]) => (
+                      <div class="flex bg-base-200 p-2 rounded-sm items-center justify-between">
+                        <div class={`capitalize badge badge-lg font-normal ${getStatusColor(status)}`}>
+                          {status}
+                        </div>
+                        <span class="text-base-content/70" data-status-count={status}>
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters and Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <Paragraph size="xs" class="opacity-50"> 
+                View and manage all customer orders
+              </Paragraph>            
+            <!-- Filters and Controls -->
+            <div class="flex flex-col sm:flex-row gap-6 font-quicksand">
+              <!-- Status Filter -->
+              <div class="form-control">
+                <label class="label">
+                  <Paragraph size="xs">Filter by Status</Paragraph>
+                </label>
+                <select id="status-filter" class="select select-bordered select-sm w-full sm:w-auto">
+                  <option value="">All Statuses</option>
+                  {uniqueStatuses.map(status => (
+                    <option value={status} class="capitalize">{status}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <!-- Date Sort -->
+              <div class="form-control">
+                <label class="label">
+                  <Paragraph size="xs">Sort by Date</Paragraph> 
+                </label>
+                <select id="date-sort" class="select select-bordered select-sm w-full sm:w-auto">
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+              
+              <!-- Reset Filters -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-xs">&nbsp;</span>
+                </label>
+                <button id="reset-filters" class="btn btn-outline btn-sm">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        {
+          orders.length === 0 ? (
+            <div class="p-6 text-center text-gray-500">No orders found</div>
+          ) : (
+            <div class="overflow-x-auto">
+              <table class="table">
+                <thead>
+                  <tr class="bg-base-200 font-quicksand">
+                    <th class="max-w-max" />
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-base-300"
+                      id="date-header"
+                    >
+                      Date 
+                      <span id="date-sort-indicator" class="ml-1">↓</span>
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Customer Name
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      No. of items
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Discount
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Total Amt.
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="orders-tbody" class="font-quicksand">
+                  {orders.map((order) => (
+                    <tr 
+                      class="hover:bg-base-300/10 order-row" 
+                      data-order-id={order.id}
+                      data-status={order.status}
+                      data-date={order.createdAt}
+                      data-total={order.total}
+                    >
+                      <th class="max-w-10">Order #{order.id}</th>
+                      <td class="max-w-10">{formatDateTime(order.createdAt)}</td>
+                      <td>
+                        <div
+                          class={`capitalize badge ${getStatusColor(order.status)}`}
+                        >
+                          {order.status}
+                        </div>
+                      </td>
+                      <td>{order.customerName}</td>
+                      <td>
+                        {order.itemCount}{" "}
+                        {order.itemCount === 1 ? "item" : "items"}
+                      </td>
+                      <td>
+                        {order.couponCode ? (
+                          <div class="text-success">
+                            <div class="text-sm font-medium">{order.couponCode}</div>
+                            <div class="text-xs">-{formatCurrency(order.couponDiscount || 0)}</div>
+                          </div>
+                        ) : (
+                          <span class="text-base-content/50">—</span>
+                        )}
+                      </td>
+                      <td>{formatCurrency(order.total)}</td>
+                      <td>
+                        <div class="flex gap-2">
+                          <a
+                            href={`/admin/orders/${order.id}`}
+                            class="btn btn-accent btn-sm"
+                          >
+                            View
+                          </a>
+                          <button
+                            class="btn btn-error btn-sm delete-order-btn"
+                            data-order-id={order.id}
+                            data-customer-name={order.customerName}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              <!-- No Results Message (hidden by default) -->
+              <div id="no-results" class="p-6 text-center text-gray-500 hidden">
+                No orders match the current filters
+              </div>
+            </div>
+          )
+        }
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <dialog id="delete_modal" class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg">Confirm Delete</h3>
+          <p class="py-4">
+            Are you sure you want to delete <span
+              id="delete-order-info"
+              class="font-semibold"></span>? This action cannot be undone.
+          </p>
+          <div class="modal-action">
+            <form method="dialog">
+              <button class="btn">Cancel</button>
+            </form>
+            <button id="confirm-delete-btn" class="btn btn-error"
+              >Delete Order</button
+            >
+          </div>
+        </div>
+      </dialog>
+
+      <!-- Toast Container -->
+      <div class="toast toast-top toast-end z-50" id="toast-container"></div>
+    </Container>
+  </ProfileLayout>
+</Layout>
+
+<script>
+  // Toast notification system
+  class ToastManager {
+    private container: HTMLElement;
+
+    constructor() {
+      this.container =
+        document.getElementById("toast-container") || this.createContainer();
+    }
+
+    private createContainer(): HTMLElement {
+      const container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast toast-top toast-end z-50";
+      document.body.appendChild(container);
+      return container;
+    }
+
+    show(
+      message: string,
+      type: "success" | "error" | "info" | "warning" = "info",
+      duration: number = 4000
+    ): void {
+      const toast = document.createElement("div");
+
+      let alertClass = "";
+      let icon = "";
+
+      switch (type) {
+        case "success":
+          alertClass = "alert-success";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "error":
+          alertClass = "alert-error";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "warning":
+          alertClass = "alert-warning";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
+          break;
+        default:
+          alertClass = "alert-info";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+      }
+
+      toast.className = `alert ${alertClass} shadow-lg mb-2`;
+      toast.innerHTML = `
+        <div class="flex items-center">
+          ${icon}
+          <span class="ml-2">${message}</span>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+
+      this.container.appendChild(toast);
+
+      // Auto remove
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, duration);
+    }
+  }
+
+  // Orders Management Class
+  class OrdersManager {
+    private allRows: HTMLTableRowElement[];
+    private currentSort: 'asc' | 'desc' = 'desc';
+    private currentStatusFilter: string = '';
+
+    constructor() {
+      this.allRows = Array.from(document.querySelectorAll('.order-row')) as HTMLTableRowElement[];
+      this.initializeFilters();
+      this.updateStats();
+    }
+
+    private initializeFilters(): void {
+      const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+      const dateSortSelect = document.getElementById('date-sort') as HTMLSelectElement;
+      const dateHeader = document.getElementById('date-header');
+      const resetBtn = document.getElementById('reset-filters');
+
+      // Status filter
+      statusFilter?.addEventListener('change', (e) => {
+        this.currentStatusFilter = (e.target as HTMLSelectElement).value;
+        this.applyFilters();
+      });
+
+      // Date sort select
+      dateSortSelect?.addEventListener('change', (e) => {
+        this.currentSort = (e.target as HTMLSelectElement).value as 'asc' | 'desc';
+        this.sortByDate();
+        this.updateSortIndicator();
+      });
+
+      // Date header click
+      dateHeader?.addEventListener('click', () => {
+        this.currentSort = this.currentSort === 'desc' ? 'asc' : 'desc';
+        dateSortSelect.value = this.currentSort;
+        this.sortByDate();
+        this.updateSortIndicator();
+      });
+
+      // Reset button
+      resetBtn?.addEventListener('click', () => {
+        this.resetFilters();
+      });
+
+      // Initial sort
+      this.sortByDate();
+      this.updateSortIndicator();
+    }
+
+    private applyFilters(): void {
+      let visibleRows = this.allRows;
+
+      // Filter by status
+      if (this.currentStatusFilter) {
+        visibleRows = visibleRows.filter(row => 
+          row.dataset.status === this.currentStatusFilter
+        );
+      }
+
+      // Hide all rows first
+      this.allRows.forEach(row => row.style.display = 'none');
+
+      // Show filtered rows
+      visibleRows.forEach(row => row.style.display = '');
+
+      // Show/hide no results message
+      const noResults = document.getElementById('no-results');
+      const table = document.querySelector('table');
+      
+      if (visibleRows.length === 0) {
+        noResults?.classList.remove('hidden');
+        table?.classList.add('hidden');
+      } else {
+        noResults?.classList.add('hidden');
+        table?.classList.remove('hidden');
+      }
+
+      this.updateStats(visibleRows);
+    }
+
+    private sortByDate(): void {
+      const tbody = document.getElementById('orders-tbody');
+      if (!tbody) return;
+
+      const sortedRows = [...this.allRows].sort((a, b) => {
+        const dateA = new Date(a.dataset.date || '');
+        const dateB = new Date(b.dataset.date || '');
+        
+        if (this.currentSort === 'desc') {
+          return dateB.getTime() - dateA.getTime();
+        } else {
+          return dateA.getTime() - dateB.getTime();
+        }
+      });
+
+      // Clear tbody and re-append sorted rows
+      tbody.innerHTML = '';
+      sortedRows.forEach(row => tbody.appendChild(row));
+
+      // Reapply filters after sorting
+      this.applyFilters();
+    }
+
+    private updateSortIndicator(): void {
+      const indicator = document.getElementById('date-sort-indicator');
+      if (indicator) {
+        indicator.textContent = this.currentSort === 'desc' ? '↓' : '↑';
+      }
+    }
+
+    private updateStats(visibleRows?: HTMLTableRowElement[]): void {
+      const rows = visibleRows || this.allRows.filter(row => row.style.display !== 'none');
+      
+      const ordersCount = document.getElementById('orders-count');
+      const ordersTotal = document.getElementById('orders-total');
+
+      if (ordersCount) {
+        ordersCount.textContent = rows.length.toString();
+      }
+
+      if (ordersTotal) {
+        const total = rows.reduce((sum, row) => {
+          const rowTotal = parseFloat(row.dataset.total || '0');
+          return sum + rowTotal;
+        }, 0);
+        
+        // Format currency similar to the server-side function
+        const formattedTotal = `₹ ${total.toLocaleString("en-IN", { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        })}`;
+        
+        ordersTotal.textContent = formattedTotal;
+      }
+
+      // Update status counts
+      this.updateStatusCounts(rows);
+    }
+
+    private updateStatusCounts(visibleRows: HTMLTableRowElement[]): void {
+      // Calculate status counts for visible rows
+      const statusCounts: Record<string, number> = {};
+      
+      visibleRows.forEach(row => {
+        const status = row.dataset.status || '';
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+      });
+
+      // Update each status count in the UI
+      Object.keys(statusCounts).forEach(status => {
+        const countElement = document.querySelector(`[data-status-count="${status}"]`);
+        if (countElement) {
+          countElement.textContent = statusCounts[status].toString();
+        }
+      });
+
+      // Set count to 0 for statuses not in visible rows
+      document.querySelectorAll('[data-status-count]').forEach(element => {
+        const status = element.getAttribute('data-status-count') || '';
+        if (!statusCounts[status]) {
+          element.textContent = '0';
+        }
+      });
+    }
+
+    private resetFilters(): void {
+      const statusFilter = document.getElementById('status-filter') as HTMLSelectElement;
+      const dateSortSelect = document.getElementById('date-sort') as HTMLSelectElement;
+
+      // Reset form values
+      if (statusFilter) statusFilter.value = '';
+      if (dateSortSelect) dateSortSelect.value = 'desc';
+
+      // Reset internal state
+      this.currentStatusFilter = '';
+      this.currentSort = 'desc';
+
+      // Apply changes
+      this.sortByDate();
+      this.updateSortIndicator();
+    }
+  }
+
+  function initOrdersPage() {
+    const toastManager = new ToastManager();
+    const ordersManager = new OrdersManager();
+    
+    const deleteModal = document.getElementById(
+      "delete_modal"
+    ) as HTMLDialogElement;
+    const deleteOrderInfo = document.getElementById("delete-order-info");
+    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
+    let orderToDelete: { id: number; name: string } | null = null;
+
+    // Handle delete button clicks
+    document.querySelectorAll(".delete-order-btn").forEach((button) => {
+      button.addEventListener("click", function (this: HTMLButtonElement) {
+        const orderId = this.getAttribute("data-order-id");
+        const customerName = this.getAttribute("data-customer-name");
+
+        if (orderId && customerName && deleteOrderInfo) {
+          orderToDelete = { id: parseInt(orderId), name: customerName };
+          deleteOrderInfo.textContent = `Order #${orderId} for ${customerName}`;
+          deleteModal?.showModal();
+        }
+      });
+    });
+
+    // Handle confirm delete
+    confirmDeleteBtn?.addEventListener(
+      "click",
+      async function (this: HTMLButtonElement) {
+        if (!orderToDelete) return;
+
+        // Show loading state
+        this.disabled = true;
+        this.textContent = "Deleting...";
+
+        try {
+          const response = await fetch(
+            `/api/orders/${orderToDelete.id}/delete`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            toastManager.show("Order deleted successfully!", "success");
+
+            // Close modal
+            deleteModal?.close();
+
+            // Reload page after short delay
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          } else {
+            throw new Error(result.error || "Failed to delete order");
+          }
+        } catch (error: any) {
+          console.error("Delete error:", error);
+          toastManager.show(
+            error.message || "Failed to delete order. Please try again.",
+            "error"
+          );
+        } finally {
+          // Reset button state
+          this.disabled = false;
+          this.textContent = "Delete Order";
+        }
+      }
+    );
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initOrdersPage);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initOrdersPage);
+</script>

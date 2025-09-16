@@ -1,0 +1,27 @@
+---
+import Heading from '../ui/Heading.astro';
+ 
+
+// Define the Product interface
+interface Product { 
+  id: string;
+  name: string;
+  marke?: string;
+  // Add other potential product properties here
+}
+
+// Props interface
+interface Props {
+  product: Product;
+}
+
+// Destructure props
+const { product } = Astro.props;
+const { id, name, marke } = product;
+---
+
+<a href={`/products/${id}`} class="text-center">
+  <Heading>{name}</Heading>
+  <Heading size="xs" fontweight="normal">{marke}</Heading>
+ 
+</a>

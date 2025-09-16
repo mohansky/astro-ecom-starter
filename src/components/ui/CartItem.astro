@@ -1,0 +1,169 @@
+---
+// src/components/CartItem.astro
+interface Props {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+const { id, name, price, quantity, image } = Astro.props;
+const totalPrice = price * quantity;
+---
+
+<div class="flex flex-col sm:flex-row items-center gap-4 py-4 border-b border-base-300 last:border-0" data-item-id={id}>
+  {image ? (
+    <div class="avatar">
+      <div class="w-16 h-16 rounded">
+        <img src={image} alt={name} />
+      </div>
+    </div>
+  ) : (
+    <div class="avatar placeholder">
+      <div class="bg-neutral-focus text-neutral-content w-16 h-16 rounded">
+        <span>No img</span>
+      </div>
+    </div>
+  )}
+  
+  <div class="flex-grow">
+    <h3 class="font-medium">{name}</h3>
+    <p class="text-sm opacity-70">${price.toFixed(2)} each</p>
+  </div>
+  
+  <div class="flex items-center">
+    <button 
+      class="decrement-quantity btn btn-circle btn-sm btn-ghost"
+      aria-label="Decrease quantity"
+    >
+      <span class="sr-only">Decrease</span>
+      <span aria-hidden="true">-</span>
+    </button>
+    
+    <span class="quantity-display mx-2 w-8 text-center">{quantity}</span>
+    
+    <button 
+      class="increment-quantity btn btn-circle btn-sm btn-ghost"
+      aria-label="Increase quantity"
+    >
+      <span class="sr-only">Increase</span>
+      <span aria-hidden="true">+</span>
+    </button>
+  </div>
+  
+  <div class="text-right">
+    <p class="font-bold">${totalPrice.toFixed(2)}</p>
+    <button 
+      class="remove-item btn btn-ghost btn-xs text-error"
+      aria-label="Remove item"
+    >
+      Remove
+    </button>
+  </div>
+</div>
+
+<script>
+import { removeFromCart, updateQuantity } from "@/stores/CartStore";
+
+ 
+  
+  function initCartItemControls() {
+    // Increment buttons
+    document.querySelectorAll('.increment-quantity').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const item = (e.currentTarget as HTMLElement).closest('[data-item-id]');
+        if (!item) return;
+        
+        const id = item.getAttribute('data-item-id') as string;
+        const quantityDisplay = item.querySelector('.quantity-display');
+        if (!quantityDisplay) return;
+        
+        const currentQuantity = parseInt(quantityDisplay.textContent || '0');
+        updateQuantity(id, currentQuantity + 1);
+        
+        // UI update for reactivity without page reload
+        quantityDisplay.textContent = (currentQuantity + 1).toString();
+        updateCartItemTotal(item, currentQuantity + 1);
+      });
+    });
+    
+    // Decrement buttons
+    document.querySelectorAll('.decrement-quantity').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const item = (e.currentTarget as HTMLElement).closest('[data-item-id]');
+        if (!item) return;
+        
+        const id = item.getAttribute('data-item-id') as string;
+        const quantityDisplay = item.querySelector('.quantity-display');
+        if (!quantityDisplay) return;
+        
+        const currentQuantity = parseInt(quantityDisplay.textContent || '0');
+        if (currentQuantity > 1) {
+          updateQuantity(id, currentQuantity - 1);
+          
+          // UI update for reactivity without page reload
+          quantityDisplay.textContent = (currentQuantity - 1).toString();
+          updateCartItemTotal(item, currentQuantity - 1);
+        }
+      });
+    });
+    
+    // Remove buttons
+    document.querySelectorAll('.remove-item').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const item = (e.currentTarget as HTMLElement).closest('[data-item-id]');
+        if (!item) return;
+        
+        const id = item.getAttribute('data-item-id') as string;
+        removeFromCart(id);
+        
+        // UI update for reactivity without page reload
+        item.remove();
+        updateCartTotal();
+      });
+    });
+  }
+  
+  function updateCartItemTotal(item: Element, quantity: number) {
+    const priceEl = item.querySelector('.opacity-70');
+    if (!priceEl) return;
+    
+    const priceText = priceEl.textContent || '';
+    const match = priceText.match(/\$(\d+\.\d+)/);
+    if (!match) return;
+    
+    const price = parseFloat(match[1]);
+    const totalPrice = price * quantity;
+    
+    const totalEl = item.querySelector('.font-bold');
+    if (totalEl) {
+      totalEl.textContent = `$${totalPrice.toFixed(2)}`;
+    }
+    
+    updateCartTotal();
+  }
+  
+  function updateCartTotal() {
+    const totalEl = document.getElementById('cart-total');
+    if (!totalEl) return;
+    
+    // Recalculate total by summing item totals
+    let newTotal = 0;
+    document.querySelectorAll('[data-item-id]').forEach(item => {
+      const totalPriceEl = item.querySelector('.font-bold');
+      if (totalPriceEl) {
+        const totalPrice = parseFloat(totalPriceEl.textContent?.replace('$', '') || '0');
+        newTotal += totalPrice;
+      }
+    });
+    
+    totalEl.textContent = `$${newTotal.toFixed(2)}`;
+  }
+  
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initCartItemControls);
+  
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initCartItemControls);
+</script>

@@ -1,0 +1,20 @@
+--- 
+import { getCollection } from "astro:content";
+import ContactLink from "./ContactLink.astro";
+import { Icon } from "astro-icon/components";
+
+const siteData = await getCollection("siteData");
+const siteInfo = siteData[0].data; 
+const socials = siteInfo.socials;
+---
+
+<div class="flex space-x-4 lg:space-x-8">
+  {
+    socials.map((social) => (
+      <ContactLink href={social.link} target="_blank" title={social.text}>
+        <Icon name={social.icon} class="w-10 h-10 lg:w-14 lg:h-14 mx-auto mb-3" />
+        <p>{social.text}</p>
+      </ContactLink>
+    ))
+  } 
+</div>

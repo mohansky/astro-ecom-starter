@@ -1,0 +1,52 @@
+---
+import { Image } from "astro:assets";
+import Heading from "../ui/Heading.astro";
+
+import { getCollection } from "astro:content";
+import Container from "../ui/Container.astro";
+
+const siteData = await getCollection("siteData");
+const siteInfo = siteData[0].data;
+const peopleTitle = siteInfo.peopleTitle;
+const peopleSubtitle = siteInfo.peopleSubtitle;
+const peopleText = siteInfo.peopleText;
+const peopleImage = siteInfo.peopleImage;
+const people = siteInfo.people;
+---
+
+<Container>
+  <section class="my-20">
+    <Heading class="mb-5" size="xl">{peopleTitle}</Heading>
+    <div class="grid md:grid-cols-5 gap-12">
+      <Image
+        class="col-span-2"
+        src={peopleImage}
+        alt={peopleTitle}
+        width="720"
+        height="720"
+      />
+
+      <div class="md:col-span-3 grid content-between">
+        <div>
+          <Heading size="md" class="mb-10">{peopleSubtitle}</Heading>
+          <p class="leading-loose">
+            {peopleText}
+          </p>
+        </div>
+
+        <div class="mt-5 mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {
+            people.map((person) => (
+              <Image
+                src={person.image}
+                alt={person.name}
+                width="360"
+                height="360"
+              />
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</Container>

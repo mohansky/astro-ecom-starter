@@ -1,0 +1,123 @@
+---
+import { server } from "@/actions/index";  
+import Button from "./Button.astro";
+---
+
+<form
+  id="contact-form"
+  action={server.contactForm}
+  method="POST"
+  class="space-y-3"
+>
+  <input
+    class="password-input"
+    type="text"
+    id="a_password"
+    name="a_password"
+    tabindex="-1"
+    autocomplete="off"
+  />
+  <div class="grid grid-cols-2 gap-4">
+    <input
+      type="text"
+      name="firstName"
+      placeholder="Vorname"
+      class="input input-bordered w-full"
+      required
+    />
+    <input
+      type="text"
+      name="lastName"
+      placeholder="Nachname"
+      class="input input-bordered w-full"
+      required
+    />
+  </div>
+  <input
+    type="email"
+    name="email"
+    placeholder="Email Addresse"
+    class="input input-bordered w-full"
+    required
+  />
+  <input
+    type="tel"
+    name="phone"
+    placeholder="Telefonnummer"
+    class="input input-bordered w-full"
+    required
+  />
+
+  <textarea
+    name="message"
+    class="textarea textarea-bordered w-full"
+    rows="5"
+    placeholder="Ihre Nachricht"
+    required></textarea>
+
+  <Button type="submit" variant="primary" className="block w-full"> Absenden </Button>
+</form>
+
+<script>
+  import { isInputError, actions } from "astro:actions";
+
+  const form = document.getElementById("contact-form") as HTMLFormElement;
+  const toast = document.querySelector(".toast") as HTMLDivElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Honeypot check
+    const honeypot = document.getElementById("honeypot") as HTMLInputElement;
+    if (honeypot && honeypot.value.trim() !== "") {
+      console.warn("Spam detected: honeypot field is filled.");
+      return;
+    }
+
+    const formData = new FormData(form);
+    const { data, error } = await actions.contactForm(formData);
+
+    if (data) {
+      form.reset();
+      if (toast) {
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+    }
+
+    if (error && isInputError(error)) {
+      console.error("Input error:", error);
+    }
+  });
+
+  for (const fieldset of document.querySelectorAll(
+    "fieldset[data-require-one]"
+  )) {
+    const updateValidity = () => {
+      const elements = Array.from(
+        (fieldset as HTMLFieldSetElement).elements
+      ).filter(
+        (element): element is HTMLInputElement =>
+          element instanceof HTMLInputElement
+      );
+      if (elements.some((e) => e.checked)) {
+        elements[0].setCustomValidity("");
+      } else {
+        elements[0].setCustomValidity("At least one required!");
+      }
+    };
+    const form = (fieldset as HTMLFieldSetElement).form;
+    if (form) {
+      form.addEventListener("change", updateValidity);
+    }
+    updateValidity();
+  }
+</script>
+
+<div class="toast" style="display: none;">
+  <div class="alert alert-success">
+    <span>Form submitted, thank you for your message.</span>
+  </div>
+</div>

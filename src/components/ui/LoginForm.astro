@@ -1,0 +1,222 @@
+---
+// No server-side logic needed for this component
+---
+
+<div
+  class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
+>
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2
+        id="auth-title"
+        class="mt-6 text-center text-3xl font-extrabold text-gray-900"
+      >
+        Sign in to your account
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        <span id="auth-switch-text">Don't have an account?</span>
+        <button
+          type="button"
+          id="auth-toggle"
+          class="font-medium text-indigo-600 hover:text-indigo-500 ml-1"
+        >
+          Sign up
+        </button>
+      </p>
+    </div>
+
+    <form id="auth-form" class="mt-8 space-y-6">
+      <div class="rounded-md shadow-sm -space-y-px">
+        <!-- Name field (hidden by default) -->
+        <div id="name-field" class="hidden">
+          <label for="name" class="sr-only">Full Name</label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Full Name"
+          />
+        </div>
+
+        <!-- Email field -->
+        <div>
+          <label for="email-address" class="sr-only">Email address</label>
+          <input
+            id="email-address"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Email address"
+          />
+        </div>
+
+        <!-- Password field -->
+        <div>
+          <label for="password" class="sr-only">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Password"
+          />
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div
+        id="error-message"
+        class="hidden text-red-600 text-sm text-center bg-red-50 p-3 rounded-md"
+      >
+      </div>
+
+      <!-- Submit button -->
+      <div>
+        <button
+          type="submit"
+          id="submit-button"
+          class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span id="button-text">Sign in</span>
+          <span
+            id="loading-spinner"
+            class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white"
+          ></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  import { signIn, signUp } from "@/lib/auth-client";
+
+  let isLogin = true;
+
+  // DOM elements
+  const authToggle = document.getElementById("auth-toggle");
+  const authTitle = document.getElementById("auth-title");
+  const authSwitchText = document.getElementById("auth-switch-text");
+  const nameField = document.getElementById("name-field");
+  const nameInput = document.getElementById("name") as HTMLInputElement;
+  const emailInput = document.getElementById(
+    "email-address"
+  ) as HTMLInputElement;
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const emailDiv = emailInput?.parentElement;
+  const authForm = document.getElementById("auth-form") as HTMLFormElement;
+  const errorMessage = document.getElementById("error-message");
+  const submitButton = document.getElementById(
+    "submit-button"
+  ) as HTMLButtonElement;
+  const buttonText = document.getElementById("button-text");
+  const loadingSpinner = document.getElementById("loading-spinner");
+
+  // Toggle between login and signup
+  authToggle?.addEventListener("click", () => {
+    isLogin = !isLogin;
+
+    if (isLogin) {
+      // Switch to login mode
+      authTitle!.textContent = "Sign in to your account";
+      authSwitchText!.textContent = "Don't have an account?";
+      authToggle!.textContent = "Sign up";
+      nameField?.classList.add("hidden");
+      nameInput!.required = false;
+      emailDiv?.querySelector("input")?.classList.add("rounded-t-md");
+      buttonText!.textContent = "Sign in";
+      passwordInput!.autocomplete = "current-password";
+    } else {
+      // Switch to signup mode
+      authTitle!.textContent = "Create your account";
+      authSwitchText!.textContent = "Already have an account?";
+      authToggle!.textContent = "Sign in";
+      nameField?.classList.remove("hidden");
+      nameInput!.required = true;
+      emailDiv?.querySelector("input")?.classList.remove("rounded-t-md");
+      buttonText!.textContent = "Sign up";
+      passwordInput!.autocomplete = "new-password";
+    }
+
+    // Clear error message
+    hideError();
+  });
+
+  // Show error message
+  function showError(message: string) {
+    if (errorMessage) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove("hidden");
+    }
+  }
+
+  // Hide error message
+  function hideError() {
+    errorMessage?.classList.add("hidden");
+  }
+
+  // Show loading state
+  function showLoading(loading: boolean) {
+    if (loading) {
+      buttonText?.classList.add("hidden");
+      loadingSpinner?.classList.remove("hidden");
+      submitButton!.disabled = true;
+    } else {
+      buttonText?.classList.remove("hidden");
+      loadingSpinner?.classList.add("hidden");
+      submitButton!.disabled = false;
+    }
+  }
+
+  // Handle form submission
+  authForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showLoading(true);
+    hideError();
+
+    const email = emailInput!.value;
+    const password = passwordInput!.value;
+    const name = nameInput!.value;
+
+    try {
+      if (isLogin) {
+        // Login
+        const result = await signIn.email({
+          email,
+          password,
+        });
+
+        if (result.error) {
+          showError(result.error.message || "Login failed");
+        } else {
+          // Redirect to dashboard on success
+          window.location.href = "/dashboard";
+        }
+      } else {
+        // Sign up
+        const result = await signUp.email({
+          email,
+          password,
+          name,
+        });
+
+        if (result.error) {
+          showError(result.error.message || "Signup failed");
+        } else {
+          // Redirect to dashboard on success
+          window.location.href = "/dashboard";
+        }
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      showError("An unexpected error occurred");
+    } finally {
+      showLoading(false);
+    }
+  });
+</script>

@@ -1,0 +1,131 @@
+---
+import Container from "@/components/ui/Container.astro"; 
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Create Account">
+  <Container class="flex flex-col items-center justify-center">
+
+ 
+  <div class="card w-96 bg-base-200/30 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title justify-center mb-4">Create Account</h2>
+
+      <form id="registerForm" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Name</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter your name"
+            class="input input-bordered w-full"
+            required
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Email</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            class="input input-bordered w-full"
+            required
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input
+            type="password"
+            name="password"
+            placeholder="Create a password"
+            class="input input-bordered w-full"
+            required
+            minlength="6"
+          />
+          <label class="label">
+            <span class="label-text-alt">Minimum 6 characters</span>
+          </label>
+        </div>
+
+        <div id="errorAlert" class="alert alert-error hidden">
+          <span id="errorMessage"></span>
+        </div>
+
+        <div class="form-control mt-6">
+          <button type="submit" id="submitBtn" class="btn btn-primary">
+            Sign Up
+          </button>
+        </div>
+      </form>
+
+      <div class="divider">OR</div>
+
+      <p class="text-center">
+        Already have an account?{" "}
+        <a href="/admin/login" class="link link-primary"> Sign in </a>
+      </p>
+    </div>
+  </div>
+   </Container>
+</Layout>
+
+<script>
+  // Import Better Auth client
+  import { createAuthClient } from "better-auth/client";
+ 
+  const authClient = createAuthClient({
+    baseURL: import.meta.env.PUBLIC_AUTH_BASE_URL || window.location.origin,
+  });
+
+  document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+   
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+   
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const errorAlert = document.getElementById('errorAlert') as HTMLElement;
+    const errorMessage = document.getElementById('errorMessage') as HTMLElement;
+   
+    // Show loading state
+    submitBtn.classList.add('loading');
+    submitBtn.disabled = true;
+    errorAlert.classList.add('hidden');
+   
+    try {
+      // Use Better Auth client method instead of fetch
+      const { data, error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
+       
+      // Success - redirect to dashboard
+      if (data && !error) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        // Show error
+        errorMessage.textContent = error?.message || 'Registration failed';
+        errorAlert.classList.remove('hidden');
+      }
+    } catch (error) {
+      errorMessage.textContent = 'An error occurred. Please try again.';
+      errorAlert.classList.remove('hidden');
+    } finally {
+      // Reset loading state
+      submitBtn.classList.remove('loading');
+      submitBtn.disabled = false;
+    }
+  });
+</script>

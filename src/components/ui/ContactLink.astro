@@ -1,0 +1,38 @@
+---
+// ContactLink.astro
+interface Props {
+  size?: "xxl" | "xl" | "lg" | "base" | "sm" | "xs";
+  target?: "_blank" | "_parent" | "_self" | "_top";
+  className?: string;
+  href: string;
+  title?: string;
+}
+
+const { 
+  size = "base",
+  target = "_blank",
+  className,
+  href,
+  title,
+  ...restProps 
+} = Astro.props;
+
+const sizeClasses = {
+  xxl: "text-2xl",
+  xl: "text-xl",
+  lg: "text-lg",
+  base: "text-base",
+  sm: "text-sm",
+  xs: "text-xs"
+};
+
+const classes = [
+  "w-fit hover:opacity-50 transition duration-150 ease-out hover:ease-in",
+  sizeClasses[size],
+  className
+].filter(Boolean).join(" ");
+---
+
+<a href={href} target={target} class={classes} {...restProps} title={title}>
+  <slot />
+</a>

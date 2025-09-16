@@ -1,0 +1,79 @@
+---
+import ProductList from "@/components/Product/ProductList.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Layout from "@/layouts/Layout.astro";
+import { getAllProducts, type Product } from "@/lib/db";
+
+// Fetch products from database
+let allProducts: Product[] = [];
+let categories: string[] = [];
+try {
+  const result = await getAllProducts({ isActive: true });
+  allProducts = result.products;
+  categories = result.categories;
+} catch (error) {
+  console.error("Error loading products from database:", error);
+}
+
+const url = new URL(Astro.request.url);
+const categoryParam = url.searchParams.get("category");
+
+// Create category variants based on database categories
+const categoryVariants = [
+  { name: "All", value: "" },
+  ...categories.map(cat => ({ name: cat, value: cat }))
+];
+
+const filteredProducts = categoryParam && categoryParam !== ""
+  ? allProducts.filter(product => product.category === categoryParam)
+  : allProducts;
+---
+
+
+<Layout>
+  <Container width="marginxy">
+    <div class="flex flex-wrap justify-between mb-8">
+      <div>
+        <Heading size="md" class="mb-5">Products</Heading>
+        <div class="flex flex-wrap">
+          {categoryVariants.map((item) => {
+            const isActive = 
+              item.value === categoryParam || 
+              (item.value === "" && (!categoryParam || categoryParam === ""));
+            
+            return (
+              <a
+                href={item.value ? `/shop?category=${item.value}` : "/shop"}
+                class={`mb-4 mr-3 px-4 py-2 text-sm font-semibold rounded-lg inline-block
+                  ${isActive 
+                    ? "bg-black text-white" 
+                    : "bg-muted hover:bg-black hover:text-white focus:bg-black focus:text-white"
+                  }`}
+              >
+                {item.name}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+   
+    <div class="mt-4 mb-4">
+      <p class="text-xs text-muted">Showing {filteredProducts.length} of {allProducts.length} products</p>
+      {categoryParam && filteredProducts.length === 0 && (
+        <p class="text-red-500">No products found in the "{categoryParam}" category.</p>
+      )}
+    </div>
+
+    {allProducts.length > 0 ? (
+      <ProductList products={filteredProducts} />
+    ) : (
+      <div class="text-center py-12">
+        <p>No products available at this time. Please check back later.</p>
+      </div>
+    )}
+
+ 
+  </Container>
+</Layout>

@@ -1,0 +1,8 @@
+---
+import Paragraph from "../ui/Paragraph.astro";
+
+const { description } = Astro.props;
+// const { beschreibung } = product;
+---
+ 
+{description ? <Paragraph>{description}</Paragraph> : null}

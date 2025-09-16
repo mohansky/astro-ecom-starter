@@ -1,0 +1,950 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Paragraph from "@/components/ui/Paragraph.astro";
+import { getUser } from "@/lib/auth-utils";
+
+const user = await getUser(Astro);
+
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+
+if (!user.emailVerified) {
+  return Astro.redirect("/emailVerification");
+}
+---
+
+<Layout title="Discount Coupons">
+  <ProfileLayout>
+    <Container width="marginy">
+      <div class="max-w-8xl mt-20 lg:mt-0 mx-auto">
+        <div class="mb-8">
+          <Heading size="xl" class="mb-2">Discount Coupons</Heading>
+          <Paragraph class="opacity-70"
+            >Manage discount codes and promotional offers</Paragraph
+          >
+        </div>
+
+        <div class="card bg-base-200 shadow-sm w-full">
+          <div class="card-body">
+            <!-- Header Actions -->
+            <div class="flex flex-col md:flex-row gap-4 mb-6">
+              <div class="flex-1">
+                <div class="form-control">
+                  <div class="input-group">
+                    <label class="input">
+                      <svg
+                        class="h-[1em] opacity-50"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <g
+                          stroke-linejoin="round"
+                          stroke-linecap="round"
+                          stroke-width="2.5"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <path d="m21 21-4.3-4.3"></path>
+                        </g>
+                      </svg>
+                      <input
+                        type="text"
+                        id="discountSearch"
+                        placeholder="Search discount codes..."
+                        class="input input-bordered w-full"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select id="statusFilter" class="select select-bordered">
+                  <option value="">All Status</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+                <button id="clearFilter" class="btn btn-outline btn-sm"
+                  >Clear</button
+                >
+                <button id="refreshBtn" class="btn btn-outline btn-sm">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    ></path>
+                  </svg>
+                  Refresh
+                </button>
+                <button id="addDiscountBtn" class="btn btn-success btn-sm">
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Add Discount
+                </button>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div
+              id="discounts-loading"
+              class="flex items-center justify-center h-32"
+            >
+              <span class="loading loading-spinner loading-lg"></span>
+            </div>
+
+            <!-- Error State -->
+            <div id="discounts-error" class="alert alert-error hidden">
+              <span id="discounts-error-message">Failed to load discounts</span>
+            </div>
+
+            <!-- Empty State -->
+            <div id="discounts-empty" class="text-center py-12 hidden">
+              <svg
+                class="w-16 h-16 mx-auto mb-4 opacity-50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                ></path>
+              </svg>
+              <Heading size="md" class="mb-2">No discount codes found</Heading>
+              <Paragraph class="opacity-70"
+                >Create your first discount code to get started</Paragraph
+              >
+            </div>
+
+            <!-- Results Section -->
+            <div id="discounts-container" class="hidden">
+              <div class="flex justify-between items-center mb-4">
+                <Paragraph
+                  size="sm"
+                  id="discounts-results-count"
+                  class="opacity-70">Loading...</Paragraph
+                >
+                <div class="flex gap-2">
+                  <button id="prevPage" class="btn btn-sm btn-outline" disabled
+                    >Previous</button
+                  >
+                  <button id="nextPage" class="btn btn-sm btn-outline" disabled
+                    >Next</button
+                  >
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="table table-sm">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Description</th>
+                      <th>Discount</th>
+                      <th>Min. Order</th>
+                      <th>Valid Period</th>
+                      <th>Usage</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="discounts-tbody"> </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </ProfileLayout>
+</Layout>
+
+<!-- Add/Edit Discount Modal -->
+<dialog id="discountModal" class="modal">
+  <div class="modal-box max-w-2xl">
+    <h3 class="font-bold text-lg mb-4" id="modalTitle">
+      Add New Discount Code
+    </h3>
+
+    <form id="discountForm" class="space-y-4">
+      <input type="hidden" id="discountId" name="discountId" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label" for="code">
+            <span class="label-text">Discount Code</span>
+          </label>
+          <input
+            type="text"
+            id="code"
+            name="code"
+            required
+            class="input input-bordered"
+            placeholder="e.g., SAVE20"
+            style="text-transform: uppercase"
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label" for="discountType">
+            <span class="label-text">Discount Type</span>
+          </label>
+          <select
+            id="discountType"
+            name="discountType"
+            required
+            class="select select-bordered"
+          >
+            <option value="">Select type</option>
+            <option value="percentage">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (₹)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label" for="description">
+          <span class="label-text">Description</span>
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          required
+          class="textarea textarea-bordered"
+          rows="2"
+          placeholder="Brief description of the discount"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label" for="discountValue">
+            <span class="label-text">Discount Value</span>
+          </label>
+          <input
+            type="number"
+            id="discountValue"
+            name="discountValue"
+            required
+            min="0"
+            step="0.01"
+            class="input input-bordered"
+            placeholder="Enter value"
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label" for="minimumOrderAmount">
+            <span class="label-text">Minimum Order Amount (₹)</span>
+          </label>
+          <input
+            type="number"
+            id="minimumOrderAmount"
+            name="minimumOrderAmount"
+            required
+            min="0"
+            step="0.01"
+            class="input input-bordered"
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label" for="maxDiscountAmount">
+          <span class="label-text">Maximum Discount Amount (₹) - Optional</span>
+        </label>
+        <input
+          type="number"
+          id="maxDiscountAmount"
+          name="maxDiscountAmount"
+          min="0"
+          step="0.01"
+          class="input input-bordered"
+          placeholder="Leave empty for no limit"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label" for="validFrom">
+            <span class="label-text">Valid From</span>
+          </label>
+          <input
+            type="date"
+            id="validFrom"
+            name="validFrom"
+            required
+            class="input input-bordered"
+          />
+        </div>
+
+        <div class="form-control">
+          <label class="label" for="validTo">
+            <span class="label-text">Valid To</span>
+          </label>
+          <input
+            type="date"
+            id="validTo"
+            name="validTo"
+            required
+            class="input input-bordered"
+          />
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label" for="usageLimit">
+          <span class="label-text">Usage Limit - Optional</span>
+        </label>
+        <input
+          type="number"
+          id="usageLimit"
+          name="usageLimit"
+          min="1"
+          class="input input-bordered"
+          placeholder="Leave empty for unlimited usage"
+        />
+      </div>
+
+      <div class="form-control">
+        <label class="cursor-pointer label">
+          <span class="label-text">Active Status</span>
+          <input
+            type="checkbox"
+            id="isActive"
+            name="isActive"
+            checked
+            class="checkbox"
+          />
+        </label>
+      </div>
+
+      <div class="modal-action">
+        <button
+          type="button"
+          class="btn btn-outline"
+          onclick="document.getElementById('discountModal').close()"
+          >Cancel</button
+        >
+        <button type="submit" id="saveDiscountBtn" class="btn btn-primary"
+          >Save Discount</button
+        >
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Toast Container -->
+<div class="toast toast-top toast-end z-50" id="toast-container"></div>
+
+<script is:inline>
+  let currentDiscountPage = 0;
+  let currentDiscountSearch = "";
+  let currentDiscountStatus = "";
+  let isDiscountsLoading = false;
+  let discountsPagination = { total: 0, limit: 50, offset: 0, hasMore: false };
+
+  // Toast Manager
+  class ToastManager {
+    constructor() {
+      this.container =
+        document.getElementById("toast-container") || this.createContainer();
+    }
+
+    createContainer() {
+      const container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast toast-top toast-end z-50";
+      document.body.appendChild(container);
+      return container;
+    }
+
+    show(message, type = "info", duration = 4000) {
+      const toast = document.createElement("div");
+
+      let alertClass = "";
+      let icon = "";
+
+      switch (type) {
+        case "success":
+          alertClass = "alert-success";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "error":
+          alertClass = "alert-error";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+          break;
+        case "warning":
+          alertClass = "alert-warning";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
+          break;
+        default:
+          alertClass = "alert-info";
+          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+      }
+
+      toast.className = `alert ${alertClass} shadow-lg mb-2`;
+      toast.innerHTML = `
+        <div class="flex items-center">
+          ${icon}
+          <span class="ml-2">${message}</span>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+
+      this.container.appendChild(toast);
+
+      setTimeout(() => {
+        if (toast.parentElement) {
+          toast.remove();
+        }
+      }, duration);
+    }
+  }
+
+  const toastManager = new ToastManager();
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  }
+
+  function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString("en-IN");
+  }
+
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  async function loadDiscounts(search = "", status = "", offset = 0) {
+    if (isDiscountsLoading) return;
+    isDiscountsLoading = true;
+
+    try {
+      console.log("Loading discounts...", { search, status, offset });
+
+      showDiscountsLoading();
+
+      const params = new URLSearchParams({
+        limit: "50",
+        offset: offset.toString(),
+      });
+
+      if (search.trim()) {
+        params.set("search", search.trim());
+      }
+
+      if (status.trim()) {
+        params.set("isActive", status.trim());
+      }
+
+      const response = await fetch(`/api/coupons?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch discounts");
+
+      const data = await response.json();
+      console.log("Discounts loaded:", data);
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to load discounts");
+      }
+
+      if (!data.coupons || data.coupons.length === 0) {
+        showDiscountsEmpty();
+        return;
+      }
+
+      discountsPagination = data.pagination;
+      currentDiscountSearch = search;
+      currentDiscountStatus = status;
+      currentDiscountPage = Math.floor(offset / discountsPagination.limit);
+
+      hideDiscountsLoading();
+      renderDiscounts(data.coupons);
+      updateDiscountsPagination();
+    } catch (error) {
+      console.error("Error loading discounts:", error);
+      showDiscountsError("Failed to load discounts");
+    } finally {
+      isDiscountsLoading = false;
+    }
+  }
+
+  function showDiscountsLoading() {
+    document.getElementById("discounts-loading").classList.remove("hidden");
+    document.getElementById("discounts-container").classList.add("hidden");
+    document.getElementById("discounts-error").classList.add("hidden");
+    document.getElementById("discounts-empty").classList.add("hidden");
+  }
+
+  function hideDiscountsLoading() {
+    document.getElementById("discounts-loading").classList.add("hidden");
+    document.getElementById("discounts-container").classList.remove("hidden");
+  }
+
+  function showDiscountsError(message) {
+    document.getElementById("discounts-loading").classList.add("hidden");
+    document.getElementById("discounts-container").classList.add("hidden");
+    document.getElementById("discounts-empty").classList.add("hidden");
+    document.getElementById("discounts-error-message").textContent = message;
+    document.getElementById("discounts-error").classList.remove("hidden");
+  }
+
+  function showDiscountsEmpty() {
+    document.getElementById("discounts-loading").classList.add("hidden");
+    document.getElementById("discounts-container").classList.add("hidden");
+    document.getElementById("discounts-error").classList.add("hidden");
+    document.getElementById("discounts-empty").classList.remove("hidden");
+  }
+
+  function renderDiscounts(discounts) {
+    const tbody = document.getElementById("discounts-tbody");
+    if (!tbody) return;
+
+    tbody.innerHTML = discounts
+      .map((discount) => {
+        const now = new Date();
+        const validFrom = new Date(discount.validFrom);
+        const validTo = new Date(discount.validTo);
+
+        let statusBadge = "";
+        if (!discount.isActive) {
+          statusBadge = '<span class="badge badge-error">Inactive</span>';
+        } else if (now < validFrom) {
+          statusBadge = '<span class="badge badge-warning">Upcoming</span>';
+        } else if (now > validTo) {
+          statusBadge = '<span class="badge badge-ghost">Expired</span>';
+        } else {
+          statusBadge = '<span class="badge badge-success">Active</span>';
+        }
+
+        const discountDisplay =
+          discount.discountType === "percentage"
+            ? `${discount.discountValue}%`
+            : formatCurrency(discount.discountValue);
+
+        const usageDisplay = discount.usageLimit
+          ? `${discount.usedCount}/${discount.usageLimit}`
+          : `${discount.usedCount}/∞`;
+
+        return `
+        <tr class="hover">
+          <td>
+            <div class="font-semibold text-primary">${discount.code}</div>
+          </td>
+          <td>
+            <div class="max-w-48 truncate">${discount.description}</div>
+          </td>
+          <td>
+            <span class="font-semibold">${discountDisplay}</span>
+            ${discount.maxDiscountAmount ? `<div class="text-xs opacity-70">Max: ${formatCurrency(discount.maxDiscountAmount)}</div>` : ""}
+          </td>
+          <td class="text-sm">${formatCurrency(discount.minimumOrderAmount)}</td>
+          <td class="text-sm">
+            <div>${formatDate(discount.validFrom)}</div>
+            <div class="opacity-70">to ${formatDate(discount.validTo)}</div>
+          </td>
+          <td class="text-center">
+            <span class="badge badge-outline">${usageDisplay}</span>
+          </td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="flex gap-1">
+              <button class="btn btn-ghost btn-xs" onclick="editDiscount(${discount.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <button class="btn btn-ghost btn-xs ${discount.isActive ? "text-warning" : "text-success"}"
+                      onclick="toggleDiscountStatus(${discount.id}, ${!discount.isActive})">
+                ${
+                  discount.isActive
+                    ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path></svg>'
+                    : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                }
+              </button>
+              <button class="btn btn-ghost btn-xs text-error" onclick="deleteDiscount(${discount.id})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    // Update results count
+    const resultsCount = document.getElementById("discounts-results-count");
+    if (resultsCount) {
+      const start = discountsPagination.offset + 1;
+      const end = Math.min(
+        discountsPagination.offset + discountsPagination.limit,
+        discountsPagination.total
+      );
+      resultsCount.textContent = `Showing ${start}-${end} of ${discountsPagination.total} discount codes`;
+    }
+  }
+
+  function updateDiscountsPagination() {
+    const prevBtn = document.getElementById("prevPage");
+    const nextBtn = document.getElementById("nextPage");
+
+    if (prevBtn) {
+      prevBtn.disabled = discountsPagination.offset === 0;
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = !discountsPagination.hasMore;
+    }
+  }
+
+  // Debounced search function
+  const debouncedDiscountSearch = debounce((search) => {
+    loadDiscounts(search, currentDiscountStatus, 0);
+  }, 300);
+
+  function setupDiscountsEventListeners() {
+    const searchInput = document.getElementById("discountSearch");
+    const searchBtn = null; // No separate search button with new design
+    const statusFilter = document.getElementById("statusFilter");
+    const clearBtn = document.getElementById("clearFilter");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const addDiscountBtn = document.getElementById("addDiscountBtn");
+    const prevBtn = document.getElementById("prevPage");
+    const nextBtn = document.getElementById("nextPage");
+
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        debouncedDiscountSearch(e.target.value);
+      });
+
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          loadDiscounts(e.target.value, currentDiscountStatus, 0);
+        }
+      });
+    }
+
+    if (searchBtn) {
+      searchBtn.addEventListener("click", () => {
+        const search = searchInput?.value || "";
+        loadDiscounts(search, currentDiscountStatus, 0);
+      });
+    }
+
+    if (statusFilter) {
+      statusFilter.addEventListener("change", (e) => {
+        loadDiscounts(currentDiscountSearch, e.target.value, 0);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        if (searchInput) {
+          searchInput.value = "";
+        }
+        if (statusFilter) {
+          statusFilter.value = "";
+        }
+        loadDiscounts("", "", 0);
+      });
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => {
+        const search = searchInput?.value || "";
+        const status = statusFilter?.value || "";
+        loadDiscounts(search, status, discountsPagination.offset);
+      });
+    }
+
+    if (addDiscountBtn) {
+      addDiscountBtn.addEventListener("click", () => {
+        openDiscountModal();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        if (discountsPagination.offset > 0) {
+          loadDiscounts(
+            currentDiscountSearch,
+            currentDiscountStatus,
+            discountsPagination.offset - discountsPagination.limit
+          );
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        if (discountsPagination.hasMore) {
+          loadDiscounts(
+            currentDiscountSearch,
+            currentDiscountStatus,
+            discountsPagination.offset + discountsPagination.limit
+          );
+        }
+      });
+    }
+  }
+
+  function openDiscountModal(discount = null) {
+    const modal = document.getElementById("discountModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const form = document.getElementById("discountForm");
+
+    if (discount) {
+      modalTitle.textContent = "Edit Discount Code";
+      // Populate form with discount data
+      document.getElementById("discountId").value = discount.id;
+      document.getElementById("code").value = discount.code;
+      document.getElementById("description").value = discount.description;
+      document.getElementById("discountType").value = discount.discountType;
+      document.getElementById("discountValue").value = discount.discountValue;
+      document.getElementById("minimumOrderAmount").value =
+        discount.minimumOrderAmount;
+      document.getElementById("maxDiscountAmount").value =
+        discount.maxDiscountAmount || "";
+      document.getElementById("validFrom").value =
+        discount.validFrom.split("T")[0];
+      document.getElementById("validTo").value = discount.validTo.split("T")[0];
+      document.getElementById("usageLimit").value = discount.usageLimit || "";
+      document.getElementById("isActive").checked = discount.isActive;
+    } else {
+      modalTitle.textContent = "Add New Discount Code";
+      form.reset();
+      document.getElementById("discountId").value = "";
+      document.getElementById("isActive").checked = true;
+      // Set default dates
+      const today = new Date().toISOString().split("T")[0];
+      const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      document.getElementById("validFrom").value = today;
+      document.getElementById("validTo").value = nextMonth;
+    }
+
+    modal.showModal();
+  }
+
+  async function editDiscount(discountId) {
+    try {
+      const response = await fetch(`/api/coupons/${discountId}`);
+      if (!response.ok) throw new Error("Failed to fetch discount details");
+
+      const data = await response.json();
+      if (data.success && data.coupon) {
+        openDiscountModal(data.coupon);
+      } else {
+        toastManager.show("Failed to load discount details", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching discount:", error);
+      toastManager.show("Failed to load discount details", "error");
+    }
+  }
+
+  async function toggleDiscountStatus(discountId, newStatus) {
+    try {
+      const response = await fetch(`/api/coupons/${discountId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isActive: newStatus,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update discount status");
+
+      const data = await response.json();
+      if (data.success) {
+        toastManager.show(
+          `Discount ${newStatus ? "activated" : "deactivated"} successfully`,
+          "success"
+        );
+        loadDiscounts(
+          currentDiscountSearch,
+          currentDiscountStatus,
+          discountsPagination.offset
+        );
+      } else {
+        throw new Error(data.error || "Failed to update discount status");
+      }
+    } catch (error) {
+      console.error("Error updating discount status:", error);
+      toastManager.show("Failed to update discount status", "error");
+    }
+  }
+
+  async function deleteDiscount(discountId) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this discount code? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/coupons/${discountId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete discount");
+
+      const data = await response.json();
+      if (data.success) {
+        toastManager.show("Discount deleted successfully", "success");
+        loadDiscounts(
+          currentDiscountSearch,
+          currentDiscountStatus,
+          discountsPagination.offset
+        );
+      } else {
+        throw new Error(data.error || "Failed to delete discount");
+      }
+    } catch (error) {
+      console.error("Error deleting discount:", error);
+      toastManager.show("Failed to delete discount", "error");
+    }
+  }
+
+  // Handle form submission
+  document
+    .getElementById("discountForm")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const discountId = formData.get("discountId");
+      const isEdit = discountId && discountId !== "";
+
+      const data = {
+        code: formData.get("code"),
+        description: formData.get("description"),
+        discountType: formData.get("discountType"),
+        discountValue: parseFloat(formData.get("discountValue")),
+        minimumOrderAmount: parseFloat(formData.get("minimumOrderAmount")),
+        maxDiscountAmount: formData.get("maxDiscountAmount")
+          ? parseFloat(formData.get("maxDiscountAmount"))
+          : null,
+        validFrom: formData.get("validFrom"),
+        validTo: formData.get("validTo"),
+        usageLimit: formData.get("usageLimit")
+          ? parseInt(formData.get("usageLimit"))
+          : null,
+        isActive: formData.has("isActive"),
+      };
+
+      const saveBtn = document.getElementById("saveDiscountBtn");
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = isEdit ? "Updating..." : "Creating...";
+
+      try {
+        const url = isEdit ? `/api/coupons/${discountId}` : "/api/coupons";
+        const method = isEdit ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) throw new Error("Failed to save discount");
+
+        const result = await response.json();
+        if (result.success) {
+          toastManager.show(
+            `Discount ${isEdit ? "updated" : "created"} successfully`,
+            "success"
+          );
+          document.getElementById("discountModal").close();
+          loadDiscounts(
+            currentDiscountSearch,
+            currentDiscountStatus,
+            discountsPagination.offset
+          );
+        } else {
+          throw new Error(result.error || "Failed to save discount");
+        }
+      } catch (error) {
+        console.error("Error saving discount:", error);
+        toastManager.show("Failed to save discount: " + error.message, "error");
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+      }
+    });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Loading discounts page...");
+    setupDiscountsEventListeners();
+    loadDiscounts();
+  });
+</script>
+
+<style>
+  .table th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .input-group input:focus {
+    outline: none;
+    border-color: oklch(var(--p));
+  }
+
+  #code {
+    text-transform: uppercase !important;
+  }
+</style>

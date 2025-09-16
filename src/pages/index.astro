@@ -1,0 +1,46 @@
+---
+// src/pages/index.astro
+import Intro from "@/components/Sections/Intro.astro";
+import Heading from "@/components/ui/Heading.astro";
+import People from "@/components/Sections/People.astro";
+import ProductList from "@/components/Product/ProductList.astro";
+
+import { getAllProducts, type Product } from "@/lib/db";
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+
+// Fetch featured products from database
+let featuredProducts: Product[] = [];
+try {
+  const result = await getAllProducts({ isActive: true });
+
+  // First, try to get featured products
+  const featured = result.products.filter(product => product.featured);
+
+  if (featured.length >= 3) {
+    // If we have enough featured products, take first 3
+    featuredProducts = featured.slice(0, 3);
+  } else {
+    // If not enough featured products, supplement with random products
+    const nonFeatured = result.products.filter(product => !product.featured);
+    const randomNonFeatured = nonFeatured
+      .map((x) => ({ x, r: Math.random() }))
+      .sort((a, b) => a.r - b.r)
+      .map((a) => a.x)
+      .slice(0, 3 - featured.length);
+
+    featuredProducts = [...featured, ...randomNonFeatured];
+  }
+} catch (error) {
+  console.error("Error loading products from database:", error);
+}
+---
+
+<Layout>
+  <Intro />
+  <Container width="marginx">
+    <Heading size="xl" class="mb-5">The craft</Heading>
+    <ProductList products={featuredProducts} />
+  </Container>
+  <People />
+</Layout>

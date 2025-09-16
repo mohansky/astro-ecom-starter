@@ -1,0 +1,216 @@
+---
+// ImageFeatureSlider.astro - Simplified to only use images field 
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+// Define the props for the component
+interface Props {
+  subDirectory?: string;
+}
+
+// Get the subdirectory from props, default to empty string
+const { subDirectory = "" } = Astro.props;
+
+// Import ALL images from the base directory and its subdirectories
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/src/content/products/images/**/*.{png,jpg,JPG,jpeg,gif,webp}"
+);
+
+// For debugging
+console.log("ImageFeatureSlider received subDirectory:", subDirectory);
+
+// Filter the images based on the provided subdirectory
+const filteredImagePaths = Object.entries(allImages)
+  .filter(([path]) => {
+    if (!subDirectory) {
+      // If no subdirectory, only show images directly in the main folder
+      return path.match(
+        /^\/src\/content\/products\/images\/[^\/]+\.(png|jpg|JPG|jpeg|gif|webp)$/i
+      );
+    } else {
+      // Look for exact match with the provided subdirectory
+      const exactPath = `/src/content/products/images/${subDirectory}/`;
+      
+      // Check if the path starts with our expected path
+      return path.startsWith(exactPath);
+    }
+  });
+
+// Log what we found for debugging
+console.log(`Found ${filteredImagePaths.length} images for directory "${subDirectory}"`);
+if (filteredImagePaths.length === 0) {
+  console.log("Expected path:", `/src/content/products/images/${subDirectory}/`);
+  console.log("Available image paths (first 5):", Object.keys(allImages).slice(0, 5));
+}
+
+// Process the filtered images with their metadata
+const imageArray = await Promise.all(
+  filteredImagePaths.map(async ([path, loader], index) => {
+    const imageModule = await loader();
+    // Get the filename without extension
+    const filename = path.split("/").pop()?.split(".")[0] || `Image ${index}`;
+    return {
+      id: `image-${index}`,
+      path,
+      image: imageModule.default,
+      name: filename,
+    };
+  })
+);
+
+// Generate unique IDs for this instance of the slider
+const uniqueId = Math.random().toString(36).substring(2, 9);
+const mainSliderId = `main-swiper-${uniqueId}`;
+const thumbsSliderId = `thumbs-swiper-${uniqueId}`;
+---
+
+{imageArray.length > 0 ? (
+  <div class="relative">
+    <div id={mainSliderId} class="swiper w-full flex-grow">
+      <div class="swiper-wrapper">
+        {
+          imageArray.map((img) => (
+            <div class="swiper-slide">
+              <Image
+                src={img.image}
+                alt={img.name}
+                width={800}
+                height={600}
+                class="object-contain"
+              />
+            </div>
+          ))
+        }
+      </div>
+      {/* <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div> */}
+    </div>
+    
+    {/* <div id={thumbsSliderId} class="swiper mt-4 thumbs-swiper">
+      <div class="swiper-wrapper">
+        {
+          imageArray.map((img) => (
+            <div class="swiper-slide cursor-pointer">
+              <div class="border-2 border-transparent rounded overflow-hidden">
+                <Image
+                  src={img.image}
+                  alt={`Thumbnail for ${img.name}`}
+                  width={120}
+                  height={90}
+                  class="object-cover"
+                />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div> */}
+  </div>
+) : (
+  <div class="text-center py-8 border border-gray-200 rounded">
+    <p>No images found for directory: "{subDirectory || "root directory"}"</p>
+    <p class="text-sm text-gray-500 mt-2">
+      Check that images exist in this path: /src/content/products/images/{subDirectory}/
+    </p>
+  </div>
+)}
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/10.2.0/swiper-bundle.min.css"
+/>
+
+<script define:vars={{ mainSliderId, thumbsSliderId }} is:inline>
+  // This script runs on client-side
+  document.addEventListener("DOMContentLoaded", () => {
+    initializeSwiper();
+  });
+
+  // Also run on astro:page-load for view transitions
+  document.addEventListener("astro:page-load", () => {
+    initializeSwiper();
+  });
+
+  function initializeSwiper() {
+    // Make sure Swiper is available
+    if (typeof Swiper === "undefined") {
+      // If Swiper is not available yet, load it and retry
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/Swiper/10.2.0/swiper-bundle.min.js";
+      script.onload = initializeSwiper;
+      document.head.appendChild(script);
+      return;
+    }
+
+    // Get the specific swiper containers for this instance using the unique IDs
+    const mainContainer = document.getElementById(mainSliderId);
+    const thumbsContainer = document.getElementById(thumbsSliderId);
+
+    // Only initialize if the elements exist
+    if (!mainContainer) return;
+    
+    let thumbsSwiper;
+    
+    // Initialize thumbs swiper if it exists
+    if (thumbsContainer) {
+      thumbsSwiper = new Swiper(`#${thumbsSliderId}`, {
+        slidesPerView: 4,
+        spaceBetween: 8,
+        watchSlidesProgress: true,
+        breakpoints: {
+          320: { slidesPerView: 3 },
+          640: { slidesPerView: 4 },
+          768: { slidesPerView: 5 },
+        },
+        slideToClickedSlide: true,
+      });
+    }
+
+    // Then initialize the main swiper with the thumbs
+    const mainSwiper = new Swiper(`#${mainSliderId}`, {
+      spaceBetween: 0,
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+      },
+      effect: "fade",
+      fadeEffect: {
+        crossFade: true,
+      },
+      thumbs: thumbsSwiper ? { swiper: thumbsSwiper } : undefined
+    });
+    
+    if (thumbsContainer) {
+      thumbsContainer
+        .querySelectorAll(".swiper-slide")
+        .forEach((slide, index) => {
+          slide.addEventListener("click", () => {
+            mainSwiper.slideTo(index);
+          });
+        });
+    }
+  }
+</script>
+
+<style>
+  .swiper {
+    width: 100%;
+    height: 100%;
+  }
+ 
+  .swiper-slide {
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  .swiper-slide-thumb-active .border-transparent {
+    border-color: hsl(var(--p)) !important;
+  }
+  
+  .thumbs-swiper {
+    height: 100px;
+  }
+</style>

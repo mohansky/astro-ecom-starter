@@ -1,0 +1,88 @@
+---
+// src/components/MiniCart.astro
+interface Props {
+  id?: string;
+}
+
+const { id = "cart-count" } = Astro.props;
+---
+
+<label for="cart-drawer" class="btn btn-ghost btn-circle drawer-button indicator">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+  </svg>
+  <span id={id} class="badge badge-sm badge-primary indicator-item ">0</span>
+</label>
+
+<script is:inline define:vars={{ id }}>
+  // Global cart functions (defined once)
+  if (!window.cartUpdateFunctions) {
+    window.cartUpdateFunctions = [];
+
+    // Global function to get cart count
+    window.getCartCount = function() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        return Array.isArray(cart) ? cart.reduce((count, item) => count + (item.quantity || 0), 0) : 0;
+      } catch (e) {
+        console.error('Failed to get cart count:', e);
+        return 0;
+      }
+    };
+
+    // Global function to update all cart counts
+    window.updateAllCartCounts = function() {
+      const count = window.getCartCount();
+
+      window.cartUpdateFunctions.forEach(function(updateFn) {
+        updateFn(count);
+      });
+    };
+
+    // Listen for cart changes globally
+    window.addEventListener('cart:updated', function(event) {
+      window.updateAllCartCounts();
+    });
+  }
+
+  function initMiniCart() {
+    const cartCountElement = document.getElementById(id);
+
+    if (!cartCountElement) return;
+
+    // Skip if already initialized
+    if (cartCountElement.dataset.initialized === 'true') return;
+
+    cartCountElement.dataset.initialized = 'true';
+
+    // Create update function for this specific element
+    function updateThisCartCount(count) {
+      cartCountElement.textContent = count.toString();
+
+      // Show/hide badge based on count
+      if (count === 0) {
+        cartCountElement.classList.add('hidden');
+      } else {
+        cartCountElement.classList.remove('hidden');
+      }
+    }
+
+    // Register this update function globally
+    window.cartUpdateFunctions.push(updateThisCartCount);
+
+    // Update count on initial load
+    updateThisCartCount(window.getCartCount());
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initMiniCart);
+
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initMiniCart);
+
+  // Global function to clear cart
+  window.clearCart = function() {
+    localStorage.removeItem('cart');
+    window.dispatchEvent(new CustomEvent('cart:updated', { detail: { cart: [] } }));
+  };
+</script>

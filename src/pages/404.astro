@@ -1,0 +1,150 @@
+---
+// src/pages/404.astro
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Page Not Found - 404">
+  <Container width="marginy">
+    <div class="flex items-center justify-center">
+      <div class="text-center max-w-2xl mx-auto px-4">
+        <!-- 404 Number -->
+        <div class="mb-8">
+          <h1 class="text-9xl font-bold text-primary opacity-20 select-none">
+            404
+          </h1>
+        </div>
+
+        <!-- Main Content -->
+        <div class="space-y-6">
+          <div class="space-y-2">
+            <h2 class="text-4xl font-bold text-base-content">
+              Oops! Page Not Found
+            </h2>
+            <p class="text-lg text-base-content/70">
+              The page you're looking for seems to have wandered off into the digital void.
+            </p>
+          </div>
+
+          <!-- Search Box -->
+          <div class="max-w-md mx-auto">
+            <div class="form-control">
+              <div class="input-group">
+                <input 
+                  type="text" 
+                  placeholder="Search for something..." 
+                  class="input input-bordered flex-1"
+                  id="searchInput"
+                />
+                <button class="btn btn-primary" onclick="performSearch()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="/" class="btn btn-primary btn-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Go Home
+            </a>
+            
+            <button onclick="history.back()" class="btn btn-outline btn-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+              </svg>
+              Go Back
+            </button>
+          </div>
+
+          <!-- Popular Links -->
+          <!-- <div class="mt-12">
+            <h3 class="text-xl font-semibold mb-4 text-base-content">
+              Popular Pages
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+              <a href="/dashboard" class="btn btn-ghost btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Dashboard
+              </a>
+              
+              <a href="/profile" class="btn btn-ghost btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Profile
+              </a>
+              
+              <a href="/admin/login" class="btn btn-ghost btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Login
+              </a>
+              
+              <a href="/contact" class="btn btn-ghost btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Contact
+              </a>
+            </div>
+          </div> -->
+
+          <!-- Fun Element -->
+          <div class="mt-12 p-6 bg-base-200 rounded-lg">
+            <p class="text-sm text-base-content/60">
+              <span class="font-mono">Error Code:</span> CONTENT_NOT_FOUND <br>
+              <span class="font-mono">Timestamp:</span> <span id="timestamp"></span> <br>
+              <span class="font-mono">Status:</span> The requested resource has gone on vacation 🏖️
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Layout>
+
+<script>
+  // Display current timestamp
+  function updateTimestamp() {
+    const now = new Date();
+    const timestamp = now.toISOString();
+    const timestampElement = document.getElementById('timestamp');
+    if (timestampElement) {
+      timestampElement.textContent = timestamp;
+    }
+  }
+
+  // Simple search functionality
+  function performSearch() {
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    const query = searchInput?.value.trim();
+    
+    if (query) {
+      // You can customize this to your search implementation
+      // For now, it redirects to your homepage with search parameter
+      window.location.href = `/?search=${encodeURIComponent(query)}`;
+    }
+  }
+
+  // Handle Enter key in search
+  document.getElementById('searchInput')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+
+  // Update timestamp on page load
+  updateTimestamp();
+
+  // Make functions globally accessible
+  (window as any).performSearch = performSearch;
+</script>

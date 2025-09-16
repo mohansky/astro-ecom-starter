@@ -1,0 +1,269 @@
+---
+// src/components/CartSidebar.astro
+import CartItem from "./CartItem.astro";
+
+interface Props {
+  className?: string;
+}
+
+const { className = "" } = Astro.props;
+---
+
+<div class="drawer drawer-end z-40 font-quicksand">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" />
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"
+    ></label>
+    <div
+      class={`drawer-content bg-base-100 w-96 md:w-120 flex flex-col h-full ${className}`}
+    >
+      <div
+        class="sticky top-0 z-20 bg-base-100 bg-opacity-90 backdrop-blur p-4 border-b border-base-300 flex justify-between items-center"
+      >
+        <h2 class="text-xl font-bold">Your Cart</h2>
+        <label for="cart-drawer" class="btn btn-sm btn-circle btn-ghost"
+          >✕</label
+        >
+      </div>
+
+      <div id="cart-items" class="flex-grow overflow-auto p-4">
+        <div id="empty-cart-message" class="hidden text-center py-8 opacity-50">
+          Your cart is empty
+        </div>
+
+        <div id="cart-items-container">
+          <!-- Cart items will be dynamically rendered here -->
+        </div>
+      </div>
+
+      <div
+        class="sticky bottom-0 z-20 bg-base-100 bg-opacity-90 backdrop-blur border-t border-base-300 p-4"
+      >
+        <div class="flex justify-between mb-4">
+          <span class="font-medium">Subtotal:</span>
+          <span id="cart-total" class="font-bold text-lg">₹0.00</span>
+        </div>
+
+        <a href="/checkout" class="btn btn-primary w-full"> Checkout </a>
+
+        <label for="cart-drawer" class="btn btn-ghost w-full mt-2">
+          Continue Shopping
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  let cartItemsContainer;
+  let emptyCartMessage;
+  let cartTotalElement;
+  let cartDrawerCheckbox;
+
+  // Client-side cart functions
+  function getCart() {
+    try {
+      return JSON.parse(localStorage.getItem('cart') || '[]');
+    } catch (e) {
+      console.error('Error parsing cart:', e);
+      return [];
+    }
+  }
+
+  function saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart:updated', { detail: { cart } }));
+  }
+
+  function getCartTotal() {
+    const cart = getCart();
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }
+
+  function removeFromCart(id) {
+    const cart = getCart();
+    const updatedCart = cart.filter(item => item.id !== id);
+    saveCart(updatedCart);
+  }
+
+  function updateQuantity(id, quantity) {
+    if (quantity < 1) return;
+
+    const cart = getCart();
+    const updatedCart = cart.map(item =>
+      item.id === id ? { ...item, quantity } : item
+    );
+    saveCart(updatedCart);
+  }
+
+  function initCartSidebar() {
+    cartItemsContainer = document.getElementById("cart-items-container");
+    emptyCartMessage = document.getElementById("empty-cart-message");
+    cartTotalElement = document.getElementById("cart-total");
+    cartDrawerCheckbox = document.getElementById("cart-drawer");
+
+    if (!cartItemsContainer || !emptyCartMessage || !cartTotalElement) {
+      console.error("Could not find one or more cart elements");
+      return;
+    }
+
+    // Render initial cart state
+    renderCart();
+
+    // Listen for cart changes
+    window.addEventListener('cart:updated', renderCart);
+
+    // Add global open cart function
+    window.openCart = openCart;
+  }
+
+  function openCart() {
+    if (!cartDrawerCheckbox) return;
+
+    cartDrawerCheckbox.checked = true;
+
+    // Render cart on open
+    renderCart();
+  }
+
+  // Define the initCartItemControls function that was missing
+  function initCartItemControls() {
+    if (!cartItemsContainer) return;
+
+    // Increment buttons
+    cartItemsContainer
+      .querySelectorAll(".increment-quantity")
+      .forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const item = e.currentTarget.closest("[data-item-id]");
+          if (!item) return;
+
+          const id = item.getAttribute("data-item-id");
+          const quantityDisplay = item.querySelector(".quantity-display");
+          if (!quantityDisplay) return;
+
+          const currentQuantity = parseInt(quantityDisplay.textContent || "0");
+          updateQuantity(id, currentQuantity + 1);
+
+          // Re-render cart to reflect changes
+          renderCart();
+        });
+      });
+
+    // Decrement buttons
+    cartItemsContainer
+      .querySelectorAll(".decrement-quantity")
+      .forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const item = e.currentTarget.closest("[data-item-id]");
+          if (!item) return;
+
+          const id = item.getAttribute("data-item-id");
+          const quantityDisplay = item.querySelector(".quantity-display");
+          if (!quantityDisplay) return;
+
+          const currentQuantity = parseInt(quantityDisplay.textContent || "0");
+          if (currentQuantity > 1) {
+            updateQuantity(id, currentQuantity - 1);
+
+            // Re-render cart to reflect changes
+            renderCart();
+          }
+        });
+      });
+
+    // Remove buttons
+    cartItemsContainer.querySelectorAll(".remove-item").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const item = e.currentTarget.closest("[data-item-id]");
+        if (!item) return;
+
+        const id = item.getAttribute("data-item-id");
+        removeFromCart(id);
+
+        // Re-render cart to reflect changes
+        renderCart();
+      });
+    });
+  }
+
+  function renderCart() {
+    if (!cartItemsContainer || !emptyCartMessage || !cartTotalElement) return;
+
+    const items = getCart();
+    const subtotal = getCartTotal();
+
+    // Update subtotal
+    cartTotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+
+    // Clear current items
+    cartItemsContainer.innerHTML = "";
+
+    // Show empty message or render items
+    if (items.length === 0) {
+      emptyCartMessage.classList.remove("hidden");
+      cartItemsContainer.classList.add("hidden");
+    } else {
+      emptyCartMessage.classList.add("hidden");
+      cartItemsContainer.classList.remove("hidden");
+
+      // Render each item
+      items.forEach((item) => {
+        const itemElement = document.createElement("div");
+        itemElement.className =
+          "flex flex-col sm:flex-row items-center gap-4 py-4 border-b border-base-300 last:border-0";
+        itemElement.setAttribute("data-item-id", item.id);
+
+        itemElement.innerHTML = `
+          <div class="flex-grow">
+            <h3 class="font-medium">${item.name}</h3>
+            <p class="text-sm opacity-70">₹${item.price.toFixed(2)} each</p>
+          </div>
+
+          <div class="flex items-center">
+            <button
+              class="decrement-quantity btn btn-circle btn-sm btn-ghost"
+              aria-label="Decrease quantity"
+            >
+              <span class="sr-only">Decrease</span>
+              <span aria-hidden="true">-</span>
+            </button>
+
+            <span class="quantity-display mx-2 w-8 text-center">${item.quantity}</span>
+
+            <button
+              class="increment-quantity btn btn-circle btn-sm btn-ghost"
+              aria-label="Increase quantity"
+            >
+              <span class="sr-only">Increase</span>
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+
+          <div class="text-right">
+            <p class="font-semibold">₹${(item.price * item.quantity).toFixed(2)}</p>
+            <button
+              class="remove-item btn btn-ghost btn-xs text-error"
+              aria-label="Remove item"
+            >
+              Remove
+            </button>
+          </div>
+        `;
+
+        if (cartItemsContainer) {
+          cartItemsContainer.appendChild(itemElement);
+        }
+      });
+
+      // Initialize controls for the newly rendered items
+      initCartItemControls();
+    }
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener("DOMContentLoaded", initCartSidebar);
+
+  // For Astro View Transitions
+  document.addEventListener("astro:page-load", initCartSidebar);
+</script>

@@ -1,0 +1,77 @@
+---
+// Button.astro
+interface Props {
+  variant?: "primary" | "outline" | "default";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  id?: string;
+  href?: string;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
+}
+
+const {
+  variant = "default",
+  size = "md",
+  className = "",
+  id = "",
+  href,
+  type = "button",
+  disabled = false,
+  ...rest
+} = Astro.props;
+
+const sizeClasses = {
+  sm: "btn-sm text-sm px-3 py-1",
+  md: "text-base px-4 py-2",
+  lg: "btn-lg text-lg px-6 py-3",
+};
+
+const baseClasses =
+  "btn font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 delay-150 duration-300 ease-in-out";
+
+const variantClasses = {
+  default: "btn-neutral",
+  primary:
+    "bg-primary hover:opacity-80",
+  outline:
+    "bg-transparent text-primary border border-primary hover:bg-primary hover:text-neutral-content hover:opacity-80",
+};
+
+const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+---
+
+{
+  href ? (
+    <a href={href} class={classes} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} id={id} class={classes} disabled={disabled} {...rest}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  /* Additional custom styles that can't be handled by Tailwind */
+  /* .btn-primary {
+    background: linear-gradient(27deg, #59b51e 0%, #95d239 100%);
+  } */
+  /* .btn-primary:active,
+  .btn-primary:hover,
+  .btn-primary:focus,
+  .btn-primary.active {
+    background: linear-gradient(27deg, #59b51e 0%, #95d239 100%);
+    opacity: 0.8;
+  }
+  .btn-outline-primary {
+    background: transparent;
+  }
+  .btn-outline-primary:active,
+  .btn-outline-primary:hover,
+  .btn-outline-primary:focus,
+  .btn-outline-primary.active {
+    background: linear-gradient(27deg, #59b51e 0%, #95d239 100%);
+  } */
+</style>

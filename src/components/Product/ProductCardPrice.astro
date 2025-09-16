@@ -1,0 +1,44 @@
+---
+import Heading from "../ui/Heading.astro";
+
+interface Props {
+  total?: number;
+  mrp?: number;
+  price?: number;
+  discount?: number;
+}
+
+const { total, mrp, price, discount } = Astro.props;
+
+// Use price first, then total, then mrp as fallback
+const finalPrice = price !== undefined ? price : total !== undefined ? total : mrp || 0;
+const originalPrice = mrp || finalPrice;
+const discountPercent = discount || 0;
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
+};
+
+const hasDiscount = discountPercent > 0 && originalPrice > finalPrice;
+---
+
+<div class="flex flex-col">
+  <div class="flex items-center gap-2">
+    <Heading fontweight="normal" size="sm">
+      {formatCurrency(finalPrice)}
+    </Heading>
+    {hasDiscount && (
+      <span class="text-xs text-muted line-through">
+        {formatCurrency(originalPrice)}
+      </span>
+    )}
+  </div>
+  {hasDiscount && (
+    <span class="text-xs text-success font-semibold">
+      {discountPercent.toFixed(0)}% OFF
+    </span>
+  )}
+</div>

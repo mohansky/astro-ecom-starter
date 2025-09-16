@@ -1,0 +1,36 @@
+--- 
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { getUser } from "@/lib/auth-utils";
+
+const user = await getUser(Astro);
+
+// This should be handled by middleware, but double-check
+if (!user) {
+  return Astro.redirect("/admin/login");
+}
+---
+
+<Layout title="Dashboard">
+  <ProfileLayout>
+    <Container width="marginy">
+      <div class="max-w-4xl mx-auto">
+        <!-- Welcome Section -->
+        <div class="hero bg-base-200 rounded-box mb-8">
+          <div class="hero-content text-center">
+            <div class="max-w-md">
+              <h1 class="text-4xl font-bold">Welcome!</h1>
+              <p class="py-4 text-lg text-balance">
+                Hello {user.name}, your accout was successfully created. But it
+                needs to be verified before you get full access. Please contact
+                site admin at manubal@gmail.com.
+              </p>
+              <div class="badge badge-primary badge-lg">{user.email}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </ProfileLayout>
+</Layout>

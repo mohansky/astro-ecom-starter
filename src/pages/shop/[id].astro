@@ -1,0 +1,60 @@
+---
+export const prerender = false; // Server-side rendering for dynamic DB products
+import ImageFeatureSlider from "@/components/Product/ImageFeatureSlider.astro";
+import ProductCardPrice from "@/components/Product/ProductCardPrice.astro";
+import ProductDescription from "@/components/Product/ProductDescription.astro";
+import ProductDetails from "@/components/Product/ProductDetails.astro";
+import ProductSpecs from "@/components/Product/ProductSpecs.astro";
+import AddToCartButton from "@/components/ui/AddToCartButton.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Layout from "@/layouts/Layout.astro";
+import { getProductById, type Product } from "@/lib/db";
+
+// Get product from database
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/404');
+}
+
+let product: Product | null = null;
+try {
+  product = await getProductById(id as string);
+} catch (error) {
+  console.error("Error fetching product:", error);
+}
+
+// If no product found, return 404
+if (!product) {
+  return Astro.redirect('/404');
+}
+---
+
+<Layout>
+  <Container width="marginxy">
+    <div class="grid lg:grid-cols-2 gap-8">
+      <ImageFeatureSlider subDirectory={product.imagePath} />
+      <div class="space-y-10">
+        <Heading size="xl" class="mb-10">{product.name}</Heading>
+        <ProductDescription description={product.description || ""} />
+        <ProductDetails product={product} />
+        <ProductSpecs product={product} />
+        <ProductCardPrice
+          price={product.price}
+          mrp={product.mrp}
+          discount={product.discount}
+        />
+        <AddToCartButton
+          id={product.id}
+          name={product.name}
+          price={product.price}
+          weight={product.weight || 0}
+          gstPercentage={product.gstPercentage}
+          taxInclusive={product.taxInclusive}
+          image={product.imagePath ? `/products/${product.imagePath}/${product.imagePath}.jpg` : undefined}
+        />
+      </div>
+    </div>
+  </Container>
+</Layout>

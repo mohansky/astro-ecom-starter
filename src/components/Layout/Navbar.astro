@@ -1,0 +1,213 @@
+---
+import MiniCart from "../ui/MiniCart.astro";
+
+interface NavLink {
+  text: string;
+  link: string;
+}
+
+interface Props {
+  links: NavLink[];
+}
+
+const { links } = Astro.props;
+ 
+const currentPath = Astro.url.pathname;
+---
+
+<script>
+  let lastScrollTop = 0;
+  const navbar = document.getElementById("navbar");
+  const drawerToggle = document.getElementById(
+    "my-drawer-3"
+  ) as HTMLInputElement;
+  const drawerSide = document.querySelector(".drawer-side") as HTMLElement;
+ 
+  if (drawerToggle && drawerSide) {
+    drawerToggle.addEventListener("change", () => {
+      if (drawerToggle.checked) {
+        // Fade in
+        drawerSide.style.opacity = "0";
+        drawerSide.style.display = "block";
+        setTimeout(() => {
+          drawerSide.style.opacity = "1";
+        }, 10);
+      } else {
+        // Fade out
+        drawerSide.style.opacity = "0";
+        setTimeout(() => {
+          drawerSide.style.display = "none";
+        }, 300); // Match this with your transition duration
+      }
+    });
+  }
+
+  window.addEventListener("scroll", () => {
+    let scrollTop = window.scrollY || document.documentElement.scrollTop;
+    if (scrollTop > lastScrollTop) {
+      navbar?.classList.add("-translate-y-full");
+    } else {
+      navbar?.classList.remove("-translate-y-full");
+    }
+    lastScrollTop = scrollTop;
+  });
+</script>
+
+<style>
+  .drawer-side {
+    transition: opacity 0.3s ease-in-out;
+    opacity: 0;
+    display: none;
+  }
+
+  .drawer-toggle:checked ~ .drawer-side {
+    opacity: 1;
+    display: block;
+  }
+</style>
+
+<div class="drawer drawer-end z-30 py-0">
+  <input id="my-drawer-3" type="checkbox" class="drawer-toggle" />
+  <div class="drawer-content flex flex-col">
+    <div
+      id="navbar"
+      class="bg-primary border-b items-center z-10 w-full fixed top-0 shadow-none transition-transform px-2 py-3 lg:py-0"
+    >
+      <div
+        class="mx-auto flex justify-between items-center w-full lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl"
+      >
+        <div class="">
+          <a href="/" class="text-xl">
+            <div class="h-auto">
+              <span>
+                <h1>
+                  <b>MANO</b>BAL
+                </h1>
+              </span>
+            </div>
+
+            <p class="sr-only">MANOBAL</p>
+          </a>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="flex gap-3 lg:hidden">
+          <MiniCart id="cart-count-mobile" />
+          <label
+            for="my-drawer-3"
+            aria-label="open sidebar"
+            class="btn btn-circle btn-ghost"
+          >
+            <span class="sr-only">Open menu</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+          </label>
+        </div>
+
+        <!-- Desktop Menu -->
+        <div class="hidden flex-none lg:block">
+          <div class="flex items-center">
+            <ul class="menu menu-horizontal py-0">
+              {
+                links.map(({ text, link }) => {
+                  const isActive =
+                    currentPath === link ||
+                    (link !== "/" && currentPath.startsWith(link));
+                  return (
+                    <li class="ml-5">
+                      <a
+                        href={link}
+                        title={`Go to ${text}`}
+                        class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {text}
+                      </a>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+            <div class="ml-6 flex items-center gap-4">
+              <MiniCart id="cart-count-desktop" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Page content here -->
+  </div>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="drawer-side z-30 py-3">
+    <label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="menu bg-primary min-h-full w-full px-2" aria-label="Navigation">
+      <a href="/" class="text-xl">
+        <div class="w-20 h-auto">
+          <span>
+            <h1>
+              <b>MANO</b>BAL
+            </h1>
+          </span>
+        </div>
+        <p class="sr-only">MANOBAL</p>
+      </a>
+
+      <span id="close-menu-label" class="sr-only">Close menu</span>
+      <label
+        for="my-drawer-3"
+        aria-label="close sidebar"
+        aria-labelledby="close-menu-label"
+        class="absolute top-0 right-0 mr-2 z-30 btn btn-circle"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-x"
+          ><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg
+        >
+      </label>
+
+      <ul class="space-y-10 pt-10" aria-label="Navigation">
+        {
+          links.map(({ text, link }) => {
+            const isActive =
+              currentPath === link ||
+              (link !== "/" && currentPath.startsWith(link));
+            return (
+              <li>
+                <a
+                  href={link}
+                  title={`Go to ${text}`}
+                  class={`mx-auto ${isActive ? "active-link" : ""}`}
+                  aria-label={`Go to ${text}`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {text}
+                </a>
+              </li>
+            );
+          })
+        } 
+      </ul>
+    </div>
+  </div>
+</div>

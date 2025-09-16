@@ -1,0 +1,137 @@
+---
+// src/components/AddToCartButton.astro
+interface Props {
+  id: number | string;
+  name: string;
+  price: number;
+  weight: number;
+  gstPercentage: number;
+  taxInclusive: boolean;
+  image?: string;
+  className?: string;
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "lg" | "md" | "sm" | "xs";
+}
+
+const {
+  id,
+  name,
+  price,
+  weight,
+  gstPercentage,
+  taxInclusive,
+  image,
+  className = "",
+  variant = "primary",
+  size = "md"
+} = Astro.props;
+
+const variantClass = 
+  variant === "primary" ? "btn-primary" : 
+  variant === "secondary" ? "btn-secondary" : 
+  variant === "outline" ? "btn-outline" :
+  variant === "ghost" ? "btn-ghost" : "btn-primary";
+
+const sizeClass = 
+  size === "lg" ? "btn-lg" : 
+  size === "md" ? "" : 
+  size === "sm" ? "btn-sm" :
+  size === "xs" ? "btn-xs" : "";
+---
+
+<button
+  class={`add-to-cart btn ${variantClass} ${sizeClass} ${className}`}
+  data-id={id.toString()}
+  data-name={name}
+  data-price={price}
+  data-weight={weight}
+  data-gst-percentage={gstPercentage}
+  data-tax-inclusive={taxInclusive}
+  data-image={image}
+  aria-label="Add to cart"
+>
+  <slot>Add to Cart</slot>
+</button>
+
+<script is:inline>
+  // Client-side cart functions
+  function addToCart(item) {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingItem = cart.find(cartItem => cartItem.id === item.id);
+
+      if (existingItem) {
+        existingItem.quantity = (existingItem.quantity || 0) + 1;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // Dispatch cart updated event
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { cart } }));
+
+      return true;
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      return false;
+    }
+  }
+
+  // Initialize add-to-cart buttons
+  function initAddToCartButtons() {
+    const buttons = document.querySelectorAll('.add-to-cart');
+
+    buttons.forEach(button => {
+      // Skip if already initialized
+      if (button.dataset.initialized === 'true') return;
+
+      button.dataset.initialized = 'true';
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const target = e.currentTarget;
+        const id = target.dataset.id;
+        const name = target.dataset.name;
+        const price = parseFloat(target.dataset.price || '0');
+        const weight = parseFloat(target.dataset.weight || '0');
+        const gstPercentage = parseFloat(target.dataset.gstPercentage || '5');
+        const taxInclusive = target.dataset.taxInclusive === 'true';
+        const image = target.dataset.image;
+
+        if (id && name) {
+          const success = addToCart({ id, name, price, weight, gstPercentage, taxInclusive, image });
+
+          if (success) {
+            // Show success feedback
+            const originalText = target.innerHTML;
+            target.textContent = 'Added!';
+            target.classList.add('btn-success');
+
+            setTimeout(() => {
+              target.innerHTML = originalText;
+              target.classList.remove('btn-success');
+            }, 1000);
+          } else {
+            // Show error feedback
+            const originalText = target.innerHTML;
+            target.textContent = 'Error!';
+            target.classList.add('btn-error');
+
+            setTimeout(() => {
+              target.innerHTML = originalText;
+              target.classList.remove('btn-error');
+            }, 2000);
+          }
+        }
+      });
+    });
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', initAddToCartButtons);
+
+  // For Astro View Transitions
+  document.addEventListener('astro:page-load', initAddToCartButtons);
+</script>

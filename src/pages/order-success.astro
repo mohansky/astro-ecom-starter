@@ -1,0 +1,45 @@
+---
+// src/pages/order-success.astro
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+
+// Get the order ID from URL query params
+const orderId = Astro.url.searchParams.get('id');
+---
+
+<Layout title="Order Success | Manubal">
+  <Container>
+    <div class="container mx-auto px-4 py-12 text-center">
+      <div class="max-w-md mx-auto">
+        <div class="text-green-500 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        
+        <h1 class="text-3xl font-bold mb-4">Thank You for Your Order!</h1>
+        
+        {orderId && (
+          <p class="text-gray-600 mb-8">Order #{orderId} has been placed successfully.</p>
+        )}
+        
+        <p class="text-gray-600 mb-8">
+          We've received your order and will begin processing it right away. You'll receive an email confirmation shortly.
+        </p>
+        
+        <div class="mt-8 space-y-4">
+          <a 
+            href="/shop" 
+            class="bg-primary text-primary-foreground py-3 px-6 rounded text-center inline-block font-medium hover:bg-primary/90 transition"
+          >
+            Continue Shopping
+          </a>
+          
+          <div class="py-2">
+            <a href="/" class="text-gray-600 hover:text-gray-900">Return to Home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Layout>
