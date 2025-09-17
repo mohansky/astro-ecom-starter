@@ -8,8 +8,6 @@ command = "pnpm build"
 
 [site]
 bucket = "./dist"
-include = ["**/*"]
-exclude = ["_worker.js"]
 
 # KV Namespace for sessions (required by Better Auth with Cloudflare)
 [[kv_namespaces]]
