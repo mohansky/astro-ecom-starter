@@ -55,8 +55,8 @@ export default defineConfig({
         optional: false,
       }),
       PUBLIC_BETTER_AUTH_URL: envField.string({
-        context: "client",
-        access: "public",
+        context: "server",
+        access: "secret",
         optional: false,
       }),
       RAZORPAY_KEY_ID: envField.string({
@@ -70,8 +70,8 @@ export default defineConfig({
         optional: false,
       }),
       PUBLIC_RAZORPAY_KEY_ID: envField.string({
-        context: "client",
-        access: "public",
+        context: "server",
+        access: "secret",
         optional: false,
       }),
     },
