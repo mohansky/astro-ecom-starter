@@ -8,4 +8,9 @@ binding = "ASSETS"
 directory = "./dist"
 
 [observability]
-enabled = true 
+enabled = true
+
+[vars]
+BETTER_AUTH_URL = "https://astro-ecom-starter.mohansky.workers.dev"
+PUBLIC_BETTER_AUTH_URL = "https://astro-ecom-starter.mohansky.workers.dev"
+PUBLIC_RAZORPAY_KEY_ID = "rzp_test_18NAAwWRIPJTLv" 
