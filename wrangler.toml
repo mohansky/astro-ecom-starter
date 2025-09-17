@@ -8,8 +8,8 @@ command = "pnpm build"
 # KV Namespace for sessions (required by Better Auth with Cloudflare)
 [[kv_namespaces]]
 binding = "SESSION"
-preview_id = "preview_sessions"
-id = "production_sessions"
+preview_id = "f32a6a1042324a5ea4af821526b87206"
+id = "a4f9a1d79bd049d4b5b81e3dea982163"
 
 [[env.preview.vars]]
 # Add preview environment variables here
