@@ -1,12 +1,15 @@
 name = "astro-ecom-starter"
+main = "./dist/_worker.js"
 compatibility_date = "2025-09-16"
 compatibility_flags = ["nodejs_compat"]
 
 [build]
 command = "pnpm build"
 
-[assets]
-directory = "./dist"
+[site]
+bucket = "./dist"
+include = ["**/*"]
+exclude = ["_worker.js"]
 
 # KV Namespace for sessions (required by Better Auth with Cloudflare)
 [[kv_namespaces]]
