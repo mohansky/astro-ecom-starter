@@ -1,32 +1,14 @@
 name = "astro-ecom-starter"
-main = "./dist/_worker.js"
-compatibility_date = "2025-09-16"
-compatibility_flags = ["nodejs_compat"]
+main = "./dist/_worker.js/index.js"
+compatibility_date = "2025-03-25"
+compatibility_flags = [ "nodejs_compat" ]
 
 [build]
 command = "pnpm build"
 
-[site]
-bucket = "./dist"
+[assets]
+binding = "ASSETS"
+directory = "./dist"
 
-# KV Namespace for sessions (required by Better Auth with Cloudflare)
-[[kv_namespaces]]
-binding = "SESSION"
-preview_id = "f32a6a1042324a5ea4af821526b87206"
-id = "a4f9a1d79bd049d4b5b81e3dea982163"
-
-[[env.preview.vars]]
-# Add preview environment variables here
-
-[[env.production.vars]]
-# Add production environment variables here
-
-# Add your environment variables to Cloudflare Workers secrets:
-# npx wrangler secret put TURSO_DATABASE_URL
-# npx wrangler secret put TURSO_AUTH_TOKEN
-# npx wrangler secret put BETTER_AUTH_SECRET
-# npx wrangler secret put BETTER_AUTH_URL
-# npx wrangler secret put PUBLIC_BETTER_AUTH_URL
-# npx wrangler secret put RESEND_API_KEY
-# npx wrangler secret put RAZORPAY_KEY_ID
-# npx wrangler secret put RAZORPAY_KEY_SECRET
+[observability]
+enabled = true 
