@@ -59,6 +59,21 @@ export default defineConfig({
         access: "public",
         optional: false,
       }),
+      RAZORPAY_KEY_ID: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      RAZORPAY_KEY_SECRET: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      PUBLIC_RAZORPAY_KEY_ID: envField.string({
+        context: "client",
+        access: "public",
+        optional: false,
+      }),
     },
   },
   integrations: [icon(), mdx(), react()],
