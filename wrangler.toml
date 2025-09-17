@@ -5,6 +5,9 @@ compatibility_flags = ["nodejs_compat"]
 [build]
 command = "pnpm build"
 
+[assets]
+directory = "./dist"
+
 # KV Namespace for sessions (required by Better Auth with Cloudflare)
 [[kv_namespaces]]
 binding = "SESSION"
