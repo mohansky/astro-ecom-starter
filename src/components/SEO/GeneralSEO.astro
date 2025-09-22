@@ -1,0 +1,203 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  image?: string;
+  type?: "website" | "article" | "profile";
+  keywords?: string[];
+  author?: {
+    name: string;
+    email?: string;
+    url?: string;
+  };
+  siteName?: string;
+  twitterHandle?: string;
+  noindex?: boolean;
+  breadcrumbs?: Array<{
+    name: string;
+    url: string;
+  }>;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  image,
+  type = "website",
+  keywords = [],
+  author,
+  siteName = "Astro Ecom",
+  twitterHandle,
+  noindex = false,
+  breadcrumbs
+} = Astro.props;
+
+const siteUrl = Astro.site?.toString() || 'https://astro-ecom-starter.mohansky.workers.dev';
+const currentUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const canonicalUrl = canonical || currentUrl;
+
+// Default values
+const defaultTitle = title || siteName;
+const defaultDescription = description || "Quality products with fast shipping and excellent customer service.";
+const defaultImage = image || `${siteUrl}/og-image.jpg`;
+
+// Generate robots meta
+const robotsContent = noindex ? "noindex, nofollow" : "index, follow";
+
+// Generate breadcrumb schema
+function generateBreadcrumbSchema() {
+  if (!breadcrumbs || breadcrumbs.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": crumb.name,
+      "item": `${siteUrl}${crumb.url}`
+    }))
+  };
+}
+
+// Generate website/organization schema
+function generateWebsiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": siteName,
+    "url": siteUrl,
+    "description": defaultDescription,
+    "author": author ? {
+      "@type": "Person",
+      "name": author.name,
+      "email": author.email,
+      "url": author.url
+    } : undefined,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${siteUrl}/shop?search={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+}
+
+// Generate page-specific schema
+function generatePageSchema() {
+  if (type === "article") {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": defaultTitle,
+      "description": defaultDescription,
+      "image": defaultImage,
+      "author": author ? {
+        "@type": "Person",
+        "name": author.name,
+        "email": author.email,
+        "url": author.url
+      } : undefined,
+      "publisher": {
+        "@type": "Organization",
+        "name": siteName,
+        "url": siteUrl
+      },
+      "url": currentUrl,
+      "datePublished": new Date().toISOString(),
+      "dateModified": new Date().toISOString()
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": defaultTitle,
+    "description": defaultDescription,
+    "url": currentUrl,
+    "image": defaultImage,
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": siteName,
+      "url": siteUrl
+    }
+  };
+}
+
+const breadcrumbSchema = generateBreadcrumbSchema();
+const websiteSchema = generateWebsiteSchema();
+const pageSchema = generatePageSchema();
+---
+
+<!-- Primary Meta Tags -->
+<title>{defaultTitle}</title>
+<meta name="title" content={defaultTitle} />
+<meta name="description" content={defaultDescription} />
+<meta name="robots" content={robotsContent} />
+<meta name="googlebot" content={robotsContent} />
+<link rel="canonical" href={canonicalUrl} />
+
+<!-- Keywords -->
+{keywords.length > 0 && (
+  <meta name="keywords" content={keywords.join(", ")} />
+)}
+
+<!-- Author -->
+{author && (
+  <meta name="author" content={author.name} />
+)}
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content={type} />
+<meta property="og:url" content={currentUrl} />
+<meta property="og:title" content={defaultTitle} />
+<meta property="og:description" content={defaultDescription} />
+<meta property="og:image" content={defaultImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:locale" content="en_US" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={currentUrl} />
+<meta name="twitter:title" content={defaultTitle} />
+<meta name="twitter:description" content={defaultDescription} />
+<meta name="twitter:image" content={defaultImage} />
+{twitterHandle && (
+  <>
+    <meta name="twitter:site" content={`@${twitterHandle}`} />
+    <meta name="twitter:creator" content={`@${twitterHandle}`} />
+  </>
+)}
+
+<!-- Additional SEO Meta -->
+<meta name="theme-color" content="#000000" />
+<meta name="msapplication-TileColor" content="#000000" />
+<meta name="application-name" content={siteName} />
+
+<!-- Favicon and Icons -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<!-- DNS Prefetch for Performance -->
+<link rel="dns-prefetch" href="//fonts.googleapis.com" />
+<link rel="dns-prefetch" href="//www.googletagmanager.com" />
+
+<!-- Structured Data -->
+{websiteSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+)}
+
+{pageSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(pageSchema)} />
+)}
+
+{breadcrumbSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+)}
+
+<!-- Preconnect for Performance -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

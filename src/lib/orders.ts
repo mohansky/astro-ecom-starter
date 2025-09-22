@@ -67,6 +67,7 @@ export interface OrderItem {
   id: number;
   productId: string;
   productName: string;
+  sku?: string;
   price: number;
   quantity: number;
   total: number;
@@ -117,6 +118,128 @@ export async function getAllOrders(): Promise<OrderSummary[]> {
   }
 }
 
+// Function to get orders with pagination and filtering
+export async function getOrdersPaginated(params: {
+  limit: number;
+  offset: number;
+  search?: string;
+  status?: string;
+}): Promise<{
+  orders: OrderSummary[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+  statuses: string[];
+}> {
+  try {
+    // Initialize orders table on first use
+    await initializeOrdersTable();
+
+    const { limit, offset, search = '', status = '' } = params;
+
+    // Build WHERE clause for filtering
+    let whereClause = '';
+    const whereArgs: any[] = [];
+
+    if (search || status) {
+      const conditions: string[] = [];
+
+      if (search) {
+        conditions.push(`(
+          (c.first_name || ' ' || c.last_name) LIKE ? OR
+          c.email LIKE ? OR
+          CAST(o.id AS TEXT) LIKE ?
+        )`);
+        const searchTerm = `%${search}%`;
+        whereArgs.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      if (status) {
+        conditions.push('o.status = ?');
+        whereArgs.push(status);
+      }
+
+      whereClause = `WHERE ${conditions.join(' AND ')}`;
+    }
+
+    // Get total count for pagination
+    const countResult = await db.execute({
+      sql: `
+        SELECT COUNT(DISTINCT o.id) as total
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.id
+        ${whereClause}
+      `,
+      args: whereArgs
+    });
+
+    const total = Number(countResult.rows[0].total);
+
+    // Get orders with pagination
+    const result = await db.execute({
+      sql: `
+        SELECT
+          o.id,
+          (c.first_name || ' ' || c.last_name) AS customer_name,
+          o.total,
+          o.status,
+          o.created_at,
+          o.coupon_code,
+          o.coupon_discount,
+          COUNT(oi.id) AS item_count
+        FROM
+          orders o
+        JOIN
+          customers c ON o.customer_id = c.id
+        LEFT JOIN
+          order_items oi ON o.id = oi.order_id
+        ${whereClause}
+        GROUP BY
+          o.id
+        ORDER BY
+          o.created_at DESC
+        LIMIT ? OFFSET ?
+      `,
+      args: [...whereArgs, limit, offset]
+    });
+
+    // Get all available statuses for filter
+    const statusResult = await db.execute({
+      sql: `SELECT DISTINCT status FROM orders ORDER BY status`
+    });
+
+    const orders = result.rows.map(row => ({
+      id: Number(row.id),
+      customerName: row.customer_name as string,
+      total: Number(row.total),
+      status: row.status as string,
+      createdAt: row.created_at as string,
+      itemCount: Number(row.item_count),
+      couponCode: row.coupon_code as string | null,
+      couponDiscount: Number(row.coupon_discount || 0)
+    }));
+
+    const statuses = statusResult.rows.map(row => row.status as string);
+
+    return {
+      orders,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total
+      },
+      statuses
+    };
+  } catch (error) {
+    console.error('Error fetching paginated orders:', error);
+    throw error;
+  }
+}
+
 // Function to get detailed order information
 export async function getOrderById(orderId: number): Promise<OrderDetail | null> {
   try {
@@ -151,11 +274,13 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
 
     const order = orderResult.rows[0];
 
-    // Get order items
+    // Get order items with SKU from products table
     const itemsResult = await db.execute({
       sql: `
-        SELECT * FROM order_items
-        WHERE order_id = ?
+        SELECT oi.*, p.sku
+        FROM order_items oi
+        LEFT JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = ?
       `,
       args: [orderId]
     });
@@ -164,6 +289,7 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
       id: Number(item.id),
       productId: item.product_id as string,
       productName: item.product_name as string,
+      sku: item.sku as string || undefined,
       price: Number(item.price),
       quantity: Number(item.quantity),
       total: Number(item.total)
@@ -195,9 +321,22 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
   }
 }
 
-// Function to update order status
-export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
+// Function to update order status with history tracking
+export async function updateOrderStatus(orderId: number, status: string, changedBy: string, notes?: string): Promise<void> {
   try {
+    // First, get the current order status
+    const currentOrderResult = await db.execute({
+      sql: 'SELECT status FROM orders WHERE id = ?',
+      args: [orderId]
+    });
+
+    if (currentOrderResult.rows.length === 0) {
+      throw new Error(`Order ${orderId} not found`);
+    }
+
+    const currentStatus = currentOrderResult.rows[0].status as string;
+
+    // Update the order status
     await db.execute({
       sql: `
         UPDATE orders
@@ -206,8 +345,67 @@ export async function updateOrderStatus(orderId: number, status: string): Promis
       `,
       args: [status, getISTDatetime(), orderId]
     });
+
+    // Record the status change in history
+    await recordOrderStatusHistory(orderId, currentStatus, status, changedBy, notes);
+
   } catch (error) {
     console.error(`Error updating order ${orderId} status:`, error);
+    throw error;
+  }
+}
+
+// Function to record order status history
+async function recordOrderStatusHistory(
+  orderId: number,
+  previousStatus: string,
+  newStatus: string,
+  changedBy: string,
+  notes?: string
+): Promise<void> {
+  try {
+    const historyId = crypto.randomUUID();
+    await db.execute({
+      sql: `
+        INSERT INTO order_status_history (id, orderId, previousStatus, newStatus, changedBy, notes, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [historyId, orderId, previousStatus, newStatus, changedBy, notes || null, getISTDatetime()]
+    });
+  } catch (error) {
+    console.error(`Error recording status history for order ${orderId}:`, error);
+    throw error;
+  }
+}
+
+// Function to get order status history
+export async function getOrderStatusHistory(orderId: number) {
+  try {
+    const result = await db.execute({
+      sql: `
+        SELECT osh.*, u.username as changedByUsername, u.name as changedByName, u.email as changedByEmail
+        FROM order_status_history osh
+        LEFT JOIN user u ON osh.changedBy = u.id
+        WHERE osh.orderId = ?
+        ORDER BY osh.createdAt DESC
+      `,
+      args: [orderId]
+    });
+
+    return result.rows.map(row => ({
+      id: row.id as string,
+      orderId: row.orderId as number,
+      previousStatus: row.previousStatus as string | null,
+      newStatus: row.newStatus as string,
+      changedBy: row.changedBy as string,
+      changedByUsername: row.changedByUsername as string,
+      changedByName: row.changedByName as string,
+      changedByEmail: row.changedByEmail as string,
+      notes: row.notes as string | null,
+      createdAt: row.createdAt as string,
+    }));
+  } catch (error) {
+    console.error(`Error fetching status history for order ${orderId}:`, error);
     throw error;
   }
 }

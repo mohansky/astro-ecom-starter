@@ -70,7 +70,7 @@ import Layout from "@/layouts/Layout.astro";
 
       <p class="text-center">
         Already have an account?{" "}
-        <a href="/admin/login" class="link link-primary"> Sign in </a>
+        <a href="/login" class="link link-primary"> Sign in </a>
       </p>
     </div>
   </div>
@@ -82,7 +82,7 @@ import Layout from "@/layouts/Layout.astro";
   import { createAuthClient } from "better-auth/client";
  
   const authClient = createAuthClient({
-    baseURL: import.meta.env.PUBLIC_AUTH_BASE_URL || window.location.origin,
+    baseURL: import.meta.env.PUBLIC_BETTER_AUTH_URL || window.location.origin,
   });
 
   document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
@@ -113,7 +113,7 @@ import Layout from "@/layouts/Layout.astro";
        
       // Success - redirect to dashboard
       if (data && !error) {
-        window.location.href = '/admin/dashboard';
+        window.location.href = '/admin';
       } else {
         // Show error
         errorMessage.textContent = error?.message || 'Registration failed';

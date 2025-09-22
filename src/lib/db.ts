@@ -46,9 +46,73 @@ export async function migrateTaxFields() {
       sql: `UPDATE products SET taxInclusive = 0 WHERE taxInclusive IS NULL`
     });
 
-    console.log('Tax fields migration completed successfully');
+    // Tax fields migration completed
   } catch (error) {
     console.error('Error migrating tax fields:', error);
+  }
+}
+
+// Database migration for slug field
+export async function migrateSlugField() {
+  try {
+    // Add slug column
+    await rawDb.execute({
+      sql: `ALTER TABLE products ADD COLUMN slug TEXT`
+    }).catch(() => {}); // Ignore error if column already exists
+
+    // Generate slugs for existing products that don't have one
+    const productsWithoutSlug = await rawDb.execute({
+      sql: `SELECT id, name FROM products WHERE slug IS NULL OR slug = ''`
+    });
+
+    for (const product of productsWithoutSlug.rows) {
+      const slug = generateSlug(product.name as string);
+      await rawDb.execute({
+        sql: `UPDATE products SET slug = ? WHERE id = ?`,
+        args: [slug, product.id]
+      });
+    }
+
+    // Slug field migration completed
+  } catch (error) {
+    console.error('Error migrating slug field:', error);
+  }
+}
+
+// Database migration for SKU field
+export async function migrateSKUField() {
+  try {
+    // Starting SKU field migration
+
+    // Generate SKUs for existing products that don't have one
+    const productsWithoutSKU = await rawDb.execute({
+      sql: `SELECT id, name, category FROM products WHERE sku IS NULL OR sku = ''`
+    });
+
+    // Found products without SKUs: ${productsWithoutSKU.rows.length}
+
+    for (const product of productsWithoutSKU.rows) {
+      try {
+        const sku = await generateSKU(
+          product.name as string,
+          product.category as string,
+          product.id as string
+        );
+
+        await rawDb.execute({
+          sql: `UPDATE products SET sku = ? WHERE id = ?`,
+          args: [sku, product.id]
+        });
+
+        // Generated SKU for product
+      } catch (error) {
+        console.error(`Failed to generate SKU for product ${product.id}:`, error);
+      }
+    }
+
+    // SKU field migration completed
+  } catch (error) {
+    console.error('Error migrating SKU field:', error);
   }
 }
 
@@ -302,16 +366,75 @@ export async function updateOrderStatus(orderId: number, status: string) {
   }
 }
 
+// Helper function to generate slug from name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+}
+
+// Helper function to generate SKU from product name, category, and ID
+async function generateSKU(name: string, category: string, productId: string): Promise<string> {
+  // Get first 2 letters of product name (remove spaces and special chars)
+  const namePrefix = name
+    .replace(/[^a-zA-Z]/g, '') // Keep only letters
+    .toUpperCase()
+    .slice(0, 2)
+    .padEnd(2, 'X'); // Pad with X if less than 2 letters
+
+  // Get first 2 letters of category (remove spaces and special chars)
+  const categoryPrefix = category
+    .replace(/[^a-zA-Z]/g, '') // Keep only letters
+    .toUpperCase()
+    .slice(0, 2)
+    .padEnd(2, 'X'); // Pad with X if less than 2 letters
+
+  // Get first 6 characters of product ID
+  const idSuffix = productId.slice(0, 6).toUpperCase();
+
+  // Format: AA-BB-CCCCCC (first 2 of name - first 2 of category - first 6 of ID)
+  let baseSKU = `${namePrefix}${categoryPrefix}-${idSuffix}`;
+  let sku = baseSKU;
+  let counter = 1;
+
+  // Check for uniqueness and add counter if needed
+  while (true) {
+    try {
+      const existingProduct = await rawDb.execute({
+        sql: 'SELECT id FROM products WHERE sku = ?',
+        args: [sku]
+      });
+
+      if (existingProduct.rows.length === 0) {
+        return sku;
+      }
+
+      // SKU exists, try with a number suffix
+      sku = `${baseSKU}${counter}`;
+      counter++;
+    } catch (error) {
+      console.error('Error checking SKU uniqueness:', error);
+      // Fallback to random number if there's an error
+      sku = `${baseSKU}${Math.floor(Math.random() * 1000)}`;
+      return sku;
+    }
+  }
+}
+
 // Product Management Functions
 export interface Product {
   id: string;
   name: string;
+  slug: string;
+  sku: string;
   description?: string;
   category: string;
   subcategory?: string;
   price: number;
   mrp: number;
-  discount: number;
   stock: number;
   weight?: number;
   dimensions?: string;
@@ -330,23 +453,30 @@ export async function createProduct(productData: Omit<Product, 'id' | 'createdAt
     const productId = crypto.randomUUID();
     const now = getISTDatetime();
 
+    // Generate slug if not provided
+    const slug = productData.slug || generateSlug(productData.name);
+
+    // Generate SKU if not provided
+    const sku = productData.sku || await generateSKU(productData.name, productData.category, productId);
+
     const result = await rawDb.execute({
       sql: `
         INSERT INTO products (
-          id, name, description, category, subcategory, price, mrp, discount,
+          id, name, slug, sku, description, category, subcategory, price, mrp,
           stock, weight, dimensions, imagePath, tags, gstPercentage, taxInclusive,
           isActive, featured, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         productId,
         productData.name,
+        slug,
+        sku,
         productData.description || null,
         productData.category,
         productData.subcategory || null,
         productData.price,
         productData.mrp,
-        productData.discount || 0,
         productData.stock || 0,
         productData.weight || null,
         productData.dimensions || null,
@@ -414,12 +544,13 @@ export async function getProductById(productId: string): Promise<Product | null>
     return {
       id: row.id as string,
       name: row.name as string,
+      slug: row.slug as string,
+      sku: row.sku as string,
       description: row.description as string || undefined,
       category: row.category as string,
       subcategory: row.subcategory as string || undefined,
       price: row.price as number,
       mrp: row.mrp as number,
-      discount: row.discount as number || 0,
       stock: row.stock as number,
       weight: row.weight as number || undefined,
       dimensions: row.dimensions as string || undefined,
@@ -481,12 +612,13 @@ export async function getAllProducts(options: {
     const products = result.rows.map(row => ({
       id: row.id as string,
       name: row.name as string,
+      slug: row.slug as string,
+      sku: row.sku as string,
       description: row.description as string || undefined,
       category: row.category as string,
       subcategory: row.subcategory as string || undefined,
       price: row.price as number,
       mrp: row.mrp as number,
-      discount: row.discount as number || 0,
       stock: row.stock as number,
       weight: row.weight as number || undefined,
       dimensions: row.dimensions as string || undefined,
@@ -528,25 +660,28 @@ export async function bulkCreateProducts(products: Omit<Product, 'id' | 'created
 
     for (const productData of products) {
       const productId = crypto.randomUUID();
+      const slug = productData.slug || generateSlug(productData.name);
+      const sku = productData.sku || await generateSKU(productData.name, productData.category, productId);
 
       await rawDb.execute({
         sql: `
           INSERT INTO products (
-            id, name, description, category, subcategory, price, mrp, discount,
+            id, name, slug, sku, description, category, subcategory, price, mrp,
             stock, weight, dimensions, imagePath, tags, gstPercentage, taxInclusive,
             isActive, featured, createdAt, updatedAt
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         args: [
           productId,
           productData.name,
+          slug,
+          sku,
           productData.description || null,
           productData.category,
           productData.subcategory || null,
           productData.price,
           productData.mrp,
-          productData.discount || 0,
-          productData.stock || 0,
+            productData.stock || 0,
           productData.weight || null,
           productData.dimensions || null,
           productData.imagePath || null,

@@ -461,8 +461,6 @@ if (!user.emailVerified) {
     isDiscountsLoading = true;
 
     try {
-      console.log("Loading discounts...", { search, status, offset });
-
       showDiscountsLoading();
 
       const params = new URLSearchParams({
@@ -482,7 +480,6 @@ if (!user.emailVerified) {
       if (!response.ok) throw new Error("Failed to fetch discounts");
 
       const data = await response.json();
-      console.log("Discounts loaded:", data);
 
       if (!data.success) {
         throw new Error(data.error || "Failed to load discounts");
@@ -502,7 +499,6 @@ if (!user.emailVerified) {
       renderDiscounts(data.coupons);
       updateDiscountsPagination();
     } catch (error) {
-      console.error("Error loading discounts:", error);
       showDiscountsError("Failed to load discounts");
     } finally {
       isDiscountsLoading = false;
@@ -782,7 +778,6 @@ if (!user.emailVerified) {
         toastManager.show("Failed to load discount details", "error");
       }
     } catch (error) {
-      console.error("Error fetching discount:", error);
       toastManager.show("Failed to load discount details", "error");
     }
   }
@@ -816,7 +811,6 @@ if (!user.emailVerified) {
         throw new Error(data.error || "Failed to update discount status");
       }
     } catch (error) {
-      console.error("Error updating discount status:", error);
       toastManager.show("Failed to update discount status", "error");
     }
   }
@@ -849,7 +843,6 @@ if (!user.emailVerified) {
         throw new Error(data.error || "Failed to delete discount");
       }
     } catch (error) {
-      console.error("Error deleting discount:", error);
       toastManager.show("Failed to delete discount", "error");
     }
   }
@@ -916,7 +909,6 @@ if (!user.emailVerified) {
           throw new Error(result.error || "Failed to save discount");
         }
       } catch (error) {
-        console.error("Error saving discount:", error);
         toastManager.show("Failed to save discount: " + error.message, "error");
       } finally {
         saveBtn.disabled = false;
@@ -925,7 +917,6 @@ if (!user.emailVerified) {
     });
 
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("Loading discounts page...");
     setupDiscountsEventListeners();
     loadDiscounts();
   });

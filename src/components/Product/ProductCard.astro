@@ -4,7 +4,7 @@ import AddToCartButton from "../ui/AddToCartButton.astro";
 import Button from "../ui/Button.astro";
 import Heading from "../ui/Heading.astro";
 import Paragraph from "../ui/Paragraph.astro";
-import ImageFeatureSlider from "./ImageFeatureSlider.astro";
+import R2Image from "../ui/R2Image.astro";
 import ProductCardPrice from "./ProductCardPrice.astro";
 
 interface Props {
@@ -68,9 +68,24 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
 ---
 
 <div class="card bg-base-100">
-  <a href={slug} class="product-link">
+  <a href={`/shop/${slug}`} class="product-link" title={`View ${name} details`}>
     <figure class="relative">
-      <ImageFeatureSlider subDirectory={images} />
+      {images ? (
+        <R2Image
+          src={`products/${images}/${images}.jpg`}
+          alt={name}
+          width={400}
+          height={400}
+          class="object-cover w-full h-auto"
+        />
+      ) : (
+        <div class="flex items-center justify-center w-full h-64 bg-base-200">
+          <div class="text-center">
+            <div class="text-6xl mb-4">📦</div>
+            <p class="text-base-content/70">No image available</p>
+          </div>
+        </div>
+      )}
       <div class={`badge absolute bottom-2 right-2 z-10 ${categoryClass}`}>
         {category}
       </div>
@@ -94,7 +109,7 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
         {description}
       </Paragraph>
       <div class="card-actions flex justify-center items-center gap-4  w-full m-0 px-4">
-        <Button href={slug} variant="outline" className="flex-1">
+        <Button href={`/shop/${slug}`} variant="outline" className="flex-1" title={`View details for ${name}`}>
           View Details
         </Button>
         <AddToCartButton

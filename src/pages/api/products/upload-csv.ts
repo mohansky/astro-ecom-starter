@@ -62,7 +62,6 @@ export const POST: APIRoute = async ({ request }) => {
     const optionalFields = {
       description: ['description', 'product_description'],
       subcategory: ['subcategory', 'sub_category'],
-      discount: ['discount', 'discount_percent'],
       stock: ['stock', 'quantity', 'inventory'],
       weight: ['weight', 'weight_grams'],
       dimensions: ['dimensions', 'size'],
@@ -115,10 +114,6 @@ export const POST: APIRoute = async ({ request }) => {
         }
         if (fieldMapping.subcategory !== undefined) {
           product.subcategory = values[fieldMapping.subcategory] || undefined;
-        }
-        if (fieldMapping.discount !== undefined) {
-          const discount = parseFloat(values[fieldMapping.discount]);
-          product.discount = isNaN(discount) ? 0 : discount;
         }
         if (fieldMapping.stock !== undefined) {
           const stock = parseInt(values[fieldMapping.stock]);

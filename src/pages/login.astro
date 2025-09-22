@@ -50,7 +50,7 @@ import Layout from "@/layouts/Layout.astro";
         <div class="divider">OR</div>
         <p class="text-center">
           Don't have an account?{" "}
-          <a href="/admin/register" class="link link-primary"> Sign up </a>
+          <a href="/register" class="link link-primary"> Sign up </a>
         </p>
       </div>
     </div>
@@ -81,8 +81,6 @@ import Layout from "@/layouts/Layout.astro";
       errorAlert.classList.add("hidden");
 
       try {
-        console.log("Attempting login with baseURL:", (authClient as any).options?.baseURL);
-        
         // Use Better Auth client method
         const { data, error } = await authClient.signIn.email({
           email,
@@ -91,7 +89,7 @@ import Layout from "@/layouts/Layout.astro";
 
         // Success - redirect to dashboard
         if (data && !error) {
-          window.location.href = "/admin/dashboard";
+          window.location.href = "/admin";
         } else {
           // Show error
           errorMessage.textContent = error?.message || "Login failed";

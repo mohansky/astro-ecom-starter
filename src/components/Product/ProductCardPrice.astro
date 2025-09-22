@@ -1,5 +1,6 @@
 ---
 import Heading from "../ui/Heading.astro";
+import { getPriceInfo, formatCurrency } from "@/lib/pricing-utils";
 
 interface Props {
   total?: number;
@@ -10,19 +11,13 @@ interface Props {
 
 const { total, mrp, price, discount } = Astro.props;
 
-// Use price first, then total, then mrp as fallback
-const finalPrice = price !== undefined ? price : total !== undefined ? total : mrp || 0;
-const originalPrice = mrp || finalPrice;
-const discountPercent = discount || 0;
+// Get comprehensive price information using utility functions
+const priceInfo = getPriceInfo({ price, mrp, discount, total });
+const { finalPrice, originalPrice, discountPercent, hasDiscount, savings } = priceInfo;
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(amount);
-};
-
-const hasDiscount = discountPercent > 0 && originalPrice > finalPrice;
+// Check if discount was auto-calculated or manually set
+const manualDiscount = discount || 0;
+const isAutoCalculated = manualDiscount === 0 && discountPercent > 0;
 ---
 
 <div class="flex flex-col">

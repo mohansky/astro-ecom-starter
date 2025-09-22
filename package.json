@@ -16,6 +16,7 @@
     "@astrojs/cloudflare": "^12.6.8",
     "@astrojs/mdx": "^4.2.1",
     "@astrojs/react": "^4.2.7",
+    "@aws-sdk/client-s3": "^3.893.0",
     "@formatjs/intl-numberformat": "^8.15.4",
     "@iconify-json/fa6-solid": "^1.2.3",
     "@iconify-json/ph": "^1.2.2",
@@ -56,7 +57,9 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "daisyui": "^5.0.6",
-    "drizzle-kit": "^0.31.1"
+    "drizzle-kit": "^0.31.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-astro": "^0.14.1"
   },
   "overrides": {
     "@libsql/core": "0.15.7"

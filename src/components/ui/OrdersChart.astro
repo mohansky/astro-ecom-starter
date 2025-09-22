@@ -112,29 +112,23 @@ import Paragraph from "./Paragraph.astro";
 
   function waitForChart() {
     if (typeof Chart !== "undefined") {
-      console.log("Chart.js loaded successfully");
       initializeChart();
     } else {
-      console.log("Waiting for Chart.js...");
       setTimeout(waitForChart, 100);
     }
   }
 
   function initializeChart() {
-    console.log("Initializing chart system");
     loadChartData();
     setupEventListeners();
   }
 
   async function loadChartData(days = currentDays) {
     try {
-      console.log("Loading chart data for", days, "days...");
-
       const response = await fetch(`/api/orders/monthly-stats?days=${days}`);
       if (!response.ok) throw new Error("Failed to fetch data");
 
       chartData = await response.json();
-      console.log("Chart data loaded:", chartData);
 
       if (!Array.isArray(chartData) || chartData.length === 0) {
         showError("No order data available");
@@ -180,8 +174,6 @@ import Paragraph from "./Paragraph.astro";
 
   function createChart(type) {
     if (!type) type = "line";
-
-    console.log("Creating chart with type:", type, "showRevenue:", showRevenue);
 
     if (typeof Chart === "undefined") {
       console.error("Chart.js not loaded");
@@ -294,7 +286,6 @@ import Paragraph from "./Paragraph.astro";
       },
     });
 
-    console.log("Chart created successfully");
   }
 
   function updateStats() {
@@ -351,7 +342,6 @@ import Paragraph from "./Paragraph.astro";
     if (toggleRevenueBtn) {
       toggleRevenueBtn.addEventListener("click", function () {
         showRevenue = !showRevenue;
-        console.log("Toggled revenue to:", showRevenue);
 
         const currentType = chartInstance ? chartInstance.config.type : "line";
         createChart(currentType);
@@ -385,7 +375,6 @@ import Paragraph from "./Paragraph.astro";
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM loaded, waiting for Chart.js...");
     waitForChart();
   });
 </script>

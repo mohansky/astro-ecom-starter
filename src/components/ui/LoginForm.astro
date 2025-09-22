@@ -195,7 +195,7 @@
           showError(result.error.message || "Login failed");
         } else {
           // Redirect to dashboard on success
-          window.location.href = "/dashboard";
+          window.location.href = "/admin";
         }
       } else {
         // Sign up
@@ -209,7 +209,7 @@
           showError(result.error.message || "Signup failed");
         } else {
           // Redirect to dashboard on success
-          window.location.href = "/dashboard";
+          window.location.href = "/admin";
         }
       }
     } catch (err) {

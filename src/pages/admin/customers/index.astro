@@ -1,20 +1,20 @@
 ---
 // src/pages/admin/customers/index.astro
-import Layout from "@/layouts/Layout.astro";
-import ProfileLayout from "@/layouts/ProfileLayout.astro";
-import Container from "@/components/ui/Container.astro";
-import Heading from "@/components/ui/Heading.astro";
-import Paragraph from "@/components/ui/Paragraph.astro";
-import { getUser } from "@/lib/auth-utils";
+import Layout from '@/layouts/Layout.astro';
+import ProfileLayout from '@/layouts/ProfileLayout.astro';
+import Container from '@/components/ui/Container.astro';
+import Heading from '@/components/ui/Heading.astro';
+import Paragraph from '@/components/ui/Paragraph.astro';
+import { getUser } from '@/lib/auth-utils';
 
 const user = await getUser(Astro);
 
 if (!user) {
-  return Astro.redirect("/admin/login");
+  return Astro.redirect('/admin/login');
 }
 
 if (!user.emailVerified) {
-  return Astro.redirect("/emailVerification");
+  return Astro.redirect('/emailVerification');
 }
 ---
 
@@ -163,23 +163,23 @@ if (!user.emailVerified) {
 
 <script is:inline>
   let currentPage = 0;
-  let currentSearch = "";
+  let currentSearch = '';
   let isLoading = false;
-  let pagination = { total: 0, limit: 50, offset: 0, hasMore: false };
+  let pagination = { total: 0, limit: 20, offset: 0, hasMore: false };
 
   function formatCurrencyCustomers(amount) {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
     }).format(amount);
   }
 
   function formatDateCustomers(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   }
 
@@ -195,29 +195,26 @@ if (!user.emailVerified) {
     };
   }
 
-  async function loadCustomers(search = "", offset = 0) {
+  async function loadCustomers(search = '', offset = 0) {
     if (isLoading) return;
     isLoading = true;
 
     try {
-      console.log("Loading customers...", { search, offset });
-
       showLoading();
 
       const params = new URLSearchParams({
-        limit: "50",
+        limit: '20',
         offset: offset.toString(),
       });
 
       if (search.trim()) {
-        params.set("search", search.trim());
+        params.set('search', search.trim());
       }
 
       const response = await fetch(`/api/customers?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch customers");
+      if (!response.ok) throw new Error('Failed to fetch customers');
 
       const data = await response.json();
-      console.log("Customers loaded:", data);
 
       if (!data.customers || data.customers.length === 0) {
         showEmpty();
@@ -232,42 +229,41 @@ if (!user.emailVerified) {
       renderCustomers(data.customers);
       updatePagination();
     } catch (error) {
-      console.error("Error loading customers:", error);
-      showError("Failed to load customers");
+      showError('Failed to load customers');
     } finally {
       isLoading = false;
     }
   }
 
   function showLoading() {
-    document.getElementById("customers-loading").classList.remove("hidden");
-    document.getElementById("customers-container").classList.add("hidden");
-    document.getElementById("customers-error").classList.add("hidden");
-    document.getElementById("customers-empty").classList.add("hidden");
+    document.getElementById('customers-loading').classList.remove('hidden');
+    document.getElementById('customers-container').classList.add('hidden');
+    document.getElementById('customers-error').classList.add('hidden');
+    document.getElementById('customers-empty').classList.add('hidden');
   }
 
   function hideLoading() {
-    document.getElementById("customers-loading").classList.add("hidden");
-    document.getElementById("customers-container").classList.remove("hidden");
+    document.getElementById('customers-loading').classList.add('hidden');
+    document.getElementById('customers-container').classList.remove('hidden');
   }
 
   function showError(message) {
-    document.getElementById("customers-loading").classList.add("hidden");
-    document.getElementById("customers-container").classList.add("hidden");
-    document.getElementById("customers-empty").classList.add("hidden");
-    document.getElementById("customers-error-message").textContent = message;
-    document.getElementById("customers-error").classList.remove("hidden");
+    document.getElementById('customers-loading').classList.add('hidden');
+    document.getElementById('customers-container').classList.add('hidden');
+    document.getElementById('customers-empty').classList.add('hidden');
+    document.getElementById('customers-error-message').textContent = message;
+    document.getElementById('customers-error').classList.remove('hidden');
   }
 
   function showEmpty() {
-    document.getElementById("customers-loading").classList.add("hidden");
-    document.getElementById("customers-container").classList.add("hidden");
-    document.getElementById("customers-error").classList.add("hidden");
-    document.getElementById("customers-empty").classList.remove("hidden");
+    document.getElementById('customers-loading').classList.add('hidden');
+    document.getElementById('customers-container').classList.add('hidden');
+    document.getElementById('customers-error').classList.add('hidden');
+    document.getElementById('customers-empty').classList.remove('hidden');
   }
 
   function renderCustomers(customers) {
-    const tbody = document.getElementById("customers-tbody");
+    const tbody = document.getElementById('customers-tbody');
     if (!tbody) return;
 
     tbody.innerHTML = customers
@@ -278,7 +274,7 @@ if (!user.emailVerified) {
           <div class="font-semibold">${customer.firstName} ${customer.lastName}</div>
         </td>
         <td class="max-w-48 truncate">${customer.email}</td>
-        <td>${customer.phoneNumber || "-"}</td>
+        <td>${customer.phoneNumber || '-'}</td>
         <td class="max-w-32 truncate">${customer.city}, ${customer.state}</td>
         <td class="text-center">
           <span class="badge badge-outline">${customer.orderCount}</span>
@@ -297,10 +293,10 @@ if (!user.emailVerified) {
       </tr>
     `
       )
-      .join("");
+      .join('');
 
     // Update results count
-    const resultsCount = document.getElementById("results-count");
+    const resultsCount = document.getElementById('results-count');
     if (resultsCount) {
       const start = pagination.offset + 1;
       const end = Math.min(
@@ -312,8 +308,8 @@ if (!user.emailVerified) {
   }
 
   function updatePagination() {
-    const prevBtn = document.getElementById("prevPage");
-    const nextBtn = document.getElementById("nextPage");
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
 
     if (prevBtn) {
       prevBtn.disabled = pagination.offset === 0;
@@ -330,20 +326,20 @@ if (!user.emailVerified) {
   }, 300);
 
   function setupEventListeners() {
-    const searchInput = document.getElementById("customerSearch");
-    const searchBtn = document.getElementById("searchBtn");
-    const clearBtn = document.getElementById("clearSearch");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const prevBtn = document.getElementById("prevPage");
-    const nextBtn = document.getElementById("nextPage");
+    const searchInput = document.getElementById('customerSearch');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearSearch');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
 
     if (searchInput) {
-      searchInput.addEventListener("input", (e) => {
+      searchInput.addEventListener('input', (e) => {
         debouncedSearch(e.target.value);
       });
 
-      searchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
           e.preventDefault();
           loadCustomers(e.target.value, 0);
         }
@@ -351,30 +347,30 @@ if (!user.emailVerified) {
     }
 
     if (searchBtn) {
-      searchBtn.addEventListener("click", () => {
-        const search = searchInput?.value || "";
+      searchBtn.addEventListener('click', () => {
+        const search = searchInput?.value || '';
         loadCustomers(search, 0);
       });
     }
 
     if (clearBtn) {
-      clearBtn.addEventListener("click", () => {
+      clearBtn.addEventListener('click', () => {
         if (searchInput) {
-          searchInput.value = "";
+          searchInput.value = '';
         }
-        loadCustomers("", 0);
+        loadCustomers('', 0);
       });
     }
 
     if (refreshBtn) {
-      refreshBtn.addEventListener("click", () => {
-        const search = searchInput?.value || "";
+      refreshBtn.addEventListener('click', () => {
+        const search = searchInput?.value || '';
         loadCustomers(search, pagination.offset);
       });
     }
 
     if (prevBtn) {
-      prevBtn.addEventListener("click", () => {
+      prevBtn.addEventListener('click', () => {
         if (pagination.offset > 0) {
           loadCustomers(currentSearch, pagination.offset - pagination.limit);
         }
@@ -382,7 +378,7 @@ if (!user.emailVerified) {
     }
 
     if (nextBtn) {
-      nextBtn.addEventListener("click", () => {
+      nextBtn.addEventListener('click', () => {
         if (pagination.hasMore) {
           loadCustomers(currentSearch, pagination.offset + pagination.limit);
         }
@@ -390,8 +386,7 @@ if (!user.emailVerified) {
     }
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    console.log("Loading customers page...");
+  document.addEventListener('DOMContentLoaded', function () {
     setupEventListeners();
     loadCustomers();
   });

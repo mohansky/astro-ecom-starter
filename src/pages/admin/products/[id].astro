@@ -1,0 +1,1023 @@
+---
+import Container from "@/components/ui/Container.astro";
+import Layout from "@/layouts/Layout.astro";
+import ProfileLayout from "@/layouts/ProfileLayout.astro";
+import { formatDate } from "@/lib/helpers";
+import { getProductById } from "@/lib/db";
+import { getUser } from "@/lib/auth-utils";
+
+const { id } = Astro.params;
+const productId = id || "";
+
+// Get current user for auth
+const currentUser = await getUser(Astro);
+if (!currentUser) {
+  return Astro.redirect("/admin/login");
+}
+
+if (!currentUser.emailVerified) {
+  return Astro.redirect("/admin/emailVerification");
+}
+
+// Handle form submissions via JavaScript API calls
+
+const product = await getProductById(productId);
+
+if (!product) {
+  return Astro.redirect("/admin/products");
+}
+
+const categories = ["Electronics", "Fashion", "Home", "Sports", "Books"]; // You might want to get this from the database
+---
+
+<Layout>
+  <ProfileLayout title={`Product Details - ${product.name}`}>
+    <Container width="marginy">
+      <!-- Toast Container -->
+      <div class="toast toast-top toast-end z-50" id="toast-container"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Meta Information Card -->
+        <div class="lg:col-span-2">
+          <div class="card bg-base-200 shadow-sm">
+            <div class="card-body">
+              <h3 class="card-title mb-4">Meta Information</h3>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="stat col-span-2">
+                  <div class="stat-title">Product ID</div>
+                  <div class="stat-value text-sm font-mono">{product.id}</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Status</div>
+                  <div class="flex items-center gap-2">
+                    <div
+                      class={`stat-value text-sm badge ${product.isActive ? "badge-success" : "badge-error"}`}
+                    >
+                      {product.isActive ? "Active" : "Inactive"}
+                    </div>
+                    {
+                      product.featured && (
+                        <div class="badge badge-primary">Featured</div>
+                      )
+                    }
+                  </div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Current SKU</div>
+                  <div class="stat-value text-sm">
+                    {product.sku || "Not set"}
+                  </div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Created Date</div>
+                  <div class="stat-value text-lg">
+                    {formatDate(product.createdAt)}
+                  </div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Last Updated</div>
+                  <div class="stat-value text-lg">
+                    {formatDate(product.updatedAt)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Image Section -->
+        <div class="lg:col-span-2">
+          <div class="card bg-base-200 shadow-sm">
+            <div class="card-body">
+              <h3 class="card-title mb-4">Product Image</h3>
+
+              <div class="flex flex-col space-y-4">
+                <div class="avatar">
+                  <div
+                    class="w-38 h-38 rounded-lg bg-base-300 flex items-center justify-center relative overflow-hidden"
+                  >
+                    <img
+                      id="currentProductImage"
+                      src=""
+                      alt={product.name}
+                      class="w-full h-full object-cover hidden"
+                    />
+                    <div id="noImagePlaceholder" class="text-center">
+                      <svg
+                        class="w-16 h-16 text-base-content/30 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2"
+                        ></rect>
+                        <circle cx="9" cy="9" r="2"></circle>
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"
+                        ></path>
+                      </svg>
+                      <p class="text-sm text-base-content/50">
+                        No image uploaded
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Image Upload Controls -->
+                <div class="flex flex-col gap-2 w-full max-w-xs">
+                  <input
+                    type="file"
+                    id="productImageFile"
+                    accept="image/jpeg,image/png,image/webp"
+                    class="file-input file-input-bordered file-input-sm"
+                  />
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      id="uploadImageBtn"
+                      class="btn btn-primary btn-sm flex-1"
+                      disabled
+                    >
+                      <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        ></path>
+                      </svg>
+                      Upload
+                    </button>
+                    <button
+                      type="button"
+                      id="removeImageBtn"
+                      class="btn btn-outline btn-error btn-sm"
+                      style="display: none;"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div
+                    id="imageUploadStatus"
+                    class="text-xs text-center hidden"
+                  >
+                  </div>
+                </div>
+
+                <!-- Hidden input to store image path -->
+                <input
+                  type="hidden"
+                  id="productImagePath"
+                  name="imagePath"
+                  value={product.imagePath || ""}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Details Form -->
+        <div class="lg:col-span-4">
+          <form id="productForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Basic Information Card -->
+              <div class="lg:col-span-2 card bg-base-200 shadow-sm">
+                <div class="card-body">
+                  <div class="flex items-center justify-between mb-6">
+                    <h2 class="card-title text-2xl">Product Information</h2>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium"
+                          >Product Name *</span
+                        >
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={product.name}
+                        class="input input-bordered"
+                        required
+                      />
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium">SKU</span>
+                        <span class="label-text-alt text-xs"
+                          >(Auto-generated if empty)</span
+                        >
+                      </label>
+                      <input
+                        type="text"
+                        name="sku"
+                        value={product.sku || ""}
+                        class="input input-bordered"
+                        placeholder="Auto-generated from name + category + ID"
+                      />
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium">Slug</span>
+                        <span class="label-text-alt text-xs"
+                          >(Auto-generated if empty)</span
+                        >
+                      </label>
+                      <input
+                        type="text"
+                        name="slug"
+                        value={product.slug}
+                        class="input input-bordered"
+                        placeholder="Auto-generated from name"
+                      />
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium">Category *</span>
+                      </label>
+                      <select
+                        name="category"
+                        class="select select-bordered"
+                        required
+                      >
+                        {
+                          categories.map((cat) => (
+                            <option
+                              value={cat}
+                              selected={product.category === cat}
+                            >
+                              {cat}
+                            </option>
+                          ))
+                        }
+                      </select>
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium">Subcategory</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="subcategory"
+                        value={product.subcategory || ""}
+                        class="input input-bordered"
+                        placeholder="e.g., Smartphones, T-Shirts"
+                      />
+                    </div>
+
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text font-medium">Tags</span>
+                        <span class="label-text-alt text-xs"
+                          >(Comma separated)</span
+                        >
+                      </label>
+                      <input
+                        type="text"
+                        name="tags"
+                        value={product.tags || ""}
+                        class="input input-bordered"
+                        placeholder="e.g., electronics, smartphone, android"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pricing Card -->
+              <div class="lg:col-span-1">
+                <div class="card bg-base-200 shadow-sm">
+                  <div class="card-body">
+                    <h3 class="card-title mb-4">Pricing & Inventory</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium">Price (₹) *</span
+                          >
+                        </label>
+                        <input
+                          type="number"
+                          name="price"
+                          value={product.price}
+                          class="input input-bordered"
+                          step="0.01"
+                          min="0"
+                          required
+                        />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium">MRP (₹) *</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="mrp"
+                          value={product.mrp}
+                          class="input input-bordered"
+                          step="0.01"
+                          min="0"
+                          required
+                        />
+                        <label class="label">
+                          <span class="label-text-alt text-xs">
+                            Optional to display % discount
+                          </span>
+                        </label>
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium">GST (%)</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="gstPercentage"
+                          value={product.gstPercentage}
+                          class="input input-bordered"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                        />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium"
+                            >Discount (%)</span
+                          >
+                        </label>
+                        <input
+                          type="text"
+                          id="discount-display"
+                          class="input input-bordered bg-base-200"
+                          value="--"
+                          readonly
+                          placeholder="Calculated automatically"
+                        />
+                        <label class="label">
+                          <span class="label-text-alt text-xs">
+                            Display only
+                          </span>
+                        </label>
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium"
+                            >Stock Quantity</span
+                          >
+                        </label>
+                        <input
+                          type="number"
+                          name="stock"
+                          value={product.stock}
+                          class="input input-bordered"
+                          min="0"
+                        />
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium">Weight (g)</span>
+                        </label>
+                        <input
+                          type="number"
+                          name="weight"
+                          value={product.weight || ""}
+                          class="input input-bordered"
+                          min="0"
+                        />
+                      </div>
+                      <div class="form-control">
+                        <label class="label">
+                          <span class="label-text font-medium">Dimensions</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="dimensions"
+                          value={product.dimensions || ""}
+                          class="input input-bordered"
+                          placeholder="e.g., 10x5x3 cm"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="flex gap-6 mt-4">
+                      <div class="form-control">
+                        <label class="label cursor-pointer">
+                          <span class="label-text font-medium"
+                            >Tax Inclusive</span
+                          >
+                          <input
+                            type="checkbox"
+                            name="taxInclusive"
+                            class="checkbox checkbox-primary ml-2"
+                            checked={product.taxInclusive}
+                          />
+                        </label>
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label cursor-pointer">
+                          <span class="label-text font-medium">Active</span>
+                          <input
+                            type="checkbox"
+                            name="isActive"
+                            class="checkbox checkbox-primary ml-2"
+                            checked={product.isActive}
+                          />
+                        </label>
+                      </div>
+
+                      <div class="form-control">
+                        <label class="label cursor-pointer">
+                          <span class="label-text font-medium">Featured</span>
+                          <input
+                            type="checkbox"
+                            name="featured"
+                            class="checkbox checkbox-primary ml-2"
+                            checked={product.featured}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description Card -->
+              <div class="card bg-base-200 shadow-sm">
+                <div class="card-body">
+                  <div class="flex items-center justify-between mb-6">
+                    <h2 class="card-title text-2xl">Product Description</h2>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-2">
+                    <div class="form-control col-span-2 mr-6">
+                      <label class="label">
+                        <span class="label-text font-medium">Description</span>
+                      </label>
+                      <textarea
+                        name="description"
+                        class="textarea textarea-bordered w-full"
+                        placeholder="Product description..."
+                        rows={6}>{product.description || ""}</textarea
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div
+                class="lg:col-span-2 flex flex-col sm:flex-row justify-between gap-4"
+              >
+                <a href="/admin/products" class="btn btn-ghost">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                  </svg>
+                  Back to Products
+                </a>
+
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-error"
+                    onclick="deleteProduct()"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
+                    Delete Product
+                  </button>
+
+                  <button type="submit" class="btn btn-primary">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                      ></path>
+                    </svg>
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Container>
+  </ProfileLayout>
+
+  <script>
+    // Toast Manager
+    class ToastManager {
+      private container: HTMLElement;
+
+      constructor() {
+        this.container =
+          document.getElementById("toast-container") || this.createContainer();
+      }
+
+      createContainer() {
+        const container = document.createElement("div");
+        container.id = "toast-container";
+        container.className = "toast toast-top toast-end z-50";
+        document.body.appendChild(container);
+        return container;
+      }
+
+      show(message: string, type = "info", duration = 4000) {
+        const toast = document.createElement("div");
+
+        let alertClass = "";
+        let icon = "";
+
+        switch (type) {
+          case "success":
+            alertClass = "alert-success";
+            icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            break;
+          case "error":
+            alertClass = "alert-error";
+            icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            break;
+          default:
+            alertClass = "alert-info";
+            icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        }
+
+        toast.className = `alert ${alertClass} shadow-lg mb-2`;
+        toast.innerHTML = `
+        <div class="flex items-center">
+          ${icon}
+          <span class="ml-2">${message}</span>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+
+        this.container.appendChild(toast);
+
+        setTimeout(() => {
+          if (toast.parentElement) {
+            toast.remove();
+          }
+        }, duration);
+      }
+    }
+
+    const toastManager = new ToastManager();
+    const productId = window.location.pathname.split("/").pop();
+
+    if (!productId) {
+      toastManager.show("Invalid product ID", "error");
+      window.location.href = "/admin/products";
+      throw new Error("Product ID not found");
+    }
+
+    // Image management elements
+    const currentProductImage = document.getElementById(
+      "currentProductImage"
+    ) as HTMLImageElement | null;
+    const noImagePlaceholder = document.getElementById(
+      "noImagePlaceholder"
+    ) as HTMLElement | null;
+    const imageFileInput = document.getElementById(
+      "productImageFile"
+    ) as HTMLInputElement | null;
+    const uploadImageBtn = document.getElementById(
+      "uploadImageBtn"
+    ) as HTMLButtonElement | null;
+    const removeImageBtn = document.getElementById(
+      "removeImageBtn"
+    ) as HTMLButtonElement | null;
+    const imageUploadStatus = document.getElementById(
+      "imageUploadStatus"
+    ) as HTMLElement | null;
+    const productImagePath = document.getElementById(
+      "productImagePath"
+    ) as HTMLInputElement | null;
+
+    // Initialize image display
+    function initializeImageDisplay() {
+      if (
+        !productImagePath ||
+        !currentProductImage ||
+        !noImagePlaceholder ||
+        !removeImageBtn
+      )
+        return;
+
+      const imagePath = productImagePath.value;
+      if (imagePath) {
+        const r2BucketUrl =
+          "https://pub-67b76734f5b543b9925c0870089929bb.r2.dev";
+        const imageUrl = `${r2BucketUrl}/products/${imagePath}/${imagePath}.jpg`;
+        currentProductImage.src = imageUrl;
+        currentProductImage.classList.remove("hidden");
+        noImagePlaceholder.style.display = "none";
+        removeImageBtn.style.display = "block";
+      } else {
+        currentProductImage.classList.add("hidden");
+        noImagePlaceholder.style.display = "block";
+        removeImageBtn.style.display = "none";
+      }
+    }
+
+    // Image upload event listeners
+    if (
+      imageFileInput &&
+      uploadImageBtn &&
+      currentProductImage &&
+      noImagePlaceholder
+    ) {
+      imageFileInput.addEventListener("change", (e) => {
+        const target = e.target as HTMLInputElement;
+        const file = target?.files?.[0];
+        if (file && uploadImageBtn) {
+          uploadImageBtn.disabled = false;
+
+          // Show file preview
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (currentProductImage && noImagePlaceholder && e.target?.result) {
+              currentProductImage.src = e.target.result as string;
+              currentProductImage.classList.remove("hidden");
+              noImagePlaceholder.style.display = "none";
+            }
+          };
+          reader.readAsDataURL(file);
+        } else if (uploadImageBtn) {
+          uploadImageBtn.disabled = true;
+          initializeImageDisplay(); // Reset to original state
+        }
+      });
+    }
+
+    if (uploadImageBtn) {
+      uploadImageBtn.addEventListener("click", async () => {
+        await uploadProductImage();
+      });
+    }
+
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener("click", () => {
+        clearProductImage();
+      });
+    }
+
+    // Image Upload Functions
+    async function uploadProductImage() {
+      const fileInput = document.getElementById(
+        "productImageFile"
+      ) as HTMLInputElement;
+      const uploadBtn = document.getElementById(
+        "uploadImageBtn"
+      ) as HTMLButtonElement;
+      const statusDiv = document.getElementById(
+        "imageUploadStatus"
+      ) as HTMLElement;
+
+      if (!fileInput?.files?.[0]) {
+        toastManager.show("Please select an image file", "error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", fileInput.files[0]);
+
+      // Get product name from the form
+      const productNameInput = document.querySelector(
+        'input[name="name"]'
+      ) as HTMLInputElement;
+      const productName = productNameInput?.value || `product-${productId}`;
+      formData.append("productName", productName);
+
+      try {
+        // Show loading state
+        if (uploadBtn) {
+          uploadBtn.disabled = true;
+          uploadBtn.innerHTML =
+            '<span class="loading loading-spinner loading-sm mr-2"></span>Uploading...';
+        }
+        if (statusDiv) {
+          statusDiv.textContent = "Uploading image...";
+          statusDiv.className = "text-xs text-center text-info";
+          statusDiv.classList.remove("hidden");
+        }
+
+        const response = await fetch("/api/products/upload-image", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update the hidden input with the new image path
+          if (productImagePath) {
+            productImagePath.value = result.imagePath;
+          }
+
+          // Update the display
+          const r2BucketUrl =
+            "https://pub-67b76734f5b543b9925c0870089929bb.r2.dev";
+          const imageUrl = `${r2BucketUrl}/products/${result.imagePath}/${result.imagePath}.jpg`;
+          if (currentProductImage) {
+            currentProductImage.src = imageUrl;
+            currentProductImage.classList.remove("hidden");
+          }
+          if (noImagePlaceholder) {
+            noImagePlaceholder.style.display = "none";
+          }
+          if (removeImageBtn) {
+            removeImageBtn.style.display = "block";
+          }
+
+          if (statusDiv) {
+            statusDiv.textContent = "Image uploaded successfully!";
+            statusDiv.className = "text-xs text-center text-success";
+          }
+
+          toastManager.show("Image uploaded successfully!", "success");
+
+          // Clear the file input
+          if (fileInput) {
+            fileInput.value = "";
+          }
+        } else {
+          if (statusDiv) {
+            statusDiv.textContent = result.error || "Upload failed";
+            statusDiv.className = "text-xs text-center text-error";
+          }
+          toastManager.show(result.error || "Failed to upload image", "error");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        if (statusDiv) {
+          statusDiv.textContent = "Upload failed";
+          statusDiv.className = "text-xs text-center text-error";
+        }
+        toastManager.show("Failed to upload image", "error");
+      } finally {
+        // Reset button
+        if (uploadBtn) {
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML =
+            '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>Upload';
+        }
+      }
+    }
+
+    function clearProductImage() {
+      const fileInput = document.getElementById(
+        "productImageFile"
+      ) as HTMLInputElement;
+      const imagePathInput = document.getElementById(
+        "productImagePath"
+      ) as HTMLInputElement;
+      const statusDiv = document.getElementById(
+        "imageUploadStatus"
+      ) as HTMLElement;
+      const uploadBtn = document.getElementById(
+        "uploadImageBtn"
+      ) as HTMLButtonElement;
+
+      // Clear all image-related fields
+      if (fileInput) fileInput.value = "";
+      if (imagePathInput) imagePathInput.value = "";
+      if (statusDiv) statusDiv.classList.add("hidden");
+      if (uploadBtn) uploadBtn.disabled = true;
+
+      // Reset display
+      if (currentProductImage) currentProductImage.classList.add("hidden");
+      if (noImagePlaceholder) noImagePlaceholder.style.display = "block";
+      if (removeImageBtn) removeImageBtn.style.display = "none";
+
+      toastManager.show("Image removed", "info");
+    }
+
+    // Initialize the page
+    initializeImageDisplay();
+
+    // Form submission handler
+    document
+      .getElementById("productForm")
+      ?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const form = e.target as HTMLFormElement;
+        const submitBtn = form?.querySelector(
+          'button[type="submit"]'
+        ) as HTMLButtonElement;
+        const originalText = submitBtn?.textContent || "Save Changes";
+
+        try {
+          // Show loading state
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+          <span class="loading loading-spinner loading-sm mr-2"></span>
+          Saving...
+        `;
+          }
+
+          const formData = new FormData(form);
+          const productData: Record<string, any> = {};
+
+          // Convert form data to object
+          for (const [key, value] of formData.entries()) {
+            if (
+              key === "isActive" ||
+              key === "featured" ||
+              key === "taxInclusive"
+            ) {
+              productData[key] = value === "on";
+            } else if (
+              key === "price" ||
+              key === "mrp" ||
+              key === "stock" ||
+              key === "weight" ||
+              key === "gstPercentage"
+            ) {
+              productData[key] = parseFloat(value as string) || 0;
+            } else {
+              productData[key] = (value as string) || "";
+            }
+          }
+
+          const response = await fetch(`/api/products?id=${productId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(productData),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            toastManager.show("Product updated successfully!", "success");
+            // Optionally reload the page to show updated data
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            toastManager.show(
+              result.error || "Failed to update product",
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Error updating product:", error);
+          toastManager.show("Failed to update product", "error");
+        } finally {
+          // Reset button state
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        }
+      });
+
+    async function deleteProduct() {
+      if (
+        !confirm(
+          "Are you sure you want to delete this product? This action cannot be undone."
+        )
+      ) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/products?id=${productId}`, {
+          method: "DELETE",
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          toastManager.show("Product deleted successfully!", "success");
+          setTimeout(() => {
+            window.location.href = "/admin/products";
+          }, 1500);
+        } else {
+          toastManager.show(
+            result.error || "Failed to delete product",
+            "error"
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        toastManager.show("Failed to delete product", "error");
+      }
+    }
+
+    // Real-time discount calculation
+    function calculateDiscount() {
+      const priceInput = document.querySelector(
+        'input[name="price"]'
+      ) as HTMLInputElement;
+      const mrpInput = document.querySelector(
+        'input[name="mrp"]'
+      ) as HTMLInputElement;
+      const discountDisplay = document.getElementById(
+        "discount-display"
+      ) as HTMLInputElement;
+
+      if (!priceInput || !mrpInput || !discountDisplay) return;
+
+      const price = parseFloat(priceInput.value) || 0;
+      const mrp = parseFloat(mrpInput.value) || 0;
+
+      if (mrp > 0 && price > 0 && price < mrp) {
+        const discountPercent = Math.round(((mrp - price) / mrp) * 100);
+        discountDisplay.value = `${discountPercent}%`;
+        discountDisplay.className =
+          "input input-bordered bg-green-50 text-success";
+      } else if (price === mrp && mrp > 0) {
+        discountDisplay.value = "0%";
+        discountDisplay.className = "input input-bordered bg-base-200";
+      } else {
+        discountDisplay.value = "--";
+        discountDisplay.className = "input input-bordered bg-base-200";
+      }
+    }
+
+    // Add event listeners for real-time calculation
+    const priceInput = document.querySelector('input[name="price"]');
+    const mrpInput = document.querySelector('input[name="mrp"]');
+
+    if (priceInput) {
+      priceInput.addEventListener("input", calculateDiscount);
+    }
+
+    if (mrpInput) {
+      mrpInput.addEventListener("input", calculateDiscount);
+    }
+
+    // Calculate on page load
+    calculateDiscount();
+  </script>
+</Layout>

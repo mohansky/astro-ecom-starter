@@ -14,7 +14,7 @@ const { products } = Astro.props;
     products.map((product) => (
       <ProductCard
         id={product.id}
-        slug={`/shop/${product.id}`}
+        slug={product.slug}
         published={product.isActive}
         name={product.name}
         quantity={product.stock}

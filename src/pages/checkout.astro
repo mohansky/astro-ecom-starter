@@ -333,10 +333,6 @@ import Layout from "@/layouts/Layout.astro";
     // Check for duplicate IDs
     const allCartTotals: NodeListOf<HTMLElement> =
       document.querySelectorAll("#cart-total");
-    console.log(
-      `Found ${allCartTotals.length} elements with id="cart-total"`,
-      allCartTotals
-    );
 
     // Find the cart total specifically within the checkout section
     const checkoutSection: HTMLElement | null =
@@ -347,12 +343,6 @@ import Layout from "@/layouts/Layout.astro";
       cartTotalElement = checkoutSection.querySelector(
         "#cart-total"
       ) as HTMLElement | null;
-      console.log(
-        "Found cart-total within checkout section:",
-        cartTotalElement
-      );
-    } else {
-      console.error("Checkout section not found");
     }
 
     // Get other elements
@@ -395,24 +385,13 @@ import Layout from "@/layouts/Layout.astro";
 
     // Early return if essential elements are missing
     if (!checkoutForm) {
-      console.error("Required checkout form not found");
       return;
     }
 
     // Verify cart total element is found - this is critical
     if (!cartTotalElement) {
-      console.error("Cart total element not found in checkout section");
-
       // Fallback: try direct selection as last resort
       cartTotalElement = document.getElementById("cart-total");
-
-      if (cartTotalElement) {
-        console.log("Found cart-total through direct selection");
-      } else {
-        console.error(
-          "Cart total element not found at all - totals will be incorrect"
-        );
-      }
     }
 
     // Render cart initially
@@ -420,7 +399,6 @@ import Layout from "@/layouts/Layout.astro";
 
     // Subscribe to cart changes with explicit function reference
     const unsubscribeCartListener = cartItems.listen(() => {
-      console.log("Cart updated, re-rendering checkout");
       renderCheckoutItems();
     });
 
@@ -454,7 +432,6 @@ import Layout from "@/layouts/Layout.astro";
 
     function renderCheckoutItems(): void {
       const items = cartItems.get();
-      console.log("Cart items in checkout:", items);
 
       // Calculate values
       const subtotal = getCartSubtotal();
@@ -466,14 +443,10 @@ import Layout from "@/layouts/Layout.astro";
       const tax = getCartTax();
       const total = discountedSubtotal + shipping + tax;
 
-      console.log("Calculated totals:", { subtotal, couponDiscount, discountedSubtotal, weight, shipping, tax, total });
 
       // Check for all cart-total elements again in case DOM changed
       const allTotalElements: NodeListOf<HTMLElement> =
         document.querySelectorAll("#cart-total");
-      console.log(
-        `Found ${allTotalElements.length} cart-total elements when updating`
-      );
 
       // Update totals with null checks
       if (cartSubtotalElement) {
@@ -505,16 +478,11 @@ import Layout from "@/layouts/Layout.astro";
 
       // Update ALL elements with id="cart-total" to ensure the visible one gets updated
       allTotalElements.forEach((element, index) => {
-        console.log(`Updating cart-total element ${index}:`, element);
         element.textContent = `₹${total.toFixed(2)}`;
       });
 
       // For the specific checkout cart total we found earlier
       if (cartTotalElement) {
-        console.log(
-          "Updating specifically found cart total element:",
-          cartTotalElement
-        );
         cartTotalElement.textContent = `₹${total.toFixed(2)}`;
       }
 
@@ -588,7 +556,6 @@ import Layout from "@/layouts/Layout.astro";
         }
 
         const result = await response.json();
-        console.log("Coupon validation result:", result);
 
         if (!result.success) {
           throw new Error(result.error || "Invalid coupon code");
@@ -696,8 +663,6 @@ import Layout from "@/layouts/Layout.astro";
           formObject[key] = value.toString();
         });
 
-        console.log("Form data:", formObject);
-        console.log("Cart items:", items);
 
         // Calculate totals
         const subtotal = getCartSubtotal();
@@ -720,7 +685,6 @@ import Layout from "@/layouts/Layout.astro";
           total
         };
 
-        console.log("Order data:", orderData);
 
         // Create Razorpay order
         const razorpayOrderResponse = await fetch("/api/razorpay/create-order", {
@@ -744,7 +708,6 @@ import Layout from "@/layouts/Layout.astro";
         }
 
         const razorpayOrder = await razorpayOrderResponse.json();
-        console.log("Razorpay order created:", razorpayOrder);
 
         if (!razorpayOrder.success) {
           throw new Error(razorpayOrder.error || "Failed to create payment order");
@@ -766,7 +729,6 @@ import Layout from "@/layouts/Layout.astro";
           description: "Order Payment",
           order_id: razorpayOrder.orderId,
           handler: async function (response: any) {
-            console.log("Payment successful:", response);
             await handlePaymentSuccess(response, orderData);
           },
           prefill: {
@@ -779,7 +741,6 @@ import Layout from "@/layouts/Layout.astro";
           },
           modal: {
             ondismiss: function () {
-              console.log("Payment modal dismissed");
               toastManager.show("Payment cancelled", "warning");
             },
           },
@@ -807,7 +768,6 @@ import Layout from "@/layouts/Layout.astro";
 
     async function handlePaymentSuccess(paymentResponse: any, orderData: any): Promise<void> {
       try {
-        console.log("Verifying payment...", paymentResponse);
 
         // Verify payment with backend
         const verificationResponse = await fetch("/api/razorpay/verify-payment", {
@@ -828,7 +788,6 @@ import Layout from "@/layouts/Layout.astro";
         }
 
         const result = await verificationResponse.json();
-        console.log("Payment verification result:", result);
 
         if (!result.success) {
           throw new Error(result.error || "Payment verification failed");

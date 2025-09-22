@@ -2,171 +2,65 @@
 import Footer from "@/components/Layout/Footer.astro";
 import Navbar from "@/components/Layout/Navbar.astro";
 import CartSidebar from "@/components/ui/CartSidebar.astro";
-import "@/styles/global.css"; 
+import GeneralSEO from "@/components/SEO/GeneralSEO.astro";
+import "@/styles/global.css";
 
 import { getCollection } from "astro:content";
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  image?: string;
+  type?: "website" | "article" | "profile";
+  noindex?: boolean;
+  breadcrumbs?: Array<{
+    name: string;
+    url: string;
+  }>;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  image,
+  type = "website",
+  noindex = false,
+  breadcrumbs
+} = Astro.props;
 
 const siteData = await getCollection("siteData");
 const siteInfo = siteData[0].data;
 const site = siteInfo;
+
+// Convert site data for SEO component
+const seoTitle = title || site.title;
+const seoDescription = description || site.description;
+const seoImage = image || `${site.basepath}${site.ogImageURL}`;
 ---
 
 <!doctype html>
-<html lang="en" >
-  <head> 
-    <!-- <script is:inline>
-      if (localStorage.getItem("theme") === null) {
-        document.documentElement.setAttribute("data-theme", "lofi");
-      } else
-        document.documentElement.setAttribute(
-          "data-theme",
-          localStorage.getItem("theme")
-        );
-    </script> -->
-
-    <!-- Theme Changer  -->
-    <!-- <script>
-      import { themeChange } from "theme-change";
-      themeChange();
-    </script> -->
-
-    <!-- Schema.org -->
-    <script
-      is:inline
-      type="application/ld+json"
-      set:html={JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        name: `${site.title}`,
-        description: `${site.description}`,
-        image: `${site.ogImageURL}`,
-        url: `${site.basepath}`,
-        telephone: `${site.contactdetails[0].text}`,
-        email: `${site.email}`,
-        itemListElement: [
-          {
-            "@type": "Product",
-            position: 1,
-            name: "Tilapia Bites",
-            description: "Premium pet treats made from Tilapia",
-            offers: {
-              "@type": "Offer",
-              price: "600",
-              priceCurrency: "INR",
-              priceSpecification: {
-                "@type": "UnitPriceSpecification",
-                price: "600",
-                priceCurrency: "INR",
-                unitCode: "GRM",
-                unitText: "gram",
-                referenceQuantity: {
-                  "@type": "QuantitativeValue",
-                  value: "300",
-                  unitCode: "GRM",
-                  unitText: "gram",
-                },
-              },
-              availability: "https://schema.org/InStock",
-            },
-            image: "./images/treats/cat-treat.jpg",
-            additionalProperty: {
-              "@type": "PropertyValue",
-              name: "Origin",
-              value: "Africa",
-            },
-          },
-          {
-            "@type": "Product",
-            position: 2,
-            name: "Catfish Feast",
-            description: "Premium pet treats made from Catfish",
-            offers: {
-              "@type": "Offer",
-              price: "600",
-              priceCurrency: "INR",
-              priceSpecification: {
-                "@type": "UnitPriceSpecification",
-                price: "600",
-                priceCurrency: "INR",
-                unitCode: "GRM",
-                unitText: "gram",
-                referenceQuantity: {
-                  "@type": "QuantitativeValue",
-                  value: "300",
-                  unitCode: "GRM",
-                  unitText: "gram",
-                },
-              },
-              availability: "https://schema.org/InStock",
-            },
-            image: "./images/treats/dog-treat.jpg",
-            additionalProperty: {
-              "@type": "PropertyValue",
-              name: "Origin",
-              value: "South America",
-            },
-          },
-        ],
-        starRating: {
-          "@type": "Rating",
-          ratingValue: "5",
-        },
-        offers: {
-          "@type": "Offer",
-          price: "250",
-          priceCurrency: "INR",
-          availability: "https://schema.org/InStock",
-          validFrom: "2025-01-01",
-        },
-        review: {
-          "@type": "Review",
-          author: {
-            "@type": "Person",
-            name: "John Doe",
-          },
-          reviewRating: {
-            "@type": "Rating",
-            ratingValue: "5",
-            bestRating: "5",
-          },
-          reviewBody: "Woof woof!",
-        },
-        sameAs: [
-          "https://www.facebook.com/pawsforrivers",
-          "https://www.instagram.com/pawsforrivers",
-          "https://www.tripadvisor.com/pawsforrivers",
-        ],
-      })}
-    />
-
-    <!-- Basic Meta Tags -->
+<html lang="en">
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{site.title}</title>
-    <meta name="description" content={site.description} /> 
-    <meta property="og:title" content={site.title} />
-    <meta property="og:description" content={site.description} />
-    <meta
-      property="og:image"
-      content={`${site.basepath}/images/open-graph-image.jpg`}
-    />
-    <meta property="og:url" content={`${site.basepath}/`} />
-    <meta property="og:type" content="website" /> 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={site.title} />
-    <meta name="twitter:description" content={site.description} />
-    <meta
-      name="twitter:image"
-      content={`${site.basepath}/images/twitter-image.jpg"`}
-    /> 
-    <link rel="canonical" href={site.basepath} /> 
-    <meta name="robots" content="index, follow" />
-    <meta name="keywords" content={site.keywords.join(",")} /> 
-    <meta name="author" content={site.author.name} />
 
- 
+    <GeneralSEO
+      title={seoTitle}
+      description={seoDescription}
+      canonical={canonical}
+      image={seoImage}
+      type={type}
+      keywords={site.keywords}
+      author={site.author}
+      siteName={site.name}
+      noindex={noindex}
+      breadcrumbs={breadcrumbs}
+    />
+  </head>
+
   <body>
  
     <Navbar links={site.links} />

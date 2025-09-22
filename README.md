@@ -15,13 +15,14 @@ Use these test card details in development mode:
 
 
 
-### Todo dicount coupons
-#### APPLY
-- A prefixed amount will be deducted on specified products
-- A prefixed amount will be deducted from the order
-- A percentage rebate on the total of the order
-- A discount price provided by an alternate price list
-- A discount on the shipping
+### Discount Coupons Features
+#### IMPLEMENTED FEATURES
+- Percentage-based discounts on order total
+- Fixed amount discounts on order total
+- Minimum order value requirements
+- Coupon usage limits and tracking
+- Active/inactive coupon status
+- Admin coupon management interface
 - A prefixed amount will be deducted on specified products
 - A rate will be deducted on specified products
 - A prefixed amount will be deducted on items of specified categories
@@ -40,3 +41,10 @@ Use these test card details in development mode:
 - When cart contains at least all specified products
 - When cart only contains products from the specified categories
 - When cart contains some products from the specified categories
+
+
+
+// [[kv_namespaces]]
+// binding = "SESSION"
+// id = "your_kv_namespace_id"
+// preview_id = "your_preview_kv_namespace_id"

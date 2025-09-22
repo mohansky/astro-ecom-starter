@@ -14,6 +14,9 @@ import cloudflare from "@astrojs/cloudflare";
 export default defineConfig({
   output: "server",
   adapter: cloudflare(),
+  image: {
+    service: { entrypoint: "astro/assets/services/sharp" }
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
@@ -70,6 +73,31 @@ export default defineConfig({
         optional: false,
       }),
       PUBLIC_RAZORPAY_KEY_ID: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      R2_BUCKET_URL: envField.string({
+        context: "server",
+        access: "public",
+        optional: false,
+      }),
+      CLOUDFLARE_ACCOUNT_ID: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      R2_ACCESS_KEY_ID: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      R2_SECRET_ACCESS_KEY: envField.string({
+        context: "server",
+        access: "secret",
+        optional: false,
+      }),
+      R2_BUCKET_NAME: envField.string({
         context: "server",
         access: "secret",
         optional: false,

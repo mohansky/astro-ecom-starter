@@ -17,7 +17,6 @@ export const server = {
       message: z.string().min(1, { message: "Message is required" }),
     }),
     handler: async (formData) => {
-      console.log("From here:", formData);
       const { data, error } = await resend.emails.send({
         from: "MK <mail@mohankumar.dev>",
         to: "mohansky@gmail.com",

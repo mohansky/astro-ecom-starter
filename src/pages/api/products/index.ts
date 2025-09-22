@@ -1,114 +1,61 @@
 // src/pages/api/products/index.ts
 import type { APIRoute } from 'astro';
-import fs from 'fs';
-import path from 'path';
-import { parse } from 'csv-parse/sync';
+import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, type Product } from '@/lib/db';
+import { requireUserOrAdminAuth } from '@/lib/auth-utils';
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  mrp: number;
-  discount: number;
-  weight: number;
-  imagePath: string;
-  slug: string;
-  category: string;
-  subcategory: string;
-  stock: number;
-  isActive: boolean;
-}
-
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    const searchParams = new URL(url).searchParams;
+    // Check authentication
+    const authResult = await requireUserOrAdminAuth(context);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const searchParams = new URL(context.request.url).searchParams;
+    const id = searchParams.get('id');
     const search = searchParams.get('search') || '';
     const category = searchParams.get('category') || '';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const isActive = searchParams.get('isActive') !== 'false'; // Default to true
 
-    // Read and parse the CSV file
-    const csvPath = path.join(process.cwd(), 'src', 'content', 'products', 'manubal-product-listing.csv');
+    // If requesting a specific product by ID
+    if (id) {
+      const product = await getProductById(id);
+      if (!product) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Product not found'
+        }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
 
-    if (!fs.existsSync(csvPath)) {
       return new Response(JSON.stringify({
-        success: false,
-        error: 'Products data file not found'
+        success: true,
+        products: [product]
       }), {
-        status: 404,
+        status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const csvContent = fs.readFileSync(csvPath, 'utf-8');
-    const records = parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true
+    // Get all products with filters
+    const result = await getAllProducts({
+      search,
+      category,
+      limit,
+      offset,
+      isActive
     });
-
-    // Convert and filter products
-    let products: Product[] = records.map((record: any) => {
-      const mrp = parseFloat(record.mrp || 0);
-      const totalPrice = parseFloat(record.total || 0);
-      const price = totalPrice || mrp; // Use total if available, otherwise mrp
-      const discount = mrp > 0 && price > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
-
-      return {
-        id: record.id || '',
-        name: record.name || '',
-        description: record.description || '',
-        price: price,
-        mrp: mrp,
-        discount: discount,
-        weight: parseFloat(record.weight || 0),
-        imagePath: record.slug || record.images || '',
-        slug: record.slug || '',
-        category: record.category || '',
-        subcategory: record.material || '',
-        stock: parseInt(record.quantity || 0),
-        isActive: (record.published || 'true').toLowerCase() === 'true'
-      };
-    });
-
-    // Apply filters
-    if (search.trim()) {
-      const searchLower = search.toLowerCase();
-      products = products.filter(product =>
-        product.name.toLowerCase().includes(searchLower) ||
-        product.description.toLowerCase().includes(searchLower) ||
-        product.category.toLowerCase().includes(searchLower) ||
-        product.subcategory.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (category.trim()) {
-      products = products.filter(product =>
-        product.category.toLowerCase() === category.toLowerCase()
-      );
-    }
-
-    const total = products.length;
-
-    // Apply pagination
-    const paginatedProducts = products.slice(offset, offset + limit);
-
-    // Get unique categories for filtering
-    const categories = [...new Set(records.map((record: any) =>
-      record.category
-    ))].filter(Boolean);
 
     return new Response(JSON.stringify({
       success: true,
-      products: paginatedProducts,
-      categories,
-      pagination: {
-        total,
-        limit,
-        offset,
-        hasMore: offset + limit < total
-      }
-    }, null, 2), {
+      products: result.products,
+      categories: result.categories,
+      pagination: result.pagination
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -118,6 +65,150 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response(JSON.stringify({
       success: false,
       error: error.message || 'Failed to fetch products'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const POST: APIRoute = async (context) => {
+  try {
+    // Check authentication
+    const authResult = await requireUserOrAdminAuth(context);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const productData = await context.request.json();
+
+    // Create product
+    const productId = await createProduct(productData);
+
+    return new Response(JSON.stringify({
+      success: true,
+      productId,
+      message: 'Product created successfully'
+    }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('Error creating product:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Failed to create product'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const PUT: APIRoute = async (context) => {
+  try {
+    // Check authentication
+    const authResult = await requireUserOrAdminAuth(context);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const searchParams = new URL(context.request.url).searchParams;
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product ID is required'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const productData = await context.request.json();
+
+    // Update product
+    const success = await updateProduct(id, productData);
+
+    if (!success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product not found or update failed'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Product updated successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('Error updating product:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Failed to update product'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const DELETE: APIRoute = async (context) => {
+  try {
+    // Check authentication
+    const authResult = await requireUserOrAdminAuth(context);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const searchParams = new URL(context.request.url).searchParams;
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product ID is required'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Delete product
+    const success = await deleteProduct(id);
+
+    if (!success) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product not found or delete failed'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Product deleted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('Error deleting product:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Failed to delete product'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

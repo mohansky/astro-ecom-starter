@@ -72,13 +72,10 @@ import Paragraph from "./Paragraph.astro";
 
   async function loadRecentOrders() {
     try {
-      console.log("Loading recent orders...");
-
       const response = await fetch("/api/orders/recent?limit=10");
       if (!response.ok) throw new Error("Failed to fetch recent orders");
 
       const orders = await response.json();
-      console.log("Recent orders loaded:", orders);
 
       if (!Array.isArray(orders) || orders.length === 0) {
         showOrdersError("No recent orders found");
@@ -121,7 +118,6 @@ import Paragraph from "./Paragraph.astro";
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("Loading recent orders component...");
     loadRecentOrders();
   });
 </script>

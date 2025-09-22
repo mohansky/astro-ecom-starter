@@ -3,9 +3,11 @@ import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  username: text("username").unique(),
   email: text("email").notNull().unique(),
   emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
+  role: text("role", { enum: ["admin", "user", "customer"] }).notNull().default("customer"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
@@ -49,12 +51,13 @@ export const verification = sqliteTable("verification", {
 export const products = sqliteTable("products", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  sku: text("sku").unique(),
   description: text("description"),
   category: text("category").notNull(),
   subcategory: text("subcategory"),
   price: real("price").notNull(),
   mrp: real("mrp").notNull(),
-  discount: real("discount").default(0),
   stock: integer("stock").notNull().default(0),
   weight: real("weight"),
   dimensions: text("dimensions"),
@@ -68,4 +71,14 @@ export const products = sqliteTable("products", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
 
-export const schema = { user, session, account, verification, products };
+export const orderStatusHistory = sqliteTable("order_status_history", {
+  id: text("id").primaryKey(),
+  orderId: integer("orderId").notNull(),
+  previousStatus: text("previousStatus"),
+  newStatus: text("newStatus").notNull(),
+  changedBy: text("changedBy").notNull().references(() => user.id),
+  notes: text("notes"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+export const schema = { user, session, account, verification, products, orderStatusHistory };

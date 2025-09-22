@@ -74,6 +74,110 @@ export async function getAllCustomers(): Promise<Customer[]> {
   }
 }
 
+// Function to get customers with pagination and filtering
+export async function getCustomersPaginated(params: {
+  limit: number;
+  offset: number;
+  search?: string;
+}): Promise<{
+  customers: Customer[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}> {
+  try {
+    const { limit, offset, search = '' } = params;
+
+    // Build WHERE clause for filtering
+    let whereClause = '';
+    const whereArgs: any[] = [];
+
+    if (search) {
+      whereClause = `WHERE (
+        c.first_name LIKE ? OR
+        c.last_name LIKE ? OR
+        c.email LIKE ? OR
+        (c.first_name || ' ' || c.last_name) LIKE ?
+      )`;
+      const searchTerm = `%${search}%`;
+      whereArgs.push(searchTerm, searchTerm, searchTerm, searchTerm);
+    }
+
+    // Get total count for pagination
+    const countResult = await db.execute({
+      sql: `
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM customers c
+        ${whereClause}
+      `,
+      args: whereArgs
+    });
+
+    const total = Number(countResult.rows[0].total);
+
+    // Get customers with pagination
+    const result = await db.execute({
+      sql: `
+        SELECT
+          c.id,
+          c.first_name,
+          c.last_name,
+          c.email,
+          c.phone_number,
+          c.address,
+          c.city,
+          c.state,
+          c.zip_code,
+          c.created_at,
+          COUNT(o.id) as order_count,
+          COALESCE(SUM(o.total), 0) as total_spent
+        FROM
+          customers c
+        LEFT JOIN
+          orders o ON c.id = o.customer_id
+        ${whereClause}
+        GROUP BY
+          c.id
+        ORDER BY
+          c.created_at DESC
+        LIMIT ? OFFSET ?
+      `,
+      args: [...whereArgs, limit, offset]
+    });
+
+    const customers = result.rows.map(row => ({
+      id: Number(row.id),
+      firstName: String(row.first_name),
+      lastName: String(row.last_name),
+      email: String(row.email),
+      phoneNumber: String(row.phone_number || ''),
+      address: String(row.address),
+      city: String(row.city),
+      state: String(row.state),
+      zipCode: String(row.zip_code),
+      createdAt: String(row.created_at),
+      orderCount: Number(row.order_count),
+      totalSpent: Number(row.total_spent)
+    }));
+
+    return {
+      customers,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching paginated customers:', error);
+    throw error;
+  }
+}
+
 // Function to get detailed customer information with their orders
 export async function getCustomerById(customerId: number): Promise<CustomerDetail | null> {
   try {

@@ -10,7 +10,7 @@ const siteData = defineCollection({
       title: z.string(),
       description: z.string(),
       basepath: z.string().url({ message: "Base path must be a valid URL" }),
-      ogImageURL: image(),
+      ogImageURL: z.string(),
       keywords: z.array(z.string()),
       author: z.object({
         name: z.string(),
@@ -29,7 +29,7 @@ const siteData = defineCollection({
       email: z.string().email({ message: "Must be a valid email address" }),
       hero: z.array(
         z.object({
-          bgImage: image(),
+          bgImage: z.string(),
           title: z.string(),
           subtitle: z.string(),
           btnText: z.string(),
@@ -38,9 +38,9 @@ const siteData = defineCollection({
       ),
       introTitle: z.string(),
       introText: z.string(),
-      introImage: image(),
+      introImage: z.string(),
       peopleTitle: z.string(),
-      peopleImage: image(),
+      peopleImage: z.string(),
       peopleSubtitle: z.string(),
       peopleText: z.string(),
       people: z.array(
@@ -48,7 +48,7 @@ const siteData = defineCollection({
           name: z.string(),
           title: z.string(),
           subtitle: z.string(),
-          image: image(),
+          image: z.string(),
         })
       ),
       socialTitle: z.string(),

@@ -1,11 +1,9 @@
 // src/lib/auth-client.ts - Simple approach
 import { createAuthClient } from "better-auth/client";
 
-const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL || 
-                import.meta.env.BETTER_AUTH_URL || 
+const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL ||
+                import.meta.env.BETTER_AUTH_URL ||
                 'http://localhost:4321';
-
-console.log('Using Auth URL:', baseURL);
 
 export const authClient = createAuthClient({
   baseURL,

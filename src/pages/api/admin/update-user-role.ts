@@ -1,0 +1,53 @@
+import type { APIRoute } from 'astro';
+import { requireAdminAuth } from '@/lib/auth-utils';
+import { db } from '@/lib/db';
+import { user } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
+
+export const POST: APIRoute = async (context) => {
+  try {
+    // Check if user is admin
+    const authResult = await requireAdminAuth(context);
+    if (authResult instanceof Response) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await context.request.json();
+    const { userId, role } = body;
+
+    if (!userId || !role) {
+      return new Response(JSON.stringify({ error: 'Missing userId or role' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate role
+    if (!['admin', 'user', 'customer'].includes(role)) {
+      return new Response(JSON.stringify({ error: 'Invalid role' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Update user role
+    await db
+      .update(user)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(user.id, userId));
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+};

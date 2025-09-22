@@ -1,0 +1,179 @@
+---
+import R2Image from "../ui/R2Image.astro";
+
+interface Props {
+  subDirectory?: string;
+}
+
+const { subDirectory = "" } = Astro.props;
+
+// For R2 images, we'll use a predictable naming pattern
+// Each product folder should contain images like: slug.jpg, slug-1.jpg, slug-2.jpg, etc.
+const imageVariants = ['jpg', 'jpeg', 'png', 'webp'];
+const imageNumbers = ['', '-1', '-2', '-3', '-4']; // Support up to 5 images per product
+
+const uniqueId = Math.random().toString(36).substring(2, 9);
+const mainSliderId = `main-swiper-${uniqueId}`;
+---
+
+{
+  subDirectory ? (
+    <div class="relative">
+      <div id={mainSliderId} class="swiper w-full flex-grow">
+        <div class="swiper-wrapper">
+          <!-- Primary image (slug.jpg) -->
+          <div class="swiper-slide">
+            <R2Image
+              src={`${subDirectory}/${subDirectory}.jpg`}
+              alt={subDirectory}
+              width={800}
+              height={600}
+              class="object-contain w-full h-64"
+            />
+          </div>
+
+          <!-- Additional images (slug-1.jpg, slug-2.jpg, etc.) -->
+          {imageNumbers.slice(1).map((num) => (
+            <div class="swiper-slide">
+              <R2Image
+                src={`${subDirectory}/${subDirectory}${num}.jpg`}
+                alt={`${subDirectory} ${num}`}
+                width={800}
+                height={600}
+                class="object-contain w-full h-64"
+                fallback={false}
+              />
+            </div>
+          ))}
+        </div>
+
+        <!-- Navigation buttons -->
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+
+        <!-- Pagination -->
+        <div class="swiper-pagination"></div>
+      </div>
+    </div>
+  ) : (
+    <div class="text-center py-8 border border-gray-200 rounded bg-base-200">
+      <div class="text-6xl mb-4">📦</div>
+      <p class="text-base-content/70">No image available</p>
+      <p class="text-sm text-base-content/50 mt-2">
+        Upload an image for this product in the admin panel
+      </p>
+    </div>
+  )
+}
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/10.2.0/swiper-bundle.min.css"
+/>
+
+<script define:vars={{ mainSliderId }} is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+    initializeSwiper();
+  });
+
+  document.addEventListener("astro:page-load", () => {
+    initializeSwiper();
+  });
+
+  function initializeSwiper() {
+    if (typeof Swiper === "undefined") {
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/Swiper/10.2.0/swiper-bundle.min.js";
+      script.onload = initializeSwiper;
+      document.head.appendChild(script);
+      return;
+    }
+
+    const mainContainer = document.getElementById(mainSliderId);
+    if (!mainContainer) return;
+
+    // Hide slides with failed images
+    const slides = mainContainer.querySelectorAll('.swiper-slide');
+    slides.forEach(slide => {
+      const img = slide.querySelector('img');
+      if (img) {
+        img.addEventListener('error', () => {
+          slide.style.display = 'none';
+        });
+        img.addEventListener('load', () => {
+          slide.style.display = 'block';
+        });
+      }
+    });
+
+    const mainSwiper = new Swiper(`#${mainSliderId}`, {
+      spaceBetween: 10,
+      effect: "slide",
+      loop: false,
+      autoplay: {
+        delay: 4000,
+        disableOnInteraction: false,
+      },
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+      },
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true,
+      },
+      // Only enable controls if there are multiple visible slides
+      on: {
+        init: function() {
+          const visibleSlides = Array.from(this.slides).filter(slide =>
+            slide.style.display !== 'none'
+          );
+          if (visibleSlides.length <= 1) {
+            this.navigation.destroy();
+            this.pagination.destroy();
+            this.autoplay.stop();
+          }
+        }
+      }
+    });
+  }
+</script>
+
+<style>
+  .swiper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .swiper-slide {
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: hsl(var(--p));
+    background: hsl(var(--b1) / 0.8);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-top: -16px;
+  }
+
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .swiper-pagination-bullet {
+    background: hsl(var(--p));
+  }
+
+  .swiper-pagination {
+    bottom: 8px;
+  }
+</style>

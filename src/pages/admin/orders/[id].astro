@@ -4,19 +4,27 @@ import Container from "@/components/ui/Container.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProfileLayout from "@/layouts/ProfileLayout.astro";
 import { formatCurrency, formatDate } from "@/lib/helpers";
-import { getOrderById, updateOrderStatus } from "@/lib/orders";
+import { getOrderById, updateOrderStatus, getOrderStatusHistory } from "@/lib/orders";
+import { getUser } from "@/lib/auth-utils";
 
 const { id } = Astro.params;
 const orderId = parseInt(id || "0");
+
+// Get current user for audit trail
+const currentUser = await getUser(Astro);
+if (!currentUser) {
+  return Astro.redirect("/admin/login");
+}
 
 let message = "";
 if (Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
     const newStatus = formData.get("status")?.toString();
+    const notes = formData.get("notes")?.toString();
 
     if (newStatus) {
-      await updateOrderStatus(orderId, newStatus);
+      await updateOrderStatus(orderId, newStatus, currentUser.id, notes);
       message = "Order status updated successfully";
     }
   } catch (error) {
@@ -26,6 +34,7 @@ if (Astro.request.method === "POST") {
 }
 
 const order = await getOrderById(orderId);
+const statusHistory = await getOrderStatusHistory(orderId);
 
 if (!order) {
   return Astro.redirect("/admin/orders");
@@ -70,8 +79,8 @@ function getStatusBadge(status: string): string {
         )
       }
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="card bg-base-100 shadow-sm">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 card bg-base-100 shadow-sm">
           <div class="card-body">
             <div
               class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
@@ -90,27 +99,95 @@ function getStatusBadge(status: string): string {
                 >
                   {order.status}
                 </div>
-                <form method="POST" class="flex items-center gap-2">
-                  <select
-                    name="status"
-                    class="select select-bordered w-full max-w-xs"
-                  >
-                    {
-                      statuses.map((status) => (
-                        <option
-                          value={status}
-                          selected={status === order.status}
-                        >
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </option>
-                      ))
-                    }
-                  </select>
-                  <button type="submit" class="btn btn-primary">
-                    Update
-                  </button>
+                <form method="POST" class="flex flex-col gap-2">
+                  <div class="flex items-center gap-2">
+                    <select
+                      name="status"
+                      class="select select-bordered w-full max-w-xs"
+                    >
+                      {
+                        statuses.map((status) => (
+                          <option
+                            value={status}
+                            selected={status === order.status}
+                          >
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </option>
+                        ))
+                      }
+                    </select>
+                    <button type="submit" class="btn btn-primary">
+                      Update
+                    </button>
+                  </div>
+                  <textarea
+                    name="notes"
+                    placeholder="Optional notes about this status change..."
+                    class="textarea textarea-bordered textarea-sm w-full max-w-xs"
+                    rows="2"
+                  ></textarea>
                 </form>
               </div>
+            </div>
+
+            <!-- Status History -->
+            <div class="divider"></div>
+            <div class="mt-4">
+              <h3 class="font-semibold text-lg mb-3">Status History</h3>
+              {statusHistory.length > 0 ? (
+                <div class="overflow-x-auto">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Changed By</th>
+                        <th>Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {statusHistory.map((entry) => (
+                        <tr>
+                          <td class="text-sm">
+                            {formatDate(entry.createdAt)}
+                          </td>
+                          <td>
+                            {entry.previousStatus ? (
+                              <span class={`badge badge-xs ${getStatusBadge(entry.previousStatus)}`}>
+                                {entry.previousStatus}
+                              </span>
+                            ) : (
+                              <span class="text-base-content/50">-</span>
+                            )}
+                          </td>
+                          <td>
+                            <span class={`badge badge-xs ${getStatusBadge(entry.newStatus)}`}>
+                              {entry.newStatus}
+                            </span>
+                          </td>
+                          <td class="text-sm">
+                            <div class="flex flex-col">
+                              <span class="font-medium">@{entry.changedByUsername || entry.changedByName}</span>
+                            </div>
+                          </td>
+                          <td class="text-sm max-w-xs">
+                            {entry.notes ? (
+                              <span class="text-base-content/80">{entry.notes}</span>
+                            ) : (
+                              <span class="text-base-content/40 italic">No notes</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div class="text-center py-8 text-base-content/60">
+                  <p>No status changes recorded yet.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -181,11 +258,7 @@ function getStatusBadge(status: string): string {
                     class="text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >Quantity</th
                   >
-                  <!-- <th
-                scope="col"
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >Tax</th
-              > -->
+ 
                   <th
                     scope="col"
                     class="text-xs text-right font-medium text-gray-500 uppercase tracking-wider"
@@ -199,17 +272,15 @@ function getStatusBadge(status: string): string {
                     <tr class="hover:bg-base-200/30">
                       <td>
                         <div>
-                          <div class="font-medium">{item.productName}</div>
-                          <div class="text-sm text-base-content/70">
-                            ID: {item.productId}
+                          <div class="font-medium text-lg">{item.productName}</div>
+                          <div class="text-xs text-base-content/70">
+                            SKU: {item.sku || 'N/A'}
                           </div>
                         </div>
                       </td>
                       <td>{formatCurrency(item.price)}</td>
                       <td>{item.quantity}</td>
-                      {/* <td>{formatCurrency(item.price * 0.05)}</td> */}
                       <td class="text-right font-medium">
-                        {/* {formatCurrency(item.price + item.price * 0.05)} */}
                         {formatCurrency(item.total)}
                       </td>
                     </tr>

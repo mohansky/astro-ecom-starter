@@ -1,0 +1,19 @@
+{
+  "name": "Astro Ecom",
+  "short_name": "Astro Ecom",
+  "description": "Quality products with fast shipping and excellent customer service",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["shopping", "ecommerce"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

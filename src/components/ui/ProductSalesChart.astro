@@ -83,29 +83,23 @@ import Paragraph from "./Paragraph.astro";
 
   function waitForProductChart() {
     if (typeof Chart !== "undefined") {
-      console.log("Chart.js loaded for product sales");
       initializeProductChart();
     } else {
-      console.log("Waiting for Chart.js for product chart...");
       setTimeout(waitForProductChart, 100);
     }
   }
 
   function initializeProductChart() {
-    console.log("Initializing product sales chart");
     loadProductSalesData();
     setupProductEventListeners();
   }
 
   async function loadProductSalesData(days = currentProductDays) {
     try {
-      console.log("Loading product sales data for", days, "days...");
-
       const response = await fetch(`/api/orders/product-sales?days=${days}`);
       if (!response.ok) throw new Error("Failed to fetch product sales data");
 
       productSalesData = await response.json();
-      console.log("Product sales data loaded:", productSalesData);
 
       if (!Array.isArray(productSalesData) || productSalesData.length === 0) {
         showProductError("No product sales data available");
@@ -134,7 +128,6 @@ import Paragraph from "./Paragraph.astro";
   }
 
   function createProductChart() {
-    console.log("Creating product sales pie chart");
 
     if (typeof Chart === "undefined") {
       console.error("Chart.js not loaded");
@@ -200,7 +193,6 @@ import Paragraph from "./Paragraph.astro";
       }
     });
 
-    console.log("Product sales pie chart created successfully");
   }
 
   function updateProductStats() {
@@ -247,7 +239,6 @@ import Paragraph from "./Paragraph.astro";
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM loaded, waiting for Chart.js for product sales...");
     waitForProductChart();
   });
 </script>

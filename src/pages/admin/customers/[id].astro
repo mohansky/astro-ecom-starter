@@ -197,8 +197,6 @@ const { id } = Astro.params;
 
   async function loadCustomerDetails() {
     try {
-      console.log("Loading customer details for ID:", customerId);
-
       const response = await fetch(`/api/customers/${customerId}`);
       if (!response.ok) {
         if (response.status === 404) {
@@ -208,13 +206,11 @@ const { id } = Astro.params;
       }
 
       const customer = await response.json();
-      console.log("Customer details loaded:", customer);
 
       hideLoading();
       renderCustomerDetails(customer);
       renderOrders(customer.orders || []);
     } catch (error) {
-      console.error("Error loading customer details:", error);
       showError(error.message || "Failed to load customer details");
     }
   }
@@ -284,7 +280,6 @@ const { id } = Astro.params;
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    console.log("Loading customer details page...");
     loadCustomerDetails();
   });
 </script>
