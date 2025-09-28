@@ -1,6 +1,6 @@
 ---
-import Heading from "./Heading.astro";
-import Paragraph from "./Paragraph.astro";
+import Heading from './Heading.astro';
+import Paragraph from './Paragraph.astro';
 
 // OrdersChart.astro
 ---
@@ -10,32 +10,44 @@ import Paragraph from "./Paragraph.astro";
   class="bg-base-200 stats flex flex-col md:flex-row shadow mb-5"
 >
   <div class="stat">
-    <Paragraph size="xxs" class="opacity-50" id="total-orders-label">Total Orders</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="total-orders-label"
+      >Total Orders</Paragraph
+    >
     <Heading fontweight="bold" size="xl" id="total-orders" class="text-warning"
       >0</Heading
     >
-    <Paragraph size="xxs" class="opacity-50" id="total-orders-period">Last 12 months</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="total-orders-period"
+      >Last 12 months</Paragraph
+    >
   </div>
 
   <div class="stat">
-    <Paragraph size="xxs" class="opacity-50" id="total-revenue-label">Total Revenue</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="total-revenue-label"
+      >Total Revenue</Paragraph
+    >
     <Heading fontweight="bold" size="xl" id="total-revenue" class="text-info"
       >0</Heading
     >
-    <Paragraph size="xxs" class="opacity-50" id="total-revenue-period">Last 12 months</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="total-revenue-period"
+      >Last 12 months</Paragraph
+    >
   </div>
 
   <div class="stat">
-    <Paragraph size="xxs" class="opacity-50" id="avg-orders-label">Avg Orders/Month</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="avg-orders-label"
+      >Avg Orders/Month</Paragraph
+    >
     <Heading fontweight="bold" size="xl" id="avg-orders" class="text-accent"
       >0</Heading
     >
-    <Paragraph size="xxs" class="opacity-50" id="avg-orders-period">12 month average</Paragraph>
+    <Paragraph size="xxs" class="opacity-50" id="avg-orders-period"
+      >12 month average</Paragraph
+    >
   </div>
 </div>
 <div class="card bg-base-200 shadow-sm w-full">
   <div class="card-body">
-    <Heading size="md" class="mb-4">Orders Recieved</Heading> 
+    <Heading size="md" class="mb-4">Orders Recieved</Heading>
 
     <div id="chart-loading" class="flex items-center justify-center h-64">
       <span class="loading loading-spinner loading-lg"></span>
@@ -54,12 +66,14 @@ import Paragraph from "./Paragraph.astro";
         <button id="lineChartBtn" class="btn btn-primary btn-sm"
           >Line Chart</button
         >
-        <button id="barChartBtn" class="btn btn-outline btn-sm">Bar Chart</button>
+        <button id="barChartBtn" class="btn btn-outline btn-sm"
+          >Bar Chart</button
+        >
         <button id="toggleRevenueBtn" class="btn btn-accent btn-sm"
           >Show Revenue</button
         >
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button id="dateRange7" class="btn btn-outline btn-sm" data-days="7"
           >Last 7 Days</button
         >
@@ -88,9 +102,9 @@ import Paragraph from "./Paragraph.astro";
 
   // Currency formatting function for client-side use
   function formatCurrency(amount) {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
     }).format(amount);
   }
 
@@ -98,20 +112,20 @@ import Paragraph from "./Paragraph.astro";
   function getDateRangeDescription(days) {
     switch (days) {
       case 7:
-        return "Last 7 days";
+        return 'Last 7 days';
       case 30:
-        return "Last 30 days";
+        return 'Last 30 days';
       case 90:
-        return "Last 90 days";
+        return 'Last 90 days';
       case 365:
-        return "Last 12 months";
+        return 'Last 12 months';
       default:
         return `Last ${days} days`;
     }
   }
 
   function waitForChart() {
-    if (typeof Chart !== "undefined") {
+    if (typeof Chart !== 'undefined') {
       initializeChart();
     } else {
       setTimeout(waitForChart, 100);
@@ -126,12 +140,12 @@ import Paragraph from "./Paragraph.astro";
   async function loadChartData(days = currentDays) {
     try {
       const response = await fetch(`/api/orders/monthly-stats?days=${days}`);
-      if (!response.ok) throw new Error("Failed to fetch data");
+      if (!response.ok) throw new Error('Failed to fetch data');
 
       chartData = await response.json();
 
       if (!Array.isArray(chartData) || chartData.length === 0) {
-        showError("No order data available");
+        showError('No order data available');
         return;
       }
 
@@ -144,50 +158,50 @@ import Paragraph from "./Paragraph.astro";
       createChart();
       updateStats();
     } catch (error) {
-      console.error("Error loading data:", error);
-      showError("Failed to load chart data");
+      console.error('Error loading data:', error);
+      showError('Failed to load chart data');
     }
   }
 
   function formatMonth(monthStr) {
-    const parts = monthStr.split("-");
+    const parts = monthStr.split('-');
     const year = parseInt(parts[0]);
     const month = parseInt(parts[1]) - 1;
     const date = new Date(year, month);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      year: "2-digit",
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      year: '2-digit',
     });
   }
 
   function hideLoading() {
-    document.getElementById("chart-loading").classList.add("hidden");
-    document.getElementById("chart-container").classList.remove("hidden");
-    document.getElementById("stats-container").classList.remove("hidden");
+    document.getElementById('chart-loading').classList.add('hidden');
+    document.getElementById('chart-container').classList.remove('hidden');
+    document.getElementById('stats-container').classList.remove('hidden');
   }
 
   function showError(message) {
-    document.getElementById("chart-loading").classList.add("hidden");
-    document.getElementById("error-message").textContent = message;
-    document.getElementById("chart-error").classList.remove("hidden");
+    document.getElementById('chart-loading').classList.add('hidden');
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('chart-error').classList.remove('hidden');
   }
 
   function createChart(type) {
-    if (!type) type = "line";
+    if (!type) type = 'line';
 
-    if (typeof Chart === "undefined") {
-      console.error("Chart.js not loaded");
-      showError("Chart.js library not loaded");
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js not loaded');
+      showError('Chart.js library not loaded');
       return;
     }
 
-    const canvas = document.getElementById("ordersChart");
+    const canvas = document.getElementById('ordersChart');
     if (!canvas) {
-      console.error("Canvas not found");
+      console.error('Canvas not found');
       return;
     }
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
 
     if (chartInstance) {
       chartInstance.destroy();
@@ -195,56 +209,56 @@ import Paragraph from "./Paragraph.astro";
 
     const datasets = [
       {
-        label: "Orders",
+        label: 'Orders',
         data: chartData.map((item) => item.orderCount),
-        borderColor: "oklch(70% 0.213 47.604)",
+        borderColor: 'oklch(70% 0.213 47.604)',
         backgroundColor:
-          type === "bar" ? "oklch(70% 0.213 47.604)" : "rgba(37, 99, 235, 0.1)",
+          type === 'bar' ? 'oklch(70% 0.213 47.604)' : 'rgba(37, 99, 235, 0.1)',
         borderWidth: 2,
-        fill: type === "line",
+        fill: type === 'line',
         tension: 0.4,
-        yAxisID: "y",
+        yAxisID: 'y',
       },
     ];
 
     if (showRevenue) {
       datasets.push({
-        label: "Revenue (₹)",
+        label: 'Revenue (₹)',
         data: chartData.map((item) => item.totalRevenue),
-        borderColor: "oklch(77% 0.152 181.912)",
+        borderColor: 'oklch(77% 0.152 181.912)',
         backgroundColor:
-          type === "bar"
-            ? "oklch(77% 0.152 181.912)"
-            : "rgba(220, 38, 38, 0.1)",
+          type === 'bar'
+            ? 'oklch(77% 0.152 181.912)'
+            : 'rgba(220, 38, 38, 0.1)',
         borderWidth: 2,
-        fill: type === "line",
+        fill: type === 'line',
         tension: 0.4,
-        yAxisID: "y1",
+        yAxisID: 'y1',
       });
     }
 
     const scales = {
       y: {
-        type: "linear",
+        type: 'linear',
         display: true,
-        position: "left",
+        position: 'left',
         beginAtZero: true,
         title: {
           display: true,
-          text: "Number of Orders",
+          text: 'Number of Orders',
         },
       },
     };
 
     if (showRevenue) {
       scales.y1 = {
-        type: "linear",
+        type: 'linear',
         display: true,
-        position: "right",
+        position: 'right',
         beginAtZero: true,
         title: {
           display: true,
-          text: "Revenue (₹)",
+          text: 'Revenue (₹)',
         },
         grid: {
           drawOnChartArea: false,
@@ -263,19 +277,19 @@ import Paragraph from "./Paragraph.astro";
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: "top",
+            position: 'top',
           },
           tooltip: {
             callbacks: {
               label: function (context) {
-                let label = context.dataset.label || "";
+                let label = context.dataset.label || '';
                 if (label) {
-                  label += ": ";
+                  label += ': ';
                 }
-                if (context.dataset.label === "Revenue (₹)") {
+                if (context.dataset.label === 'Revenue (₹)') {
                   label += formatCurrency(context.parsed.y);
                 } else {
-                  label += context.parsed.y + " orders";
+                  label += context.parsed.y + ' orders';
                 }
                 return label;
               },
@@ -285,7 +299,6 @@ import Paragraph from "./Paragraph.astro";
         scales: scales,
       },
     });
-
   }
 
   function updateStats() {
@@ -302,79 +315,83 @@ import Paragraph from "./Paragraph.astro";
 
     const dateRangeDesc = getDateRangeDescription(currentDays);
 
-    document.getElementById("total-orders").textContent = totalOrders;
-    document.getElementById("total-revenue").textContent =
+    document.getElementById('total-orders').textContent = totalOrders;
+    document.getElementById('total-revenue').textContent =
       formatCurrency(totalRevenue);
-    document.getElementById("avg-orders").textContent = avgOrders;
+    document.getElementById('avg-orders').textContent = avgOrders;
 
     // Update the descriptions using specific IDs
-    document.getElementById("total-orders-period").textContent = dateRangeDesc;
-    document.getElementById("total-revenue-period").textContent = dateRangeDesc;
-    document.getElementById("avg-orders-label").textContent = currentDays <= 30 ? "Avg Orders/Day" : "Avg Orders/Month";
-    document.getElementById("avg-orders-period").textContent = currentDays <= 30 ? `${currentDays} day average` : `${chartData.length} month average`;
+    document.getElementById('total-orders-period').textContent = dateRangeDesc;
+    document.getElementById('total-revenue-period').textContent = dateRangeDesc;
+    document.getElementById('avg-orders-label').textContent =
+      currentDays <= 30 ? 'Avg Orders/Day' : 'Avg Orders/Month';
+    document.getElementById('avg-orders-period').textContent =
+      currentDays <= 30
+        ? `${currentDays} day average`
+        : `${chartData.length} month average`;
   }
 
   function setupEventListeners() {
-    const lineBtn = document.getElementById("lineChartBtn");
-    const barBtn = document.getElementById("barChartBtn");
-    const toggleRevenueBtn = document.getElementById("toggleRevenueBtn");
+    const lineBtn = document.getElementById('lineChartBtn');
+    const barBtn = document.getElementById('barChartBtn');
+    const toggleRevenueBtn = document.getElementById('toggleRevenueBtn');
 
     if (lineBtn) {
-      lineBtn.addEventListener("click", function () {
-        createChart("line");
-        this.classList.add("btn-primary");
-        this.classList.remove("btn-outline");
-        barBtn.classList.remove("btn-primary");
-        barBtn.classList.add("btn-outline");
+      lineBtn.addEventListener('click', function () {
+        createChart('line');
+        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline');
+        barBtn.classList.remove('btn-primary');
+        barBtn.classList.add('btn-outline');
       });
     }
 
     if (barBtn) {
-      barBtn.addEventListener("click", function () {
-        createChart("bar");
-        this.classList.add("btn-primary");
-        this.classList.remove("btn-outline");
-        lineBtn.classList.remove("btn-primary");
-        lineBtn.classList.add("btn-outline");
+      barBtn.addEventListener('click', function () {
+        createChart('bar');
+        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline');
+        lineBtn.classList.remove('btn-primary');
+        lineBtn.classList.add('btn-outline');
       });
     }
 
     if (toggleRevenueBtn) {
-      toggleRevenueBtn.addEventListener("click", function () {
+      toggleRevenueBtn.addEventListener('click', function () {
         showRevenue = !showRevenue;
 
-        const currentType = chartInstance ? chartInstance.config.type : "line";
+        const currentType = chartInstance ? chartInstance.config.type : 'line';
         createChart(currentType);
 
-        this.textContent = showRevenue ? "Hide Revenue" : "Show Revenue";
+        this.textContent = showRevenue ? 'Hide Revenue' : 'Show Revenue';
       });
     }
 
     // Date range buttons
-    const dateRangeButtons = document.querySelectorAll("[data-days]");
-    dateRangeButtons.forEach(button => {
-      button.addEventListener("click", async function () {
-        const days = parseInt(this.getAttribute("data-days"));
+    const dateRangeButtons = document.querySelectorAll('[data-days]');
+    dateRangeButtons.forEach((button) => {
+      button.addEventListener('click', async function () {
+        const days = parseInt(this.getAttribute('data-days'));
         currentDays = days;
 
         // Update button states
-        dateRangeButtons.forEach(btn => {
-          btn.classList.remove("btn-primary");
-          btn.classList.add("btn-outline");
+        dateRangeButtons.forEach((btn) => {
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-outline');
         });
-        this.classList.add("btn-primary");
-        this.classList.remove("btn-outline");
+        this.classList.add('btn-primary');
+        this.classList.remove('btn-outline');
 
         // Show loading and reload data
-        document.getElementById("chart-loading").classList.remove("hidden");
-        document.getElementById("chart-container").classList.add("hidden");
+        document.getElementById('chart-loading').classList.remove('hidden');
+        document.getElementById('chart-container').classList.add('hidden');
 
         await loadChartData(days);
       });
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  document.addEventListener('DOMContentLoaded', function () {
     waitForChart();
   });
 </script>
