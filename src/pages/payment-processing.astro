@@ -1,0 +1,175 @@
+---
+// src/pages/payment-processing.astro
+import Layout from "@/layouts/Layout.astro";
+import Container from "@/components/ui/Container.astro";
+
+// Get redirect URL from query params, default to order-success
+const redirectUrl = Astro.url.searchParams.get('redirectUrl') || '/order-success';
+const orderId = Astro.url.searchParams.get('orderId');
+---
+
+<Layout title="Processing Payment | Manubal">
+  <Container>
+    <div class="min-h-screen flex items-center justify-center bg-base-100">
+      <div class="card bg-base-200 shadow-xl w-full max-w-lg">
+        <div class="card-body text-center py-12">
+          <!-- Loading Animation -->
+          <div class="flex justify-center mb-6">
+            <div class="relative">
+              <!-- Outer spinning circle -->
+              <div class="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+
+              <!-- Inner pulsing circle -->
+              <div class="absolute inset-2 w-16 h-16 border-2 border-secondary/30 border-b-secondary rounded-full animate-pulse"></div>
+
+              <!-- Payment icon in center -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Message -->
+          <h1 class="text-2xl font-bold mb-4 text-primary">Processing Your Payment</h1>
+
+          <div class="space-y-3 mb-8">
+            <p class="text-base-content/80">
+              Please wait while we confirm your payment details...
+            </p>
+
+            {orderId && (
+              <p class="text-sm text-base-content/60">
+                Order #{orderId}
+              </p>
+            )}
+          </div>
+
+          <!-- Progress Steps -->
+          <div class="steps steps-vertical lg:steps-horizontal w-full mb-8">
+            <div class="step step-primary">Payment Initiated</div>
+            <div class="step step-primary" id="processing-step">Processing</div>
+            <div class="step" id="confirmation-step">Confirmation</div>
+          </div>
+
+          <!-- Important Instructions -->
+          <div class="alert alert-warning shadow-lg mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div class="text-left">
+              <h3 class="font-bold">Important!</h3>
+              <div class="text-sm space-y-1">
+                <p>• Do not refresh this page</p>
+                <p>• Do not go back or close the browser</p>
+                <p>• You will be redirected automatically</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Badge -->
+          <div class="flex items-center justify-center gap-2 text-sm text-base-content/60">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span>Secured by SSL encryption</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Layout>
+
+<!-- Auto-redirect script -->
+<script define:vars={{ redirectUrl, orderId }}>
+  // Prevent user from navigating away
+  let isRedirecting = false;
+
+  // Show warning if user tries to leave
+  window.addEventListener('beforeunload', function (e) {
+    if (!isRedirecting) {
+      e.preventDefault();
+      e.returnValue = 'Your payment is being processed. Are you sure you want to leave?';
+      return e.returnValue;
+    }
+  });
+
+  // Disable back button
+  window.history.pushState(null, null, window.location.href);
+  window.addEventListener('popstate', function (e) {
+    if (!isRedirecting) {
+      window.history.pushState(null, null, window.location.href);
+
+      // Show alert
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-warning fixed top-4 left-4 right-4 z-50 max-w-md mx-auto';
+      alert.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <span>Please don't go back. Your payment is being processed.</span>
+      `;
+      document.body.appendChild(alert);
+
+      // Remove alert after 3 seconds
+      setTimeout(() => {
+        if (alert.parentNode) {
+          alert.parentNode.removeChild(alert);
+        }
+      }, 3000);
+    }
+  });
+
+  // Animate progress steps
+  setTimeout(() => {
+    document.getElementById('processing-step')?.classList.add('step-primary');
+  }, 1000);
+
+  setTimeout(() => {
+    document.getElementById('confirmation-step')?.classList.add('step-primary');
+  }, 2500);
+
+  // Redirect after 3-4 seconds
+  setTimeout(() => {
+    isRedirecting = true;
+
+    // Build redirect URL with order ID if available
+    let finalRedirectUrl = redirectUrl;
+    if (orderId && !finalRedirectUrl.includes('?')) {
+      finalRedirectUrl += `?id=${orderId}`;
+    } else if (orderId) {
+      finalRedirectUrl += `&id=${orderId}`;
+    }
+
+    window.location.href = finalRedirectUrl;
+  }, 3500);
+</script>
+
+<style>
+  /* Prevent text selection and right-click */
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Disable right-click context menu */
+  body {
+    -webkit-context-menu: none;
+    -moz-context-menu: none;
+    -ms-context-menu: none;
+    context-menu: none;
+  }
+
+  /* Custom keyframe for smooth spinning */
+  @keyframes smoothSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-spin {
+    animation: smoothSpin 2s linear infinite;
+  }
+</style>

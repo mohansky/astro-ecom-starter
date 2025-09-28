@@ -13,6 +13,7 @@ export const POST: APIRoute = async (context) => {
     const formData = await context.request.formData();
     const file = formData.get('image') as File;
     const productName = formData.get('productName') as string;
+    const isMainImage = formData.get('isMainImage') === 'true';
 
     if (!file || !productName) {
       return new Response(JSON.stringify({
@@ -69,8 +70,9 @@ export const POST: APIRoute = async (context) => {
     // Get file extension
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
 
-    // Create R2 key with the structure: products/{slug}/{slug}.{extension}
-    const r2Key = `products/${slug}/${slug}.${fileExtension}`;
+    // Create R2 key based on whether it's main image or additional
+    const fileName = isMainImage ? `main.${fileExtension}` : `${slug}.${fileExtension}`;
+    const r2Key = `products/${slug}/${fileName}`;
 
     // Get R2 credentials from environment
     const accountId = import.meta.env.CLOUDFLARE_ACCOUNT_ID;
@@ -115,10 +117,10 @@ export const POST: APIRoute = async (context) => {
 
     console.log(`Successfully uploaded to R2: ${r2Key}`);
 
-    // Return the slug (imagePath) that should be stored in the database
+    // Return the filename that should be stored in the database
     return new Response(JSON.stringify({
       success: true,
-      imagePath: slug,
+      imagePath: fileName,
       url: `${import.meta.env.R2_BUCKET_URL}/${r2Key}`,
       message: 'Image uploaded successfully to R2!'
     }), {

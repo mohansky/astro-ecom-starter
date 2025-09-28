@@ -1,5 +1,5 @@
 ---
-import MiniCart from "../ui/MiniCart.astro";
+import MiniCart from '../ui/MiniCart.astro';
 
 interface NavLink {
   text: string;
@@ -11,43 +11,43 @@ interface Props {
 }
 
 const { links } = Astro.props;
- 
+
 const currentPath = Astro.url.pathname;
 ---
 
 <script>
   let lastScrollTop = 0;
-  const navbar = document.getElementById("navbar");
+  const navbar = document.getElementById('navbar');
   const drawerToggle = document.getElementById(
-    "my-drawer-3"
+    'my-drawer-3'
   ) as HTMLInputElement;
-  const drawerSide = document.querySelector(".drawer-side") as HTMLElement;
- 
+  const drawerSide = document.querySelector('.drawer-side') as HTMLElement;
+
   if (drawerToggle && drawerSide) {
-    drawerToggle.addEventListener("change", () => {
+    drawerToggle.addEventListener('change', () => {
       if (drawerToggle.checked) {
         // Fade in
-        drawerSide.style.opacity = "0";
-        drawerSide.style.display = "block";
+        drawerSide.style.opacity = '0';
+        drawerSide.style.display = 'block';
         setTimeout(() => {
-          drawerSide.style.opacity = "1";
+          drawerSide.style.opacity = '1';
         }, 10);
       } else {
         // Fade out
-        drawerSide.style.opacity = "0";
+        drawerSide.style.opacity = '0';
         setTimeout(() => {
-          drawerSide.style.display = "none";
+          drawerSide.style.display = 'none';
         }, 300); // Match this with your transition duration
       }
     });
   }
 
-  window.addEventListener("scroll", () => {
+  window.addEventListener('scroll', () => {
     let scrollTop = window.scrollY || document.documentElement.scrollTop;
     if (scrollTop > lastScrollTop) {
-      navbar?.classList.add("-translate-y-full");
+      navbar?.classList.add('-translate-y-full');
     } else {
-      navbar?.classList.remove("-translate-y-full");
+      navbar?.classList.remove('-translate-y-full');
     }
     lastScrollTop = scrollTop;
   });
@@ -81,12 +81,12 @@ const currentPath = Astro.url.pathname;
             <div class="h-auto">
               <span>
                 <h1>
-                  <b>MANO</b>BAL
+                  <b>Craftwood </b>Studios
                 </h1>
               </span>
             </div>
 
-            <p class="sr-only">MANOBAL</p>
+            <p class="sr-only">Craftwood Studios</p>
           </a>
         </div>
 
@@ -123,14 +123,14 @@ const currentPath = Astro.url.pathname;
                 links.map(({ text, link }) => {
                   const isActive =
                     currentPath === link ||
-                    (link !== "/" && currentPath.startsWith(link));
+                    (link !== '/' && currentPath.startsWith(link));
                   return (
                     <li class="ml-5">
                       <a
                         href={link}
                         title={`Go to ${text}`}
-                        class={`rounded-none py-5 uppercase font-semibold ${isActive ? "border-b-4" : "hover:border-b-4"} focus:border-b-4 active:border-b-4`}
-                        aria-current={isActive ? "page" : undefined}
+                        class={`rounded-none py-5 uppercase font-semibold ${isActive ? 'border-b-4' : 'hover:border-b-4'} focus:border-b-4 active:border-b-4`}
+                        aria-current={isActive ? 'page' : undefined}
                       >
                         {text}
                       </a>
@@ -151,17 +151,18 @@ const currentPath = Astro.url.pathname;
 
   <!-- Mobile Navigation Drawer -->
   <div class="drawer-side z-30 py-3">
-    <label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
+    <label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"
+    ></label>
     <div class="menu bg-primary min-h-full w-full px-2" aria-label="Navigation">
       <a href="/" class="text-xl" title="Go to Home Page">
         <div class="w-20 h-auto">
           <span>
             <h1>
-              <b>MANO</b>BAL
+              <b>Craftwood </b>Studios
             </h1>
           </span>
         </div>
-        <p class="sr-only">MANOBAL</p>
+        <p class="sr-only">Craftwood Studios</p>
       </a>
 
       <span id="close-menu-label" class="sr-only">Close menu</span>
@@ -191,22 +192,22 @@ const currentPath = Astro.url.pathname;
           links.map(({ text, link }) => {
             const isActive =
               currentPath === link ||
-              (link !== "/" && currentPath.startsWith(link));
+              (link !== '/' && currentPath.startsWith(link));
             return (
               <li>
                 <a
                   href={link}
                   title={`Go to ${text}`}
-                  class={`mx-auto ${isActive ? "active-link" : ""}`}
+                  class={`mx-auto ${isActive ? 'active-link' : ''}`}
                   aria-label={`Go to ${text}`}
-                  aria-current={isActive ? "page" : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   {text}
                 </a>
               </li>
             );
           })
-        } 
+        }
       </ul>
     </div>
   </div>

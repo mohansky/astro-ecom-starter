@@ -1,6 +1,6 @@
 // src/stores/CartStore.ts
 import { atom } from 'nanostores';
-import { persistentAtom } from '@nanostores/persistent'
+import { persistentAtom } from '@nanostores/persistent';
 
 export interface CartItem {
   id: string;
@@ -23,20 +23,9 @@ if (typeof window !== 'undefined' && localStorage.getItem('cart')) {
   }
 }
 
-// Create an atom store with the initial cart data
-// export const cartItems = atom<CartItem[]>(initialCart);
-
-// // Save cart to localStorage whenever it changes
-// if (typeof window !== 'undefined') {
-//   cartItems.listen((items) => {
-//     localStorage.setItem('cart', JSON.stringify(items));
-//   });
-// }
-
-// Create a persistent atom with 'cart' as the storage key
 export const cartItems = persistentAtom<CartItem[]>('cart', [], {
   encode: JSON.stringify,
-  decode: JSON.parse
+  decode: JSON.parse,
 });
 
 // Helper function to ensure we always get an array
@@ -48,13 +37,13 @@ function getCartItems(): CartItem[] {
 // Add item to cart
 export function addToCart(item: Omit<CartItem, 'quantity'>) {
   const currentItems = getCartItems();
-  const existingItem = currentItems.find(cartItem => cartItem.id === item.id);
-  
+  const existingItem = currentItems.find((cartItem) => cartItem.id === item.id);
+
   if (existingItem) {
     // Increase quantity if item already exists
-    const updatedItems = currentItems.map(cartItem => 
-      cartItem.id === item.id 
-        ? { ...cartItem, quantity: cartItem.quantity + 1 } 
+    const updatedItems = currentItems.map((cartItem) =>
+      cartItem.id === item.id
+        ? { ...cartItem, quantity: cartItem.quantity + 1 }
         : cartItem
     );
     cartItems.set(updatedItems);
@@ -67,16 +56,16 @@ export function addToCart(item: Omit<CartItem, 'quantity'>) {
 // Remove item from cart
 export function removeFromCart(id: string) {
   const currentItems = getCartItems();
-  const updatedItems = currentItems.filter(item => item.id !== id);
+  const updatedItems = currentItems.filter((item) => item.id !== id);
   cartItems.set(updatedItems);
 }
 
 // Update item quantity
 export function updateQuantity(id: string, quantity: number) {
   if (quantity < 1) return;
-  
+
   const currentItems = getCartItems();
-  const updatedItems = currentItems.map(item => 
+  const updatedItems = currentItems.map((item) =>
     item.id === id ? { ...item, quantity } : item
   );
   cartItems.set(updatedItems);
@@ -85,17 +74,14 @@ export function updateQuantity(id: string, quantity: number) {
 // Calculate cart subtotal (price only, no shipping/tax)
 export function getCartTotal(): number {
   return getCartItems().reduce(
-    (total, item) => total + item.price * item.quantity, 
+    (total, item) => total + item.price * item.quantity,
     0
   );
 }
 
 // Get cart item count
 export function getCartCount(): number {
-  return getCartItems().reduce(
-    (count, item) => count + item.quantity, 
-    0
-  );
+  return getCartItems().reduce((count, item) => count + item.quantity, 0);
 }
 
 // Clear the cart
@@ -107,7 +93,7 @@ export function clearCart() {
 // Calculate total weight in kilograms
 export function getTotalWeight(): number {
   const totalGrams = getCartItems().reduce(
-    (total, item) => total + (item.weight * item.quantity), 
+    (total, item) => total + item.weight * item.quantity,
     0
   );
   // Convert grams to kilograms
@@ -148,10 +134,10 @@ export function getCartSubtotal(): number {
       // Remove tax from the price to get the base price
       const taxMultiplier = item.gstPercentage / 100;
       const basePrice = item.price / (1 + taxMultiplier);
-      return total + (basePrice * item.quantity);
+      return total + basePrice * item.quantity;
     } else {
       // Price doesn't include tax
-      return total + (item.price * item.quantity);
+      return total + item.price * item.quantity;
     }
   }, 0);
 }
@@ -163,5 +149,3 @@ export function getCartTotalWithShipping(): number {
   const tax = getCartTax();
   return subtotal + shipping + tax;
 }
-
-

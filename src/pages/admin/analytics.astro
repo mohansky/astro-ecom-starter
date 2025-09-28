@@ -1,29 +1,26 @@
 ---
-import Container from "@/components/ui/Container.astro";
-import OrdersChart from "@/components/ui/OrdersChart.astro";
-import ProductSalesChart from "@/components/ui/ProductSalesChart.astro";
-import Layout from "@/layouts/Layout.astro";
-import ProfileLayout from "@/layouts/ProfileLayout.astro";
-import { getUser } from "@/lib/auth-utils";
+import Container from '@/components/ui/Container.astro';
+import OrdersChart from '@/components/ui/OrdersChart.astro';
+import ProductSalesChart from '@/components/ui/ProductSalesChart.astro';
+import Layout from '@/layouts/Layout.astro';
+import ProfileLayout from '@/layouts/ProfileLayout.astro';
+import AdminBreadcrumbs from '@/components/Admin/AdminBreadcrumbs.astro';
+import { requireAdminAuth } from '@/lib/auth-utils';
 
-const user = await getUser(Astro);
-
-if (!user) {
-  return Astro.redirect("/admin/login");
+const authResult = await requireAdminAuth(Astro);
+if (authResult instanceof Response) {
+  return authResult;
 }
 ---
 
-<Layout title="Analytics Dashboard">
+<Layout title="Manobal | Analytics Dashboard">
   <ProfileLayout title="Analytics Dashboard">
     <Container width="marginy">
-      <div class="breadcrumbs text-sm mb-6">
-        <ul>
-          <li><a href="/admin">Dashboard</a></li>
-          <li>Analytics</li>
-        </ul>
-      </div>
-
-      <h1 class="text-3xl font-bold mb-8">Order Analytics</h1>
+      <AdminBreadcrumbs
+        items={[{ label: 'Analytics' }]}
+        pageTitle="Order Analytics"
+        pageDescription="Track your store's performance and sales metrics"
+      />
       <div class="space-y-4">
         <OrdersChart />
         <ProductSalesChart />

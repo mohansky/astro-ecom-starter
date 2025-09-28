@@ -17,7 +17,9 @@ export const GET: APIRoute = async (context) => {
     const category = searchParams.get('category') || '';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
-    const isActive = searchParams.get('isActive') !== 'false'; // Default to true
+    // Handle isActive parameter: undefined = show all, 'true' = active only, 'false' = inactive only
+    const isActiveParam = searchParams.get('isActive');
+    const isActive = isActiveParam === null ? undefined : isActiveParam !== 'false';
 
     // If requesting a specific product by ID
     if (id) {

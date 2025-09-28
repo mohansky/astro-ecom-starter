@@ -2,60 +2,97 @@
 // Import the Image component
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import R2Image from "../ui/R2Image.astro";
 // import LVLogo from "../Icons/LVLogo.astro";
 // Define the props for the component
 interface Props {
   subDirectory?: string;
   slug?: string;
+  // New props for database-driven products
+  mainImage?: string;
+  images?: string[];
+  productName?: string;
+  useR2?: boolean; // Flag to determine if using R2 storage or static content
 }
 
-// Get the subdirectory from props, prioritize slug over subDirectory
-const { subDirectory = "", slug } = Astro.props;
+// Get all props
+const {
+  subDirectory = "",
+  slug,
+  mainImage,
+  images = [],
+  productName,
+  useR2 = false
+} = Astro.props;
+
 const imageDirectory = slug || subDirectory;
 
-// Import ALL images from the base directory and its subdirectories
-// This is a build-time operation that will include all images
-const allImages = import.meta.glob<{ default: ImageMetadata }>(
-  "/src/content/products/images/**/*.{png,jpg,JPG,jpeg,gif,webp}"
-);
-
-// Filter the images based on the provided subdirectory or slug
-const filteredImagePaths = Object.entries(allImages)
-  // Filter to only include images from the specified subdirectory
-  .filter(([path]) => {
-    if (!imageDirectory) {
-      // If no subdirectory, only show images directly in the main folder (no additional '/' after 'images/')
-      return path.match(
-        /^\/src\/content\/products\/images\/[^\/]+\.(png|jpg|JPG|jpeg|gif|webp)$/i
-      );
-    } else {
-      // If subdirectory provided, check if the path includes that subdirectory
-      const subDirPath = `/src/content/products/images/${imageDirectory}/`;
-      return path.startsWith(subDirPath);
-    }
-  });
-
-// Get just the first image (if any exist)
+// Determine which image system to use
 let featureImage = null;
 let imageName = "Image";
+let displayImage = null;
+let useStaticImages = false;
 
-if (filteredImagePaths.length > 0) {
-  // Get the first image path and loader
-  const [path, loader] = filteredImagePaths[0];
+if (useR2 && slug) {
+  // Use R2 storage system with database products
+  displayImage = mainImage || (images.length > 0 ? images[0] : null);
+  imageName = productName || "Product Image";
+} else {
+  // Use static content system (legacy)
+  useStaticImages = true;
 
-  // Load the image module
-  const imageModule = await loader();
+  // Import ALL images from the base directory and its subdirectories
+  // This is a build-time operation that will include all images
+  const allImages = import.meta.glob<{ default: ImageMetadata }>(
+    "/src/content/products/images/**/*.{png,jpg,JPG,jpeg,gif,webp}"
+  );
 
-  // Get the filename without extension
-  imageName = path.split("/").pop()?.split(".")[0] || "Image";
+  // Filter the images based on the provided subdirectory or slug
+  const filteredImagePaths = Object.entries(allImages)
+    // Filter to only include images from the specified subdirectory
+    .filter(([path]) => {
+      if (!imageDirectory) {
+        // If no subdirectory, only show images directly in the main folder (no additional '/' after 'images/')
+        return path.match(
+          /^\/src\/content\/products\/images\/[^\/]+\.(png|jpg|JPG|jpeg|gif|webp)$/i
+        );
+      } else {
+        // If subdirectory provided, check if the path includes that subdirectory
+        const subDirPath = `/src/content/products/images/${imageDirectory}/`;
+        return path.startsWith(subDirPath);
+      }
+    });
 
-  // Store the image metadata
-  featureImage = imageModule.default;
+  if (filteredImagePaths.length > 0) {
+    // Get the first image path and loader
+    const [path, loader] = filteredImagePaths[0];
+
+    // Load the image module
+    const imageModule = await loader();
+
+    // Get the filename without extension
+    imageName = path.split("/").pop()?.split(".")[0] || "Image";
+
+    // Store the image metadata
+    featureImage = imageModule.default;
+  }
 }
 ---
 
 {
-  featureImage ? (
+  useR2 && displayImage && slug ? (
+    <!-- R2 Storage System -->
+    <figure>
+      <R2Image
+        src={`products/${slug}/${displayImage}`}
+        alt={imageName}
+        width={600}
+        height={600}
+        class="bg-white border-2 border-primary object-contain rounded-lg"
+      />
+    </figure>
+  ) : useStaticImages && featureImage ? (
+    <!-- Static Content System -->
     <figure>
       <Image
         src={featureImage}
@@ -66,6 +103,7 @@ if (filteredImagePaths.length > 0) {
       />
     </figure>
   ) : (
+    <!-- No Image Available -->
     <figure>
       <svg
         class="w-24 h-24 text-base-content/50"

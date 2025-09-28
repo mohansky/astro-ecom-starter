@@ -1,0 +1,7 @@
+name,category,price,mrp,description,subcategory,stock,weight,dimensions,tags,active,featured,gstPercentage,taxInclusive
+"Wireless Bluetooth Headphones","Electronics",2999,3999,"Premium noise-cancelling wireless headphones with 30-hour battery life","Audio",25,350,"20 x 18 x 8 cm","bluetooth,wireless,audio,noise-cancelling",true,true,18,false
+"Cotton Casual T-Shirt","Clothing",599,799,"100% cotton comfortable casual wear t-shirt available in multiple colors","Men's Wear",50,200,"Medium: 40 x 28 cm","cotton,casual,comfortable,tshirt",true,false,5,true
+"Stainless Steel Water Bottle","Home & Kitchen",449,599,"Insulated stainless steel water bottle keeps drinks cold for 24 hours","Drinkware",75,450,"Height: 26 cm, Diameter: 7 cm","bottle,steel,insulated,eco-friendly",true,true,12,false
+"Gaming Mechanical Keyboard","Electronics",4999,6499,"RGB backlit mechanical gaming keyboard with blue switches","Gaming",15,980,"44 x 13 x 3.5 cm","gaming,keyboard,mechanical,rgb",true,true,18,false
+"Organic Green Tea","Food & Beverages",299,399,"Premium organic green tea leaves sourced from Darjeeling hills","Beverages",100,100,"10 x 8 x 15 cm","tea,organic,green,healthy",true,false,5,true
+"Portable Phone Stand","Accessories",199,299,"Adjustable aluminum phone stand compatible with all smartphones","Mobile Accessories",80,125,"12 x 8 x 2 cm","phone,stand,aluminum,adjustable",true,false,18,false

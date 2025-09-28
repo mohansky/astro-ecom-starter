@@ -3,10 +3,18 @@ import { Resend } from "resend";
 import { render } from "@react-email/render";
 import OrderConfirmationEmail from "@/components/emails/OrderConfirmationEmail";
 import { PasswordResetEmail } from "@/components/emails/PasswordResetEmail";
+import { EmailVerificationEmail } from "@/components/emails/EmailVerificationEmail";
 
 interface SendPasswordResetEmailProps {
   to: string;
   resetUrl: string;
+  userName: string;
+  token: string;
+}
+
+interface SendVerificationEmailProps {
+  to: string;
+  verificationUrl: string;
   userName: string;
   token: string;
 }
@@ -171,7 +179,7 @@ export async function sendPasswordResetEmail({
 
     // Send email via Resend
     const { data, error } = await resend.emails.send({
-      from: "Manobal <onboarding@resend.dev>", // Update with your domain
+      from: "Manubal <mail@mohankumar.dev>", // Update with your domain
       to: [to],
       subject: "Reset your password",
       html: emailHtml,
@@ -186,6 +194,67 @@ export async function sendPasswordResetEmail({
     return data;
   } catch (error) {
     console.error("Error sending password reset email:", error);
+    throw error;
+  }
+}
+
+export async function sendVerificationEmail({
+  to,
+  verificationUrl,
+  userName,
+  token,
+}: SendVerificationEmailProps) {
+  try {
+    console.log("Preparing to send verification email...");
+    console.log("To:", to);
+    console.log("Verification URL:", verificationUrl);
+
+    // Render the React email template
+    const emailHtml = await render(
+      EmailVerificationEmail({
+        userName,
+        verificationUrl,
+      })
+    );
+
+    // Send email via Resend
+    const { data, error } = await resend.emails.send({
+      from: "Manubal <mail@mohankumar.dev>",
+      to: [to],
+      subject: "Verify your email address - Manubal",
+      html: emailHtml,
+      // Add plain text version for better deliverability
+      text: `
+        Hi ${userName},
+
+        Welcome to Manubal! Please verify your email address by clicking the link below:
+
+        ${verificationUrl}
+
+        This verification link will expire in 24 hours for security reasons.
+
+        If you didn't create an account with Manubal, you can safely ignore this email.
+
+        Best regards,
+        The Manubal Team
+      `,
+      tags: [
+        {
+          name: "category",
+          value: "email_verification",
+        },
+      ],
+    });
+
+    if (error) {
+      console.error("Resend error:", error);
+      throw new Error(`Failed to send verification email: ${error.message}`);
+    }
+
+    console.log("Email verification sent successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("Error sending verification email:", error);
     throw error;
   }
 }

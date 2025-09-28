@@ -65,10 +65,11 @@ export const POST: APIRoute = async ({ request }) => {
       stock: ['stock', 'quantity', 'inventory'],
       weight: ['weight', 'weight_grams'],
       dimensions: ['dimensions', 'size'],
-      imagePath: ['image', 'image_path', 'folder'],
       tags: ['tags', 'keywords'],
       isActive: ['active', 'is_active', 'status'],
-      featured: ['featured', 'is_featured']
+      featured: ['featured', 'is_featured'],
+      gstPercentage: ['gstPercentage', 'gst_percentage', 'gst', 'tax_percentage'],
+      taxInclusive: ['taxInclusive', 'tax_inclusive', 'price_includes_tax']
     };
 
     for (const [field, possibleNames] of Object.entries(optionalFields)) {
@@ -98,6 +99,8 @@ export const POST: APIRoute = async ({ request }) => {
           category: values[fieldMapping.category],
           price: parseFloat(values[fieldMapping.price]),
           mrp: parseFloat(values[fieldMapping.mrp]),
+          gstPercentage: 5, // Default GST
+          taxInclusive: false, // Default tax inclusive
           isActive: true,
           featured: false
         };
@@ -126,9 +129,6 @@ export const POST: APIRoute = async ({ request }) => {
         if (fieldMapping.dimensions !== undefined) {
           product.dimensions = values[fieldMapping.dimensions] || undefined;
         }
-        if (fieldMapping.imagePath !== undefined) {
-          product.imagePath = values[fieldMapping.imagePath] || undefined;
-        }
         if (fieldMapping.tags !== undefined) {
           product.tags = values[fieldMapping.tags] || undefined;
         }
@@ -139,6 +139,14 @@ export const POST: APIRoute = async ({ request }) => {
         if (fieldMapping.featured !== undefined) {
           const featuredValue = values[fieldMapping.featured].toLowerCase();
           product.featured = featuredValue === 'true' || featuredValue === '1' || featuredValue === 'yes';
+        }
+        if (fieldMapping.gstPercentage !== undefined) {
+          const gst = parseFloat(values[fieldMapping.gstPercentage]);
+          product.gstPercentage = isNaN(gst) ? 5 : gst;
+        }
+        if (fieldMapping.taxInclusive !== undefined) {
+          const taxValue = values[fieldMapping.taxInclusive].toLowerCase();
+          product.taxInclusive = taxValue === 'true' || taxValue === '1' || taxValue === 'yes';
         }
 
         products.push(product);

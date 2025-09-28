@@ -1,11 +1,11 @@
 ---
 // src/components/ProductCard.astro
-import AddToCartButton from "../ui/AddToCartButton.astro";
-import Button from "../ui/Button.astro";
-import Heading from "../ui/Heading.astro";
-import Paragraph from "../ui/Paragraph.astro";
-import R2Image from "../ui/R2Image.astro";
-import ProductCardPrice from "./ProductCardPrice.astro";
+import AddToCartButton from '../ui/AddToCartButton.astro';
+import Button from '../ui/Button.astro';
+import Heading from '../ui/Heading.astro';
+import Paragraph from '../ui/Paragraph.astro';
+import R2Image from '../ui/R2Image.astro';
+import ProductCardPrice from './ProductCardPrice.astro';
 
 interface Props {
   id: number | string;
@@ -19,7 +19,8 @@ interface Props {
   artisan?: string;
   code?: string;
   description: string;
-  images?: string;
+  images?: string[];
+  mainImage?: string;
   subDirectory?: string;
   category: string;
   material?: string;
@@ -42,6 +43,7 @@ const {
   id,
   slug,
   images,
+  mainImage,
   subDirectory,
   name,
   category,
@@ -57,43 +59,51 @@ const {
   taxInclusive,
 } = Astro.props;
 const categoryClass =
-  category === "Macrame"
-    ? "badge-error"
-    : category === "Stitching"
-      ? "badge-accent"
-      : "";
+  category === 'Macrame'
+    ? 'badge-error'
+    : category === 'Stitching'
+      ? 'badge-accent'
+      : '';
 
-// Calculate the image path for the cart
-const imagePath = images ? `/products/${images}/1.jpg` : undefined;
+// Calculate the image path for the cart - use mainImage or fallback to first additional image
+const displayImage =
+  mainImage || (images && images.length > 0 ? images[0] : null);
+const imagePath = displayImage
+  ? `/products/${slug}/${displayImage}`
+  : undefined;
 ---
 
 <div class="card bg-base-100">
   <a href={`/shop/${slug}`} class="product-link" title={`View ${name} details`}>
     <figure class="relative">
-      {images ? (
-        <R2Image
-          src={`products/${images}/${images}.jpg`}
-          alt={name}
-          width={400}
-          height={400}
-          class="object-cover w-full h-auto"
-        />
-      ) : (
-        <div class="flex items-center justify-center w-full h-64 bg-base-200">
-          <div class="text-center">
-            <div class="text-6xl mb-4">📦</div>
-            <p class="text-base-content/70">No image available</p>
+      {
+        displayImage ? (
+          <R2Image
+            src={`products/${slug}/${displayImage}`}
+            alt={name}
+            width={400}
+            height={400}
+            class="object-cover w-full h-auto"
+          />
+        ) : (
+          <div class="flex items-center justify-center w-full aspect-square bg-base-200">
+            <div class="text-center">
+              <div class="text-6xl mb-4">📦</div>
+              <p class="text-base-content/70">No image available</p>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
       <div class={`badge absolute bottom-2 right-2 z-10 ${categoryClass}`}>
         {category}
       </div>
-      {featured && (
-        <div class="badge badge-warning absolute top-2 left-2 z-10">
-          Featured
-        </div>
-      )}
+      {
+        featured && (
+          <div class="badge badge-warning absolute top-2 left-2 z-10">
+            Featured
+          </div>
+        )
+      }
     </figure>
     <div class="card-body">
       <div class="tooltip" data-tip={name}>
@@ -108,8 +118,15 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
       <Paragraph class="line-clamp-2 mb-2">
         {description}
       </Paragraph>
-      <div class="card-actions flex justify-center items-center gap-4  w-full m-0 px-4">
-        <Button href={`/shop/${slug}`} variant="outline" className="flex-1" title={`View details for ${name}`}>
+      <div
+        class="card-actions flex justify-center items-center gap-4 w-full m-0 px-4"
+      >
+        <Button
+          href={`/shop/${slug}`}
+          variant="outline"
+          className="flex-1"
+          title={`View details for ${name}`}
+        >
           View Details
         </Button>
         <AddToCartButton
@@ -130,12 +147,12 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
 <script>
   function initProductCards() {
     // Fix links so Add to Cart button doesn't trigger navigation
-    document.querySelectorAll(".product-link").forEach((card) => {
-      card.addEventListener("click", (e) => {
+    document.querySelectorAll('.product-link').forEach((card) => {
+      card.addEventListener('click', (e) => {
         // If the click is on or inside the add-to-cart button, don't navigate
         if (
           e.target instanceof Element &&
-          (e.target.closest(".add-to-cart") || e.target.closest(".btn-outline"))
+          (e.target.closest('.add-to-cart') || e.target.closest('.btn-outline'))
         ) {
           e.preventDefault();
         }
@@ -144,8 +161,8 @@ const imagePath = images ? `/products/${images}/1.jpg` : undefined;
   }
 
   // Initialize when DOM is ready
-  document.addEventListener("DOMContentLoaded", initProductCards);
+  document.addEventListener('DOMContentLoaded', initProductCards);
 
   // For Astro View Transitions
-  document.addEventListener("astro:page-load", initProductCards);
+  document.addEventListener('astro:page-load', initProductCards);
 </script>

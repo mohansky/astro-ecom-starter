@@ -1,34 +1,32 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import ProfileLayout from "@/layouts/ProfileLayout.astro";
-import Container from "@/components/ui/Container.astro";
-import OrdersChart from "@/components/ui/OrdersChart.astro";
-import RecentOrders from "@/components/ui/RecentOrders.astro";
-import { getUser } from "@/lib/auth-utils";
-import UserCard from "@/components/ui/UserCard.astro";
+import Layout from '@/layouts/Layout.astro';
+import ProfileLayout from '@/layouts/ProfileLayout.astro';
+import Container from '@/components/ui/Container.astro';
+import OrdersChart from '@/components/ui/OrdersChart.astro';
+import RecentOrders from '@/components/ui/RecentOrders.astro';
+import { getUser } from '@/lib/auth-utils';
+import UserCard from '@/components/ui/UserCard.astro';
 
 const user = await getUser(Astro);
 
 if (!user) {
-  return Astro.redirect("/admin/login");
+  return Astro.redirect('/admin/login');
 }
 
 if (!user.emailVerified) {
-  return Astro.redirect("/emailVerification");
+  return Astro.redirect('/emailVerification');
 }
 ---
 
-<Layout title="Dashboard">
+<Layout title="Manobal | Dashboard">
   <ProfileLayout>
     <Container width="marginy">
-      <div class="max-w-8xl mt-20 lg:mt-0 mx-auto">
+      <div class="max-w-8xl mt-20 lg:mt-0 mx-auto space-y-8">
         <UserCard user={user} />
-        <div class="mb-8">
-          <OrdersChart />
-        </div>
-        <div class="mb-8">
-          <RecentOrders />
-        </div>
+
+        <OrdersChart />
+
+        <RecentOrders />
       </div>
     </Container>
   </ProfileLayout>

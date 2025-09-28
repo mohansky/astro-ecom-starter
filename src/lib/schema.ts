@@ -8,6 +8,7 @@ export const user = sqliteTable("user", {
   emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
   role: text("role", { enum: ["admin", "user", "customer"] }).notNull().default("customer"),
+  lastLoginAt: integer("lastLoginAt", { mode: "timestamp" }),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
@@ -61,7 +62,8 @@ export const products = sqliteTable("products", {
   stock: integer("stock").notNull().default(0),
   weight: real("weight"),
   dimensions: text("dimensions"),
-  imagePath: text("imagePath"),
+  mainImage: text("mainImage"), // Main feature image filename
+  images: text("images"), // JSON array of additional image filenames
   tags: text("tags"),
   gstPercentage: real("gstPercentage").notNull().default(5),
   taxInclusive: integer("taxInclusive", { mode: "boolean" }).notNull().default(false),

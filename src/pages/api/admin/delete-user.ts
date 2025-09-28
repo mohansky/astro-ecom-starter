@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { user, session, account } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const POST: APIRoute = async (context) => {
+const deleteUserHandler = async (context: any) => {
   try {
     // Check if user is admin
     const authResult = await requireAdminAuth(context);
@@ -52,3 +52,6 @@ export const POST: APIRoute = async (context) => {
     });
   }
 };
+
+export const DELETE: APIRoute = deleteUserHandler;
+export const POST: APIRoute = deleteUserHandler;

@@ -1,23 +1,23 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import ProfileLayout from "@/layouts/ProfileLayout.astro";
-import Container from "@/components/ui/Container.astro";
-import Heading from "@/components/ui/Heading.astro";
-import Paragraph from "@/components/ui/Paragraph.astro";
-import { getUser } from "@/lib/auth-utils";
+import Layout from '@/layouts/Layout.astro';
+import ProfileLayout from '@/layouts/ProfileLayout.astro';
+import Container from '@/components/ui/Container.astro';
+import Heading from '@/components/ui/Heading.astro';
+import Paragraph from '@/components/ui/Paragraph.astro';
+import { getUser } from '@/lib/auth-utils';
 
 const user = await getUser(Astro);
 
 if (!user) {
-  return Astro.redirect("/admin/login");
+  return Astro.redirect('/admin/login');
 }
 
 if (!user.emailVerified) {
-  return Astro.redirect("/emailVerification");
+  return Astro.redirect('/emailVerification');
 }
 ---
 
-<Layout title="Profile Settings">
+<Layout title="Manobal | Profile Settings">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-4xl mt-20 lg:mt-0 mx-auto">
@@ -83,7 +83,7 @@ if (!user.emailVerified) {
                   <input
                     type="text"
                     name="username"
-                    value={user.username || ""}
+                    value={user.username || ''}
                     class="input input-bordered w-full"
                     placeholder="Enter a unique username"
                   />
@@ -94,7 +94,9 @@ if (!user.emailVerified) {
                     <label class="label flex flex-col">
                       <span class="label-text">Role</span>
                     </label>
-                    <div class={`badge capitalize ${user.role === 'admin' ? 'badge-primary' : user.role === 'user' ? 'badge-info' : 'badge-error'}`}>
+                    <div
+                      class={`badge capitalize ${user.role === 'admin' ? 'badge-primary' : user.role === 'user' ? 'badge-info' : 'badge-error'}`}
+                    >
                       {user.role}
                     </div>
                   </div>
@@ -103,11 +105,13 @@ if (!user.emailVerified) {
                     <label class="label flex flex-col">
                       <span class="label-text">Is Email verified</span>
                     </label>
-                    <div class={`badge capitalize ${user.emailVerified ? 'badge-success' : 'badge-error'}`}>
+                    <div
+                      class={`badge capitalize ${user.emailVerified ? 'badge-success' : 'badge-error'}`}
+                    >
                       {
                         user.emailVerified
-                          ? "Email Verified"
-                          : "Email not verified"
+                          ? 'Email Verified'
+                          : 'Email not verified'
                       }
                     </div>
                   </div>
@@ -137,7 +141,7 @@ if (!user.emailVerified) {
                               class="bg-neutral text-neutral-content rounded-full w-full h-full flex items-center justify-center"
                             >
                               <span class="text-lg font-semibold">
-                                {user.name?.charAt(0).toUpperCase() || "U"}
+                                {user.name?.charAt(0).toUpperCase() || 'U'}
                               </span>
                             </div>
                           )
@@ -184,7 +188,7 @@ if (!user.emailVerified) {
                     type="hidden"
                     name="image"
                     id="image-field"
-                    value={user.image || ""}
+                    value={user.image || ''}
                   />
                 </div>
 
@@ -437,42 +441,42 @@ if (!user.emailVerified) {
 
     constructor() {
       this.container =
-        document.getElementById("toast-container") || this.createContainer();
+        document.getElementById('toast-container') || this.createContainer();
     }
 
     createContainer(): HTMLElement {
-      const container = document.createElement("div");
-      container.id = "toast-container";
-      container.className = "toast toast-top toast-end z-50";
+      const container = document.createElement('div');
+      container.id = 'toast-container';
+      container.className = 'toast toast-top toast-end z-50';
       document.body.appendChild(container);
       return container;
     }
 
     show(
       message: string,
-      type: "info" | "success" | "error" | "warning" = "info",
+      type: 'info' | 'success' | 'error' | 'warning' = 'info',
       duration: number = 4000
     ): void {
-      const toast = document.createElement("div");
+      const toast = document.createElement('div');
 
-      let alertClass = "";
-      let icon = "";
+      let alertClass = '';
+      let icon = '';
 
       switch (type) {
-        case "success":
-          alertClass = "alert-success";
+        case 'success':
+          alertClass = 'alert-success';
           icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
           break;
-        case "error":
-          alertClass = "alert-error";
+        case 'error':
+          alertClass = 'alert-error';
           icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
           break;
-        case "warning":
-          alertClass = "alert-warning";
+        case 'warning':
+          alertClass = 'alert-warning';
           icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
           break;
         default:
-          alertClass = "alert-info";
+          alertClass = 'alert-info';
           icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
       }
 
@@ -515,250 +519,251 @@ if (!user.emailVerified) {
   }
 
   function getErrorMessage(error: any): string {
-    if (typeof error === "string") {
+    if (typeof error === 'string') {
       return error;
     }
 
-    if (error && typeof error === "object") {
-      if ("message" in error && typeof error.message === "string") {
+    if (error && typeof error === 'object') {
+      if ('message' in error && typeof error.message === 'string') {
         return error.message;
       }
 
       // Handle Better Auth error structure
-      if ("code" in error || "message" in error) {
+      if ('code' in error || 'message' in error) {
         const msg = error.message;
-        return typeof msg === "string" ? msg : "An error occurred";
+        return typeof msg === 'string' ? msg : 'An error occurred';
       }
     }
 
-    return "An unknown error occurred";
+    return 'An unknown error occurred';
   }
 
   // Profile form handler
   document
-    .getElementById("profileForm")
-    ?.addEventListener("submit", async (e: Event) => {
+    .getElementById('profileForm')
+    ?.addEventListener('submit', async (e: Event) => {
       e.preventDefault();
 
       const form = e.target as HTMLFormElement;
       const formData = new FormData(form);
-      const name = formData.get("name") as string;
-      const username = formData.get("username") as string;
-      const image = formData.get("image") as string;
+      const name = formData.get('name') as string;
+      const username = formData.get('username') as string;
+      const image = formData.get('image') as string;
 
       const submitBtn = document.getElementById(
-        "profileSubmitBtn"
+        'profileSubmitBtn'
       ) as HTMLButtonElement;
       const errorAlert = document.getElementById(
-        "profileErrorAlert"
+        'profileErrorAlert'
       ) as HTMLElement;
       const successAlert = document.getElementById(
-        "profileSuccessAlert"
+        'profileSuccessAlert'
       ) as HTMLElement;
       const errorMessage = document.getElementById(
-        "profileErrorMessage"
+        'profileErrorMessage'
       ) as HTMLElement;
 
       // Show loading state
-      submitBtn?.classList.add("loading");
+      submitBtn?.classList.add('loading');
       if (submitBtn) submitBtn.disabled = true;
-      errorAlert?.classList.add("hidden");
-      successAlert?.classList.add("hidden");
+      errorAlert?.classList.add('hidden');
+      successAlert?.classList.add('hidden');
 
       try {
         // Prepare update data
-        const updateData: { name: string; username?: string; image?: string } = { name };
-        if (username && username.trim() !== "") {
+        const updateData: { name: string; username?: string; image?: string } =
+          { name };
+        if (username && username.trim() !== '') {
           updateData.username = username;
         }
-        if (image && image.trim() !== "") {
+        if (image && image.trim() !== '') {
           updateData.image = image;
         }
 
         // Dynamic import of auth client
-        const { updateUser } = await import("@/lib/auth-client");
+        const { updateUser } = await import('@/lib/auth-client');
 
         // Call updateUser and cast to expected response type
         const result = await updateUser(updateData);
 
         // Check for success
         if (result?.data && !result?.error) {
-          successAlert?.classList.remove("hidden");
-          toastManager.show("Profile updated successfully!", "success");
+          successAlert?.classList.remove('hidden');
+          toastManager.show('Profile updated successfully!', 'success');
           setTimeout(() => window.location.reload(), 1500);
         } else if (result?.error) {
           const errorMsg = getErrorMessage(result.error);
-          console.error("Update failed:", result.error);
+          console.error('Update failed:', result.error);
           if (errorMessage) errorMessage.textContent = errorMsg;
-          errorAlert?.classList.remove("hidden");
-          toastManager.show("Profile update failed", "error");
+          errorAlert?.classList.remove('hidden');
+          toastManager.show('Profile update failed', 'error');
         } else {
           // Fallback for unexpected response format
-          console.error("Unexpected response format:", result);
+          console.error('Unexpected response format:', result);
           if (errorMessage)
-            errorMessage.textContent = "Update failed with unexpected response";
-          errorAlert?.classList.remove("hidden");
-          toastManager.show("Update failed with unexpected response", "error");
+            errorMessage.textContent = 'Update failed with unexpected response';
+          errorAlert?.classList.remove('hidden');
+          toastManager.show('Update failed with unexpected response', 'error');
         }
       } catch (error) {
-        console.error("Profile update error:", error);
+        console.error('Profile update error:', error);
         const errorMsg = getErrorMessage(error);
         if (errorMessage) errorMessage.textContent = errorMsg;
-        errorAlert?.classList.remove("hidden");
-        toastManager.show("Profile update failed", "error");
+        errorAlert?.classList.remove('hidden');
+        toastManager.show('Profile update failed', 'error');
       } finally {
-        submitBtn?.classList.remove("loading");
+        submitBtn?.classList.remove('loading');
         if (submitBtn) submitBtn.disabled = false;
       }
     });
 
   // Password form handler
   document
-    .getElementById("passwordForm")
-    ?.addEventListener("submit", async (e: Event) => {
+    .getElementById('passwordForm')
+    ?.addEventListener('submit', async (e: Event) => {
       e.preventDefault();
 
       const form = e.target as HTMLFormElement;
       const formData = new FormData(form);
-      const currentPassword = formData.get("currentPassword") as string;
-      const newPassword = formData.get("newPassword") as string;
-      const confirmPassword = formData.get("confirmPassword") as string;
+      const currentPassword = formData.get('currentPassword') as string;
+      const newPassword = formData.get('newPassword') as string;
+      const confirmPassword = formData.get('confirmPassword') as string;
 
       const submitBtn = document.getElementById(
-        "passwordSubmitBtn"
+        'passwordSubmitBtn'
       ) as HTMLButtonElement;
       const errorAlert = document.getElementById(
-        "passwordErrorAlert"
+        'passwordErrorAlert'
       ) as HTMLElement;
       const successAlert = document.getElementById(
-        "passwordSuccessAlert"
+        'passwordSuccessAlert'
       ) as HTMLElement;
       const errorMessage = document.getElementById(
-        "passwordErrorMessage"
+        'passwordErrorMessage'
       ) as HTMLElement;
 
       // Validate passwords match
       if (newPassword !== confirmPassword) {
         if (errorMessage)
-          errorMessage.textContent = "New passwords do not match";
-        errorAlert?.classList.remove("hidden");
-        toastManager.show("New passwords do not match", "error");
+          errorMessage.textContent = 'New passwords do not match';
+        errorAlert?.classList.remove('hidden');
+        toastManager.show('New passwords do not match', 'error');
         return;
       }
 
       // Show loading state
-      submitBtn?.classList.add("loading");
+      submitBtn?.classList.add('loading');
       if (submitBtn) submitBtn.disabled = true;
-      errorAlert?.classList.add("hidden");
-      successAlert?.classList.add("hidden");
+      errorAlert?.classList.add('hidden');
+      successAlert?.classList.add('hidden');
 
       try {
-        const response = await fetch("/api/auth/change-password", {
-          method: "PATCH",
+        const response = await fetch('/api/auth/change-password', {
+          method: 'PATCH',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ currentPassword, newPassword }),
-          credentials: "include",
+          credentials: 'include',
         });
 
         const result = await response.json();
 
         if (response.ok && !result.error) {
-          successAlert?.classList.remove("hidden");
-          toastManager.show("Password updated successfully!", "success");
+          successAlert?.classList.remove('hidden');
+          toastManager.show('Password updated successfully!', 'success');
           form.reset();
         } else {
-          const errorMsg = result.error?.message || "Password update failed";
+          const errorMsg = result.error?.message || 'Password update failed';
           if (errorMessage) errorMessage.textContent = errorMsg;
-          errorAlert?.classList.remove("hidden");
-          toastManager.show(errorMsg, "error");
+          errorAlert?.classList.remove('hidden');
+          toastManager.show(errorMsg, 'error');
         }
       } catch (error) {
-        const errorMsg = "An error occurred. Please try again.";
+        const errorMsg = 'An error occurred. Please try again.';
         if (errorMessage) errorMessage.textContent = errorMsg;
-        errorAlert?.classList.remove("hidden");
-        toastManager.show(errorMsg, "error");
+        errorAlert?.classList.remove('hidden');
+        toastManager.show(errorMsg, 'error');
       } finally {
-        submitBtn?.classList.remove("loading");
+        submitBtn?.classList.remove('loading');
         if (submitBtn) submitBtn.disabled = false;
       }
     });
 
   // Delete account handler
   document
-    .getElementById("confirmDeleteBtn")
-    ?.addEventListener("click", async () => {
+    .getElementById('confirmDeleteBtn')
+    ?.addEventListener('click', async () => {
       try {
-        const response = await fetch("/api/auth/delete-account", {
-          method: "DELETE",
-          credentials: "include",
+        const response = await fetch('/api/auth/delete-account', {
+          method: 'DELETE',
+          credentials: 'include',
         });
 
         if (response.ok) {
           toastManager.show(
-            "Account deleted successfully. Redirecting...",
-            "success"
+            'Account deleted successfully. Redirecting...',
+            'success'
           );
           setTimeout(() => {
-            window.location.href = "/";
+            window.location.href = '/';
           }, 2000);
         } else {
           toastManager.show(
-            "Failed to delete account. Please try again.",
-            "error"
+            'Failed to delete account. Please try again.',
+            'error'
           );
         }
       } catch (error) {
-        console.error("Delete account failed:", error);
+        console.error('Delete account failed:', error);
         toastManager.show(
-          "Failed to delete account. Please try again.",
-          "error"
+          'Failed to delete account. Please try again.',
+          'error'
         );
       }
     });
 
   // Avatar Upload Functionality
   const avatarFileInput = document.getElementById(
-    "avatar-file-input"
+    'avatar-file-input'
   ) as HTMLInputElement;
   const uploadAvatarBtn = document.getElementById(
-    "upload-avatar-btn"
+    'upload-avatar-btn'
   ) as HTMLButtonElement;
   const avatarStatus = document.getElementById(
-    "avatar-upload-status"
+    'avatar-upload-status'
   ) as HTMLElement;
   const avatarStatusMessage = document.getElementById(
-    "avatar-status-message"
+    'avatar-status-message'
   ) as HTMLElement;
   const currentAvatar = document.getElementById(
-    "current-avatar"
+    'current-avatar'
   ) as HTMLImageElement;
   const currentAvatarPlaceholder = document.getElementById(
-    "current-avatar-placeholder"
+    'current-avatar-placeholder'
   ) as HTMLElement;
-  const imageField = document.getElementById("image-field") as HTMLInputElement;
+  const imageField = document.getElementById('image-field') as HTMLInputElement;
 
   // Handle file input change
-  avatarFileInput?.addEventListener("change", (e) => {
+  avatarFileInput?.addEventListener('change', (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
 
     if (file) {
       // Validate file type
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showAvatarStatus(
-          "Invalid file type. Please select JPEG, PNG, or WebP.",
-          "error"
+          'Invalid file type. Please select JPEG, PNG, or WebP.',
+          'error'
         );
-        avatarFileInput.value = "";
+        avatarFileInput.value = '';
         return;
       }
 
       // Validate file size (2MB)
       if (file.size > 2 * 1024 * 1024) {
-        showAvatarStatus("File too large. Maximum size is 2MB.", "error");
-        avatarFileInput.value = "";
+        showAvatarStatus('File too large. Maximum size is 2MB.', 'error');
+        avatarFileInput.value = '';
         return;
       }
 
@@ -772,11 +777,11 @@ if (!user.emailVerified) {
   });
 
   // Handle avatar upload
-  uploadAvatarBtn?.addEventListener("click", async () => {
+  uploadAvatarBtn?.addEventListener('click', async () => {
     const file = avatarFileInput.files?.[0];
 
     if (!file) {
-      showAvatarStatus("Please select a file.", "error");
+      showAvatarStatus('Please select a file.', 'error');
       return;
     }
 
@@ -790,11 +795,11 @@ if (!user.emailVerified) {
       uploadAvatarBtn.disabled = true;
 
       const formData = new FormData();
-      formData.append("avatar", file);
+      formData.append('avatar', file);
       // Don't include userId - API will use current user's ID
 
-      const response = await fetch("/api/users/upload-avatar", {
-        method: "POST",
+      const response = await fetch('/api/users/upload-avatar', {
+        method: 'POST',
         body: formData,
       });
 
@@ -802,10 +807,10 @@ if (!user.emailVerified) {
 
       if (result.success) {
         // Update user's avatar in database
-        const updateResponse = await fetch("/api/admin/update-user-avatar", {
-          method: "POST",
+        const updateResponse = await fetch('/api/admin/update-user-avatar', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             avatarPath: result.avatarPath,
@@ -814,15 +819,15 @@ if (!user.emailVerified) {
         });
 
         if (updateResponse.ok) {
-          showAvatarStatus("Avatar uploaded successfully!", "success");
+          showAvatarStatus('Avatar uploaded successfully!', 'success');
 
           // Update the displayed avatar
           if (currentAvatar) {
             currentAvatar.src = result.avatarPath;
-            currentAvatar.style.display = "block";
+            currentAvatar.style.display = 'block';
           }
           if (currentAvatarPlaceholder) {
-            currentAvatarPlaceholder.style.display = "none";
+            currentAvatarPlaceholder.style.display = 'none';
           }
 
           // Update the hidden form field
@@ -831,18 +836,18 @@ if (!user.emailVerified) {
           }
 
           // Clear file input and reset button immediately
-          avatarFileInput.value = "";
+          avatarFileInput.value = '';
 
-          toastManager.show("Avatar uploaded successfully!", "success");
+          toastManager.show('Avatar uploaded successfully!', 'success');
         } else {
-          showAvatarStatus("Failed to update avatar.", "error");
+          showAvatarStatus('Failed to update avatar.', 'error');
         }
       } else {
-        showAvatarStatus(result.error || "Upload failed.", "error");
+        showAvatarStatus(result.error || 'Upload failed.', 'error');
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      showAvatarStatus("Upload failed. Please try again.", "error");
+      console.error('Upload error:', error);
+      showAvatarStatus('Upload failed. Please try again.', 'error');
     } finally {
       // Reset button state
       uploadAvatarBtn.innerHTML = originalText;
@@ -853,17 +858,17 @@ if (!user.emailVerified) {
   // Helper functions for avatar upload
   function showAvatarStatus(
     message: string,
-    type: "success" | "error" | "info"
+    type: 'success' | 'error' | 'info'
   ) {
     if (avatarStatusMessage && avatarStatus) {
       avatarStatusMessage.textContent = message;
-      avatarStatus.className = `mt-2 text-sm ${type === "success" ? "text-success" : type === "error" ? "text-error" : "text-info"}`;
-      avatarStatus.classList.remove("hidden");
+      avatarStatus.className = `mt-2 text-sm ${type === 'success' ? 'text-success' : type === 'error' ? 'text-error' : 'text-info'}`;
+      avatarStatus.classList.remove('hidden');
     }
   }
 
   function hideAvatarStatus() {
-    avatarStatus?.classList.add("hidden");
+    avatarStatus?.classList.add('hidden');
   }
 </script>
 

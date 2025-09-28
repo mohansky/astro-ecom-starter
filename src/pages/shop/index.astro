@@ -3,6 +3,7 @@ import Container from "@/components/ui/Container.astro";
 import Heading from "@/components/ui/Heading.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProductSEO from "@/components/SEO/ProductSEO.astro";
+import ProductList from "@/components/Product/ProductList.astro";
 import { getAllProducts } from "@/lib/db";
 
 const url = new URL(Astro.request.url);
@@ -139,8 +140,8 @@ const breadcrumbs = [
         </div>
       </div>
 
-      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- Products will be loaded here -->
+      <div id="products-grid">
+        <ProductList products={initialProducts} />
       </div>
     </div>
   </Container>
@@ -273,89 +274,105 @@ const breadcrumbs = [
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
-    grid.innerHTML = products
-      .map((product) => {
-        const categoryClass = product.category === 'Macrame'
-          ? 'badge-error'
-          : product.category === 'Stitching'
-          ? 'badge-accent'
-          : '';
+    // Create a container with the same grid layout as ProductList
+    const productListHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        ${products
+          .map((product) => {
+            const categoryClass = product.category === 'Macrame'
+              ? 'badge-error'
+              : product.category === 'Stitching'
+              ? 'badge-accent'
+              : '';
 
-        const imageUrl = product.imagePath
-          ? `https://pub-67b76734f5b543b9925c0870089929bb.r2.dev/products/${product.imagePath}/${product.imagePath}.jpg`
-          : null;
+            const displayImage = product.mainImage || (product.images && product.images.length > 0 ? product.images[0] : null);
+            const imageUrl = displayImage
+              ? `https://pub-67b76734f5b543b9925c0870089929bb.r2.dev/products/${product.slug}/${displayImage}`
+              : null;
 
-        const finalPrice = product.price || product.total || product.mrp;
-        const showDiscount = product.mrp && finalPrice < product.mrp;
+            const finalPrice = product.price || product.total || product.mrp;
+            const showDiscount = product.mrp && finalPrice < product.mrp;
+            const discountPercent = showDiscount ? Math.round(((product.mrp - finalPrice) / product.mrp) * 100) : 0;
 
-        return `
-          <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-            <a href="/shop/${product.slug}" class="product-link block" title="View ${product.name} details">
-              <figure class="relative">
-                ${imageUrl ? `
-                  <img
-                    src="${imageUrl}"
-                    alt="${product.name}"
-                    class="object-cover w-full h-64"
-                    loading="lazy"
-                  />
-                ` : `
-                  <div class="flex items-center justify-center w-full h-64 bg-base-200">
-                    <div class="text-center">
-                      <div class="text-6xl mb-4">📦</div>
-                      <p class="text-base-content/70">No image available</p>
+            return `
+              <div class="card bg-base-100">
+                <a href="/shop/${product.slug}" class="product-link" title="View ${product.name} details">
+                  <figure class="relative">
+                    ${imageUrl ? `
+                      <img
+                        src="${imageUrl}"
+                        alt="${product.name}"
+                        class="object-cover w-full h-auto"
+                        loading="lazy"
+                      />
+                    ` : `
+                      <div class="flex items-center justify-center w-full h-64 bg-base-200">
+                        <div class="text-center">
+                          <div class="text-6xl mb-4">📦</div>
+                          <p class="text-base-content/70">No image available</p>
+                        </div>
+                      </div>
+                    `}
+                    <div class="badge absolute bottom-2 right-2 z-10 ${categoryClass}">
+                      ${product.category}
+                    </div>
+                    ${product.featured ? `
+                      <div class="badge badge-warning absolute top-2 left-2 z-10">
+                        Featured
+                      </div>
+                    ` : ''}
+                  </figure>
+                  <div class="card-body">
+                    <div class="tooltip" data-tip="${product.name}">
+                      <h2 class="card-title line-clamp-1 text-sm">${product.name}</h2>
+                    </div>
+                    <div class="mb-2">
+                      ${showDiscount ? `
+                        <div class="flex flex-col">
+                          <span class="font-medium text-lg">${formatCurrency(finalPrice)}</span>
+                          <div class="flex items-center space-x-1">
+                            <span class="text-xs opacity-60 line-through">
+                              ${formatCurrency(product.mrp)}
+                            </span>
+                            <span class="text-xs text-success">
+                              ${discountPercent}% off
+                            </span>
+                          </div>
+                        </div>
+                      ` : `
+                        <span class="font-medium text-lg">${formatCurrency(finalPrice)}</span>
+                      `}
+                    </div>
+                    <p class="line-clamp-2 mb-2 text-sm">
+                      ${product.description || 'No description available'}
+                    </p>
+                    <div class="card-actions flex justify-center items-center gap-4 w-full m-0 px-4">
+                      <button class="btn btn-outline flex-1" title="View details for ${product.name}">
+                        View Details
+                      </button>
+                      <button
+                        class="btn btn-primary flex-1 add-to-cart-btn"
+                        data-product-id="${product.id}"
+                        data-product-name="${product.name}"
+                        data-product-price="${finalPrice}"
+                        data-product-weight="${product.weight || 0}"
+                        data-product-gst="${product.gstPercentage || 5}"
+                        data-product-tax-inclusive="${product.taxInclusive || false}"
+                        data-product-image="${displayImage ? `/products/${product.slug}/${displayImage}` : ''}"
+                      >
+                        Add to Cart
+                      </button>
                     </div>
                   </div>
-                `}
-                <div class="badge absolute bottom-2 right-2 z-10 ${categoryClass}">
-                  ${product.category}
-                </div>
-                ${product.featured ? `
-                  <div class="badge badge-warning absolute top-2 left-2 z-10">
-                    Featured
-                  </div>
-                ` : ''}
-              </figure>
-              <div class="card-body p-4">
-                <h3 class="card-title text-sm line-clamp-2 mb-2" title="${product.name}">
-                  ${product.name}
-                </h3>
-                <div class="mb-2">
-                  ${showDiscount ? `
-                    <div class="flex items-center gap-2">
-                      <span class="text-lg font-bold text-primary">${formatCurrency(finalPrice)}</span>
-                      <span class="text-sm line-through text-base-content/60">${formatCurrency(product.mrp)}</span>
-                    </div>
-                  ` : `
-                    <span class="text-lg font-bold">${formatCurrency(finalPrice)}</span>
-                  `}
-                </div>
-                <p class="text-sm text-base-content/70 line-clamp-2 mb-4">
-                  ${product.description || 'No description available'}
-                </p>
-                <div class="card-actions flex gap-2">
-                  <button class="btn btn-outline btn-sm flex-1">
-                    View Details
-                  </button>
-                  <button
-                    class="btn btn-primary btn-sm flex-1 add-to-cart-btn"
-                    data-product-id="${product.id}"
-                    data-product-name="${product.name}"
-                    data-product-price="${finalPrice}"
-                    data-product-weight="${product.weight || 0}"
-                    data-product-gst="${product.gstPercentage || 5}"
-                    data-product-tax-inclusive="${product.taxInclusive || false}"
-                    data-product-image="${product.imagePath ? `/products/${product.imagePath}/1.jpg` : ''}"
-                  >
-                    Add to Cart
-                  </button>
-                </div>
+                </a>
               </div>
-            </a>
-          </div>
-        `;
-      })
-      .join('');
+            `;
+          })
+          .join('')}
+      </div>
+    `;
+
+    grid.innerHTML = productListHTML;
 
     // Re-initialize product card event listeners
     initProductCards();

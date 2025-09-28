@@ -438,7 +438,8 @@ export interface Product {
   stock: number;
   weight?: number;
   dimensions?: string;
-  imagePath?: string;
+  mainImage?: string;
+  images?: string[];
   tags?: string;
   gstPercentage: number;
   taxInclusive: boolean;
@@ -463,9 +464,9 @@ export async function createProduct(productData: Omit<Product, 'id' | 'createdAt
       sql: `
         INSERT INTO products (
           id, name, slug, sku, description, category, subcategory, price, mrp,
-          stock, weight, dimensions, imagePath, tags, gstPercentage, taxInclusive,
+          stock, weight, dimensions, mainImage, images, tags, gstPercentage, taxInclusive,
           isActive, featured, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         productId,
@@ -480,7 +481,8 @@ export async function createProduct(productData: Omit<Product, 'id' | 'createdAt
         productData.stock || 0,
         productData.weight || null,
         productData.dimensions || null,
-        productData.imagePath || null,
+        productData.mainImage || null,
+        productData.images ? JSON.stringify(productData.images) : '[]',
         productData.tags || null,
         productData.gstPercentage || 5,
         productData.taxInclusive ? 1 : 0,
@@ -504,7 +506,21 @@ export async function updateProduct(productId: string, productData: Partial<Omit
 
     const updates = Object.entries(productData).filter(([_, value]) => value !== undefined);
     const setClause = updates.map(([key]) => `${key} = ?`).join(', ');
-    const values = updates.map(([_, value]) => value);
+    const values = updates.map(([key, value]): string | number | boolean | null => {
+      // Special handling for images array - serialize to JSON
+      if (key === 'images' && Array.isArray(value)) {
+        return JSON.stringify(value);
+      }
+      // Ensure we return acceptable types for the database
+      if (value === null || value === undefined) {
+        return null;
+      }
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        return value;
+      }
+      // Convert other types to string
+      return String(value);
+    });
 
     await rawDb.execute({
       sql: `UPDATE products SET ${setClause}, updatedAt = ? WHERE id = ?`,
@@ -554,7 +570,8 @@ export async function getProductById(productId: string): Promise<Product | null>
       stock: row.stock as number,
       weight: row.weight as number || undefined,
       dimensions: row.dimensions as string || undefined,
-      imagePath: row.imagePath as string || undefined,
+      mainImage: row.mainImage as string || undefined,
+      images: row.images ? JSON.parse(row.images as string) : undefined,
       tags: row.tags as string || undefined,
       gstPercentage: row.gstPercentage as number || 5,
       taxInclusive: Boolean(row.taxInclusive),
@@ -622,7 +639,8 @@ export async function getAllProducts(options: {
       stock: row.stock as number,
       weight: row.weight as number || undefined,
       dimensions: row.dimensions as string || undefined,
-      imagePath: row.imagePath as string || undefined,
+      mainImage: row.mainImage as string || undefined,
+      images: row.images ? JSON.parse(row.images as string) : undefined,
       tags: row.tags as string || undefined,
       gstPercentage: row.gstPercentage as number || 5,
       taxInclusive: Boolean(row.taxInclusive),
@@ -667,7 +685,7 @@ export async function bulkCreateProducts(products: Omit<Product, 'id' | 'created
         sql: `
           INSERT INTO products (
             id, name, slug, sku, description, category, subcategory, price, mrp,
-            stock, weight, dimensions, imagePath, tags, gstPercentage, taxInclusive,
+            stock, weight, dimensions, images, tags, gstPercentage, taxInclusive,
             isActive, featured, createdAt, updatedAt
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
@@ -684,7 +702,7 @@ export async function bulkCreateProducts(products: Omit<Product, 'id' | 'created
             productData.stock || 0,
           productData.weight || null,
           productData.dimensions || null,
-          productData.imagePath || null,
+          productData.images ? JSON.stringify(productData.images) : '[]',
           productData.tags || null,
           productData.gstPercentage || 5,
           productData.taxInclusive ? 1 : 0,

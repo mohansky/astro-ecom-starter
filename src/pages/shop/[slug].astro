@@ -11,7 +11,10 @@ import Heading from "@/components/ui/Heading.astro";
 import Layout from "@/layouts/Layout.astro";
 import ProductSEO from "@/components/SEO/ProductSEO.astro";
 import { rawDb, type Product } from "@/lib/db";
+import { calculateDiscountPercent } from "@/lib/pricing-utils";
 import R2Image from "@/components/ui/R2Image.astro";
+import { ProductImageSlider } from "@/components/Product/ProductImageSlider";
+import "@/styles/embla.css";
 
 // Get product by slug from database
 const { slug } = Astro.params;
@@ -33,16 +36,17 @@ try {
       id: row.id as string,
       name: row.name as string,
       slug: row.slug as string,
+      sku: (row.sku as string) || '',
       description: (row.description as string) || undefined,
       category: row.category as string,
       subcategory: (row.subcategory as string) || undefined,
       price: row.price as number,
       mrp: row.mrp as number,
-      discount: (row.discount as number) || 0,
       stock: row.stock as number,
       weight: (row.weight as number) || undefined,
       dimensions: (row.dimensions as string) || undefined,
-      imagePath: (row.imagePath as string) || undefined,
+      mainImage: (row.mainImage as string) || undefined,
+      images: row.images ? JSON.parse(row.images as string) : undefined,
       tags: (row.tags as string) || undefined,
       gstPercentage: (row.gstPercentage as number) || 5,
       taxInclusive: Boolean(row.taxInclusive),
@@ -74,8 +78,9 @@ const breadcrumbs = [
   { name: product.name, url: `/shop/${product.slug}` }
 ];
 
-const productImage = product.imagePath
-  ? `https://pub-67b76734f5b543b9925c0870089929bb.r2.dev/products/${product.imagePath}/${product.imagePath}.jpg`
+const displayImage = product.mainImage || (product.images && product.images.length > 0 ? product.images[0] : null);
+const productImage = displayImage
+  ? `https://pub-67b76734f5b543b9925c0870089929bb.r2.dev/products/${product.slug}/${displayImage}`
   : undefined;
 ---
 
@@ -91,13 +96,13 @@ const productImage = product.imagePath
 <Layout>
   <Container width="marginxy">
     <div class="grid lg:grid-cols-2 gap-8">
-      <R2Image
-        src={`products/${product.imagePath}/${product.imagePath}.jpg`}
-        alt={product.name}
-        width={600}
-        height={600}
+      <ProductImageSlider
+        mainImage={product.mainImage}
+        images={product.images}
+        productSlug={product.slug}
+        productName={product.name}
+        client:load
       />
-      <!-- <R2ImageFeatureSlider subDirectory={product.imagePath} /> -->
       <div class="space-y-10">
         <Heading size="xl" class="mb-10">{product.name}</Heading>
         <ProductDescription description={product.description || ""} />
@@ -106,7 +111,7 @@ const productImage = product.imagePath
         <ProductCardPrice
           price={product.price}
           mrp={product.mrp}
-          discount={product.discount}
+          discount={calculateDiscountPercent(product.mrp, product.price)}
         />
         <AddToCartButton
           id={product.id}
@@ -115,8 +120,8 @@ const productImage = product.imagePath
           weight={product.weight || 0}
           gstPercentage={product.gstPercentage}
           taxInclusive={product.taxInclusive}
-          image={product.imagePath
-            ? `/products/${product.imagePath}/${product.imagePath}.jpg`
+          image={displayImage
+            ? `/products/${product.slug}/${displayImage}`
             : undefined}
         />
       </div>

@@ -1,68 +1,59 @@
 site:
-  name: Manobal
-  title: Manobal | Empowering Women. Reviving Craft.
-  description: Empowering Women. Reviving Craft.
-  basepath: https://manobal.com/
-  ogImageURL: ./images/manobal-logo.png
+  name: Craftwood Studios
+  title: Craftwood Studios | Handcrafted Excellence. Timeless Design.
+  description: Handcrafted Excellence. Timeless Design.
+  basepath: https://craftwoodstudios.com/
+  ogImageURL: ./images/craftwood-studios-logo.png
   keywords:
-    - Macrame
-    - Stitching
-    - Craft work
+    - Woodworking
+    - Custom Furniture
+    - Handcrafted Wood
+    - Artisan Carpentry
 
   author:
     name: Mohan Kumar
     email: mohansky@gmail.com
     url: https://www.mohankumar.dev
 
-  footnote1: Manobal | Empowering Women. Reviving Craft.
-  footnote: Manobal | Empowering Women. Reviving Craft.
-  copyright: Manobal | Empowering Women. Reviving Craft.
+  footnote1: Craftwood Studios | Handcrafted Excellence. Timeless Design.
+  footnote: Craftwood Studios | Handcrafted Excellence. Timeless Design.
+  copyright: Craftwood Studios | Handcrafted Excellence. Timeless Design.
   email: mohansky@gmail.com
 
   hero:
     - bgImage: ./images/hero.jpg
-      title: Manobal
-      subtitle: Empowering Women. Reviving Craft.
+      title: Craftwood Studios
+      subtitle: Handcrafted Excellence. Timeless Design.
       btnLink: /#contact
       btnText: Contact
 
-  introTitle: Empowering Women. Reviving Craft.
-  introText:
-    There are many variations of passages of Lorem Ipsum available, but the
-    majority have suffered alteration in some form, by injected humour, or
-    randomised words which dont look even slightly believable. If you are going
-    to use a passage of Lorem Ipsum, you need to be sure there isnt anything
-    embarrassing hidden in the middle of text. All the Lorem Ipsum generators on
-    the Internet tend to repeat predefined chunks as necessary, making this the
-    first true generator on the Internet. It uses a dictionary of over 200 Latin
-    words, combined with a handful of model sentence structures, to generate
-    Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore
-    always free from repetition, injected humour, or non-characteristic words
-    etc.
+  introTitle: Handcrafted Excellence. Timeless Design.
+  introText: At Craftwood Studios, we believe every piece of wood tells a story. Our master craftsmen combine traditional woodworking techniques with contemporary design sensibilities to create bespoke furniture and architectural elements that stand the test of time. From custom dining tables that become family heirlooms to intricate cabinetry that transforms living spaces, we bring your vision to life through meticulous attention to detail and unwavering commitment to quality. Each grain pattern is carefully considered, every joint precisely fitted, ensuring that our creations not only serve their purpose but elevate the spaces they inhabit for generations to come.
   introImage: ./images/hero.jpg
 
-  peopleTitle: The People
+  peopleTitle: Master Craftsmen
   peopleImage: ./images/people/people.jpg
-  peopleSubtitle: Lorem Ipsum
-  peopleText: It is a long established fact that a reader will be distracted
-    by the readable content of a page when looking at its layout.
-    The point of using Lorem Ipsum is that it has a more-or-less
-    normal distribution of letters, as opposed to using, content
-    here, making it look like readable English. Many desktop
-    publishing packages.
+  peopleSubtitle: Artisans at Heart
+  peopleText:
+    Our team of skilled woodworkers brings decades of combined experience
+    to every project. From traditional joinery techniques passed down through
+    generations to modern precision tools, we merge the best of old and new
+    to create exceptional pieces. Each craftsman specializes in different
+    aspects of woodworking, ensuring expert attention at every stage of
+    the creative process.
   people:
-    - name: Lorem Ipsum
-      title: Founder 
-      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-      image: ./images/people/people1.jpg
-    - name: Lorem Ipsum
-      title: Sales & Marketing
-      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-      image: ./images/people/people2.jpg
-    - name: Lorem Ipsum
-      title: Operations
-      subtitle: It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.
-      image: ./images/people/people3.jpg
+    - name: Master Craftsman
+      title: Founder & Lead Artisan
+      subtitle: With over 20 years in fine woodworking, our founder brings passion and precision to every custom piece, specializing in heirloom furniture design.
+      image: ./images/people/people-1.jpg
+    - name: Design Specialist
+      title: Client Relations & Design
+      subtitle: Bridging the gap between your vision and our craft, our design specialist ensures each project reflects your unique style and functional needs.
+      image: ./images/people/people-2.jpg
+    - name: Workshop Manager
+      title: Production & Quality
+      subtitle: Overseeing every detail from wood selection to final finish, ensuring each piece meets our exacting standards of craftsmanship and durability.
+      image: ./images/people/people-3.jpg
 
   links:
     - text: Home
@@ -74,25 +65,25 @@ site:
 
   socialTitle: Follow us on
   socials:
-    - link: https://www.facebook.com/@manobal
+    - link: https://www.facebook.com/@craftwoodstudios
       icon: fa:facebook
       text: Facebook
-    - link: https://www.instagram.com/@manobal
+    - link: https://www.instagram.com/@craftwoodstudios
       icon: fa:instagram
       text: Instagram
-    - link: https://www.whatsapp.com/@manobal
+    - link: https://www.whatsapp.com/@craftwoodstudios
       icon: fa:whatsapp
       text: Whatsapp
 
   contactTitle: Contact
-  contactSubtitle: Manubal
+  contactSubtitle: Craftwood Studios
   contactdetails:
     - link: tel:+919876543210
       icon: ph:phone
       text: +91 987 654 3210
-    - link: mailto:mail@manubal.com
+    - link: mailto:mail@craftwoodstudios.com
       icon: ph:envelope
-      text: mail@manubal.com
-    - link: "#"
+      text: mail@craftwoodstudios.com
+    - link: '#'
       icon: ph:map-pin
-      text: Maharastra, India
+      text: Maharashtra, India

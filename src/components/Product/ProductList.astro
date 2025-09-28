@@ -1,6 +1,7 @@
 ---
 import type { Product } from "@/lib/db";
 import ProductCard from "./ProductCard.astro";
+import { calculateDiscountPercent } from "@/lib/pricing-utils";
 
 interface Props {
   products: Product[];
@@ -21,12 +22,13 @@ const { products } = Astro.props;
         dimensions={product.dimensions}
         weight={product.weight}
         description={product.description || ""}
-        images={product.imagePath}
+        mainImage={product.mainImage}
+        images={product.images}
         category={product.category}
         mrp={product.mrp}
         total={product.price}
         price={product.price}
-        discount={product.discount}
+        discount={calculateDiscountPercent(product.mrp, product.price)}
         subcategory={product.subcategory}
         featured={product.featured}
       />

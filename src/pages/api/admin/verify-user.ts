@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { user } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const POST: APIRoute = async (context) => {
+const verifyUserHandler = async (context: any) => {
   try {
     // Check if user is admin
     const authResult = await requireAdminAuth(context);
@@ -16,7 +16,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     const body = await context.request.json();
-    const { userId } = body;
+    const { userId, emailVerified } = body;
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Missing userId' }), {
@@ -25,10 +25,13 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    // Verify user email
+    // Set emailVerified status - default to true for backward compatibility
+    const verificationStatus = emailVerified !== undefined ? emailVerified : true;
+
+    // Update user email verification status
     await db
       .update(user)
-      .set({ emailVerified: true, updatedAt: new Date() })
+      .set({ emailVerified: verificationStatus, updatedAt: new Date() })
       .where(eq(user.id, userId));
 
     return new Response(JSON.stringify({ success: true }), {
@@ -36,10 +39,13 @@ export const POST: APIRoute = async (context) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error verifying user:', error);
+    console.error('Error updating user verification status:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 };
+
+export const POST: APIRoute = verifyUserHandler;
+export const PATCH: APIRoute = verifyUserHandler;

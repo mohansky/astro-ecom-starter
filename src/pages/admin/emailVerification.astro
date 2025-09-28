@@ -1,18 +1,18 @@
 ---
-import Container from "@/components/ui/Container.astro";
-import Layout from "@/layouts/Layout.astro";
-import ProfileLayout from "@/layouts/ProfileLayout.astro";
-import { getUser } from "@/lib/auth-utils";
+import Container from '@/components/ui/Container.astro';
+import Layout from '@/layouts/Layout.astro';
+import ProfileLayout from '@/layouts/ProfileLayout.astro';
+import { getUser } from '@/lib/auth-utils';
 
 const user = await getUser(Astro);
 
 // This should be handled by middleware, but double-check
 if (!user) {
-  return Astro.redirect("/login");
+  return Astro.redirect('/login');
 }
 ---
 
-<Layout title="Dashboard">
+<Layout title="Manobal | Dashboard">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-4xl mx-auto">
@@ -25,11 +25,11 @@ if (!user) {
                 Hello {user.name},
               </p>
               <p class="mb-5">
-                your account was successfully created! <br>
-                But it needs to be verified before you get full access. <br> 
-                Please contact site admin at 
+                your account was successfully created! <br />
+                But it needs to be verified before you get full access. <br />
+                Please contact site admin at
                 <a href="mailto:manubal@gmail.com" class="link link-info">
-                   manubal@gmail.com.
+                  manubal@gmail.com.
                 </a>
               </p>
               <!-- <div class="badge badge-primary badge-lg">{user.email}</div> -->

@@ -17,9 +17,29 @@ export const GET: APIRoute = async ({ url, locals }) => {
       status
     });
 
+    // Transform the orders to match the expected Order interface
+    const transformedOrders = result.orders.map(order => ({
+      id: order.id.toString(),
+      orderNumber: `ORD-${order.id.toString().padStart(6, '0')}`,
+      customerName: order.customerName,
+      customerEmail: '', // This would need to be added to the orders query if needed
+      items: Array.from({ length: order.itemCount }, (_, i) => ({
+        id: i + 1,
+        productId: '',
+        productName: '',
+        quantity: 1,
+        price: 0,
+      })),
+      total: order.total,
+      status: order.status,
+      createdAt: order.createdAt,
+    }));
+
     return new Response(JSON.stringify({
       success: true,
-      ...result
+      orders: transformedOrders,
+      pagination: result.pagination,
+      statuses: result.statuses || [],
     }), {
       status: 200,
       headers: {

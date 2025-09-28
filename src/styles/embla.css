@@ -1,0 +1,44 @@
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.embla-thumbs {
+  overflow: hidden;
+}
+
+.embla-thumbs .embla__container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.embla-thumbs .embla__slide {
+  flex: 0 0 auto;
+}
+
+/* Optional: Add smooth transitions */
+.embla__slide img {
+  transition: transform 0.2s ease;
+}
+
+.embla__slide:hover img {
+  transform: scale(1.02);
+}
+
+/* Thumbnail hover effects */
+.embla-thumbs button {
+  transition: all 0.2s ease;
+}
+
+.embla-thumbs button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

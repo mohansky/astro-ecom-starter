@@ -1,0 +1,160 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Container from "@/components/ui/Container.astro";
+import Heading from "@/components/ui/Heading.astro";
+import Paragraph from "@/components/ui/Paragraph.astro";
+---
+
+<Layout title="Server Error - Refresh Required">
+  <Container width="marginy">
+    <div class="min-h-screen flex items-center justify-center">
+      <div class="max-w-md mx-auto text-center">
+        <div class="mb-8">
+          <!-- Server Error Icon -->
+          <div class="mx-auto w-24 h-24 bg-error/10 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-12 h-12 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+
+          <Heading size="xl" class="mb-4">Session Expired</Heading>
+          <Paragraph class="text-base-content/70 mb-8">
+            Your session has expired due to inactivity. Please refresh the page to continue.
+          </Paragraph>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-4">
+          <button
+            id="refreshBtn"
+            class="btn btn-primary btn-wide"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh Page
+          </button>
+
+          <div class="flex flex-col sm:flex-row gap-2 justify-center">
+            <a href="/admin" class="btn btn-outline btn-sm">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+              </svg>
+              Go to Dashboard
+            </a>
+
+            <a href="/" class="btn btn-outline btn-sm">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+              </svg>
+              Go Home
+            </a>
+          </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="mt-8 p-4 bg-base-200 rounded-lg">
+          <Paragraph size="sm" class="text-base-content/60 mb-2">
+            <strong>Common causes:</strong>
+          </Paragraph>
+          <ul class="text-sm text-base-content/60 text-left space-y-1">
+            <li>• Session timeout due to inactivity</li>
+            <li>• Server maintenance or restart</li>
+            <li>• Network connectivity issues</li>
+          </ul>
+        </div>
+
+        <!-- Auto-refresh countdown -->
+        <div class="mt-6">
+          <Paragraph size="sm" class="text-base-content/50">
+            Auto-refreshing in <span id="countdown" class="font-mono font-bold">30</span> seconds
+          </Paragraph>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Layout>
+
+<script is:inline>
+  let countdownValue = 30;
+  let countdownInterval;
+
+  function updateCountdown() {
+    const countdownElement = document.getElementById('countdown');
+    if (countdownElement) {
+      countdownElement.textContent = countdownValue;
+    }
+
+    if (countdownValue <= 0) {
+      refreshPage();
+      return;
+    }
+
+    countdownValue--;
+  }
+
+  function refreshPage() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+    window.location.reload();
+  }
+
+  function startCountdown() {
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  function setupEventListeners() {
+    // Manual refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', refreshPage);
+    }
+
+    // Start auto-refresh countdown
+    startCountdown();
+
+    // Optional: Pause countdown on mouse hover
+    document.addEventListener('mouseenter', () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    });
+
+    document.addEventListener('mouseleave', () => {
+      startCountdown();
+    });
+  }
+
+  // Initialize when DOM is loaded
+  document.addEventListener('DOMContentLoaded', setupEventListeners);
+
+  // Also run immediately in case DOMContentLoaded already fired
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupEventListeners);
+  } else {
+    setupEventListeners();
+  }
+</script>
+
+<style>
+  /* Pulse animation for the refresh button */
+  #refreshBtn {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  /* Countdown styling */
+  #countdown {
+    color: oklch(var(--er));
+  }
+</style>

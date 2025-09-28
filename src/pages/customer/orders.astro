@@ -74,82 +74,86 @@ try {
           </div>
         </div>
       ) : (
-        <div class="space-y-6">
+        <div class="space-y-4">
           {orders.map((order) => (
-            <div class="card bg-base-100 shadow-xl">
-              <div class="card-body">
-                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-                  <div class="flex-1">
-                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
-                      <h3 class="text-xl font-bold">Order #{order.id}</h3>
-                      <div class={`badge ${
-                        order.status === 'pending' ? 'badge-warning' :
-                        order.status === 'processing' ? 'badge-info' :
-                        order.status === 'shipped' ? 'badge-primary' :
-                        order.status === 'delivered' ? 'badge-success' :
-                        'badge-neutral'
-                      }`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </div>
+            <div class="card bg-base-100 shadow-sm border border-base-200">
+              <div class="card-body p-4">
+                {/* Mobile-first header */}
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 class="font-semibold text-base">Order #{order.id}</h3>
+                    <p class="text-sm opacity-60">{new Date(order.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div class="flex flex-col items-end space-y-1">
+                    <div class={`badge ${
+                      order.status === 'pending' ? 'badge-warning' :
+                      order.status === 'processing' ? 'badge-info' :
+                      order.status === 'shipped' ? 'badge-primary' :
+                      order.status === 'delivered' ? 'badge-success' :
+                      'badge-neutral'
+                    }`}>
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </div>
+                  </div>
+                </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                      <div>
-                        <p class="text-sm text-base-content/70">Order Date</p>
-                        <p class="font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p class="text-sm text-base-content/70">Total Amount</p>
-                        <p class="font-bold text-lg">₹{Number(order.total).toFixed(2)}</p>
-                      </div>
-                    </div>
+                {/* Order summary - Mobile optimized */}
+                <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                  <div>
+                    <span class="font-medium opacity-70">Total:</span>
+                    <p class="font-bold text-primary">₹{Number(order.total).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span class="font-medium opacity-70">Items:</span>
+                    <p class="font-medium">{order.items.length} item(s)</p>
+                  </div>
+                  <div>
+                    <span class="font-medium opacity-70">Subtotal:</span>
+                    <p>₹{Number(order.subtotal).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span class="font-medium opacity-70">Shipping:</span>
+                    <p>₹{Number(order.shipping).toFixed(2)}</p>
+                  </div>
+                </div>
 
-                    <div class="mb-4">
-                      <h4 class="font-semibold mb-2">Order Items:</h4>
-                      <div class="space-y-2">
+                {/* Items - Collapsed for mobile */}
+                <div class="mb-4">
+                  <details class="collapse collapse-arrow border border-base-200 bg-base-100">
+                    <summary class="collapse-title text-sm font-medium">
+                      View Items ({order.items.length})
+                    </summary>
+                    <div class="collapse-content">
+                      <div class="space-y-2 pt-2">
                         {order.items.map((item: any) => (
-                          <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
-                            <div>
-                              <p class="font-medium">{item.product_name}</p>
-                              <p class="text-sm text-base-content/70">
-                                Quantity: {item.quantity} × ₹{Number(item.price).toFixed(2)}
+                          <div class="flex justify-between items-center p-2 bg-base-200 rounded text-sm">
+                            <div class="flex-1 min-w-0">
+                              <p class="font-medium truncate">{item.product_name}</p>
+                              <p class="text-xs opacity-60">
+                                {item.quantity} × ₹{Number(item.price).toFixed(2)}
                               </p>
                             </div>
-                            <p class="font-semibold">₹{Number(item.total).toFixed(2)}</p>
+                            <p class="font-semibold ml-2">₹{Number(item.total).toFixed(2)}</p>
                           </div>
                         ))}
                       </div>
                     </div>
+                  </details>
+                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p class="text-base-content/70">Subtotal</p>
-                        <p class="font-medium">₹{Number(order.subtotal).toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p class="text-base-content/70">Shipping</p>
-                        <p class="font-medium">₹{Number(order.shipping).toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p class="text-base-content/70">Tax</p>
-                        <p class="font-medium">₹{Number(order.tax).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex flex-col gap-2">
-                    <a
-                      href={`/customer/orders/${order.id}`}
-                      class="btn btn-outline btn-sm"
-                    >
-                      View Details
-                    </a>
-                    {order.status === 'delivered' && (
-                      <button class="btn btn-primary btn-sm">
-                        Reorder
-                      </button>
-                    )}
-                  </div>
+                {/* Actions */}
+                <div class="flex justify-end space-x-2 pt-3 border-t border-base-200">
+                  <a
+                    href={`/customer/orders/${order.id}`}
+                    class="btn btn-sm btn-primary"
+                  >
+                    View Details
+                  </a>
+                  {order.status === 'delivered' && (
+                    <button class="btn btn-sm btn-outline">
+                      Reorder
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

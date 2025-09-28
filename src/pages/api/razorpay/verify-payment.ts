@@ -18,63 +18,83 @@ export const POST: APIRoute = async ({ request }) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      orderData
+      orderData,
     } = await request.json();
 
     // Validate required fields
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Missing required payment verification data'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
+      !orderData
+    ) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Missing required payment verification data',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Verify payment signature
-    const hmac = crypto.createHmac('sha256', import.meta.env.RAZORPAY_KEY_SECRET);
+    const hmac = crypto.createHmac(
+      'sha256',
+      import.meta.env.RAZORPAY_KEY_SECRET
+    );
     hmac.update(razorpay_order_id + '|' + razorpay_payment_id);
     const generated_signature = hmac.digest('hex');
 
     if (generated_signature !== razorpay_signature) {
       console.error('Payment signature verification failed');
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Payment verification failed'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Payment verification failed',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    console.log('Payment signature verified successfully');
+    // console.log('Payment signature verified successfully');
 
     // Fetch payment details from Razorpay
     let paymentDetails;
     try {
       paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
-      console.log('Payment details:', paymentDetails);
+      // console.log('Payment details:', paymentDetails);
     } catch (error) {
       console.error('Error fetching payment details:', error);
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Failed to fetch payment details'
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to fetch payment details',
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Verify payment status
     if (paymentDetails.status !== 'captured') {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Payment not captured'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Payment not captured',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Create order in database with payment information
@@ -83,14 +103,14 @@ export const POST: APIRoute = async ({ request }) => {
       paymentId: razorpay_payment_id,
       razorpayOrderId: razorpay_order_id,
       paymentStatus: 'completed',
-      paymentMethod: paymentDetails.method || 'razorpay'
+      paymentMethod: paymentDetails.method || 'razorpay',
     };
 
-    console.log('Creating order with payment data:', enhancedOrderData);
+    // console.log('Creating order with payment data:', enhancedOrderData);
 
     const { orderId, customerId } = await createOrder(enhancedOrderData);
 
-    console.log(`Order created successfully: Order ID ${orderId}, Customer ID ${customerId}`);
+    // console.log(`Order created successfully: Order ID ${orderId}, Customer ID ${customerId}`);
 
     // Record coupon usage if a coupon was applied
     if (orderData.couponCode && orderData.couponDiscount > 0) {
@@ -98,13 +118,18 @@ export const POST: APIRoute = async ({ request }) => {
         // We need to get the coupon ID first
         const couponResult = await db.execute({
           sql: 'SELECT id FROM coupons WHERE code = ?',
-          args: [orderData.couponCode]
+          args: [orderData.couponCode],
         });
 
         if (couponResult.rows.length > 0) {
           const couponId = Number(couponResult.rows[0].id);
-          await recordCouponUsage(couponId, orderId, orderData.email, orderData.couponDiscount);
-          console.log(`Coupon usage recorded: ${orderData.couponCode} for order ${orderId}`);
+          await recordCouponUsage(
+            couponId,
+            orderId,
+            orderData.email,
+            orderData.couponDiscount
+          );
+          // console.log(`Coupon usage recorded: ${orderData.couponCode} for order ${orderId}`);
         }
       } catch (couponError) {
         console.error('Error recording coupon usage:', couponError);
@@ -117,12 +142,14 @@ export const POST: APIRoute = async ({ request }) => {
       customerName: `${orderData.firstName} ${orderData.lastName}`,
       customerEmail: orderData.email,
       orderId: orderId,
-      orderDate: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000)).toISOString(),
+      orderDate: new Date(
+        new Date().getTime() + 5.5 * 60 * 60 * 1000
+      ).toISOString(),
       items: orderData.cartItems.map((item: any) => ({
         id: item.id,
         name: item.name,
         price: item.price,
-        quantity: item.quantity
+        quantity: item.quantity,
       })),
       subtotal: orderData.subtotal,
       couponCode: orderData.couponCode || null,
@@ -136,8 +163,8 @@ export const POST: APIRoute = async ({ request }) => {
         address: orderData.address,
         city: orderData.city,
         state: orderData.state,
-        zipCode: orderData.zipCode
-      }
+        zipCode: orderData.zipCode,
+      },
     };
 
     // Send order confirmation email
@@ -145,7 +172,7 @@ export const POST: APIRoute = async ({ request }) => {
     try {
       emailSent = await sendOrderConfirmationEmail(emailData);
       if (emailSent) {
-        console.log('Order confirmation email sent successfully');
+        // console.log('Order confirmation email sent successfully');
       } else {
         console.warn('Failed to send order confirmation email');
       }
@@ -154,27 +181,32 @@ export const POST: APIRoute = async ({ request }) => {
       // Don't fail the order if email fails - just log the error
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      orderId,
-      customerId,
-      paymentId: razorpay_payment_id,
-      emailSent,
-      redirectUrl: `/order-success?orderId=${orderId}&paymentId=${razorpay_payment_id}`
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        orderId,
+        customerId,
+        paymentId: razorpay_payment_id,
+        emailSent,
+        redirectUrl: `/order-success?orderId=${orderId}&paymentId=${razorpay_payment_id}`,
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error: any) {
     console.error('Payment verification error:', error);
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message || 'Payment verification failed'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message || 'Payment verification failed',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   }
 };

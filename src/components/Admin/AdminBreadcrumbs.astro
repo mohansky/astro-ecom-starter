@@ -1,0 +1,46 @@
+---
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+  pageTitle?: string;
+  pageDescription?: string;
+}
+
+const { items, pageTitle, pageDescription } = Astro.props;
+
+// Always include Dashboard as the first item if not already present
+const breadcrumbItems = items[0]?.label === 'Dashboard'
+  ? items
+  : [{ label: 'Dashboard', href: '/admin' }, ...items];
+---
+
+<div class="mb-8">
+  <!-- Breadcrumbs -->
+  <div class="breadcrumbs text-sm mb-6">
+    <ul>
+      {breadcrumbItems.map((item, index) => (
+        <li>
+          {item.href && index < breadcrumbItems.length - 1 ? (
+            <a href={item.href}>{item.label}</a>
+          ) : (
+            <span>{item.label}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- Page Title and Description -->
+  {pageTitle && (
+    <div class="mb-4">
+      <h1 class="text-3xl font-bold mb-2">{pageTitle}</h1>
+      {pageDescription && (
+        <p class="text-base-content/70">{pageDescription}</p>
+      )}
+    </div>
+  )}
+</div>

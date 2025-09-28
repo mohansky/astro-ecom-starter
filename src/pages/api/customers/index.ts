@@ -87,6 +87,7 @@ export const GET: APIRoute = async ({ url }) => {
     const totalCount = Number(countResult.rows[0]?.total || 0);
 
     return new Response(JSON.stringify({
+      success: true,
       customers,
       pagination: {
         total: totalCount,
@@ -104,6 +105,7 @@ export const GET: APIRoute = async ({ url }) => {
     console.error('API Error:', error);
 
     return new Response(JSON.stringify({
+      success: false,
       error: 'Failed to fetch customers',
       message: error instanceof Error ? error.message : 'Unknown error occurred',
     }, null, 2), {
