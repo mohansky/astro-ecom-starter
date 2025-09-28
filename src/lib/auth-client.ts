@@ -3,7 +3,7 @@ import { createAuthClient } from "better-auth/client";
 
 const baseURL = import.meta.env.PUBLIC_BETTER_AUTH_URL ||
                 import.meta.env.BETTER_AUTH_URL ||
-                'http://localhost:4321';
+                'https://astro-ecom-starter.mohansky.workers.dev';
 
 export const authClient = createAuthClient({
   baseURL,
