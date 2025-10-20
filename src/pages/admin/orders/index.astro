@@ -18,7 +18,7 @@ if (!user.emailVerified) {
 ---
 
 <Layout>
-  <ProfileLayout title="Manobal | Order Management">
+  <ProfileLayout title="Order Management">
     <Container width="marginy">
       <AdminBreadcrumbs
         items={[{ label: 'Orders' }]}
@@ -27,7 +27,7 @@ if (!user.emailVerified) {
       />
       <div class="card bg-base-100 shadow-sm w-full">
         <div class="card-body">
-          <OrdersDataTable client:load />
+          <OrdersDataTable client:only="react" />
         </div>
       </div>
     </Container>

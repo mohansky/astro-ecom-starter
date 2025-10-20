@@ -4,7 +4,7 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { createOrder } from '../../../lib/orders';
 import { sendOrderConfirmationEmail } from '@/lib/email';
-import { recordCouponUsage } from '../../../lib/coupons';
+import { recordDiscountUsage } from '../../../lib/discounts';
 import { rawDb as db } from '../../../lib/db';
 
 const razorpay = new Razorpay({
@@ -112,28 +112,28 @@ export const POST: APIRoute = async ({ request }) => {
 
     // console.log(`Order created successfully: Order ID ${orderId}, Customer ID ${customerId}`);
 
-    // Record coupon usage if a coupon was applied
+    // Record discount usage if a discount was applied
     if (orderData.couponCode && orderData.couponDiscount > 0) {
       try {
-        // We need to get the coupon ID first
-        const couponResult = await db.execute({
-          sql: 'SELECT id FROM coupons WHERE code = ?',
+        // We need to get the discount ID first
+        const discountResult = await db.execute({
+          sql: 'SELECT id FROM discounts WHERE code = ?',
           args: [orderData.couponCode],
         });
 
-        if (couponResult.rows.length > 0) {
-          const couponId = Number(couponResult.rows[0].id);
-          await recordCouponUsage(
-            couponId,
+        if (discountResult.rows.length > 0) {
+          const discountId = Number(discountResult.rows[0].id);
+          await recordDiscountUsage(
+            discountId,
             orderId,
             orderData.email,
             orderData.couponDiscount
           );
-          // console.log(`Coupon usage recorded: ${orderData.couponCode} for order ${orderId}`);
+          // console.log(`Discount usage recorded: ${orderData.couponCode} for order ${orderId}`);
         }
-      } catch (couponError) {
-        console.error('Error recording coupon usage:', couponError);
-        // Don't fail the order if coupon usage recording fails
+      } catch (discountError) {
+        console.error('Error recording discount usage:', discountError);
+        // Don't fail the order if discount usage recording fails
       }
     }
 

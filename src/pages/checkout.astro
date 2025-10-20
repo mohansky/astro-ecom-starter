@@ -1,11 +1,11 @@
 ---
 // src/pages/checkout.astro
-import Button from "@/components/ui/Button.astro";
-import Container from "@/components/ui/Container.astro";
-import Layout from "@/layouts/Layout.astro";
+import Button from '@/components/ui/Button.astro';
+import Container from '@/components/ui/Container.astro';
+import Layout from '@/layouts/Layout.astro';
 ---
 
-<Layout title="Checkout | Manubal">
+<Layout title="Checkout">
   <Container>
     <div class="container mx-auto px-4 py-8">
       <h1 class="text-3xl font-bold mb-8">Checkout</h1>
@@ -38,7 +38,9 @@ import Layout from "@/layouts/Layout.astro";
                       placeholder="Enter coupon code"
                       class="input input-bordered flex-1"
                     />
-                    <button id="apply-coupon-btn" class="btn btn-outline">Apply</button>
+                    <button id="apply-coupon-btn" class="btn btn-outline"
+                      >Apply</button
+                    >
                   </div>
                 </div>
                 <div id="coupon-status" class="text-sm mt-1 hidden"></div>
@@ -61,7 +63,10 @@ import Layout from "@/layouts/Layout.astro";
                 <span id="cart-tax">₹0.00</span>
               </div>
               <!-- Coupon Discount Row -->
-              <div id="coupon-discount-row" class="flex justify-between py-2 text-success">
+              <div
+                id="coupon-discount-row"
+                class="flex justify-between py-2 text-success"
+              >
                 <span id="coupon-discount-label">Coupon Discount</span>
                 <span id="coupon-discount-amount">-₹0.00</span>
               </div>
@@ -232,11 +237,7 @@ import Layout from "@/layouts/Layout.astro";
             </div>
 
             <div class="mt-8">
-              <Button
-                type="submit"
-                variant="primary"
-                id="place-order-btn"
-                >
+              <Button type="submit" variant="primary" id="place-order-btn">
                 <!-- class="btn btn-primary w-full" -->
                 Pay with Razorpay
               </Button>
@@ -255,14 +256,23 @@ import Layout from "@/layouts/Layout.astro";
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-  import { cartItems, clearCart, getCartTotal, getCartSubtotal, getCartTax, getShippingCost, getTotalWeight } from "../stores/CartStore";
+  import {
+    cartItems,
+    clearCart,
+    getCartTotal,
+    getCartSubtotal,
+    getCartTax,
+    getShippingCost,
+    getTotalWeight,
+  } from '../stores/CartStore';
 
   // DaisyUI Toast notification system
   class ToastManager {
     private container: HTMLElement;
 
     constructor() {
-      this.container = document.getElementById('toast-container') || this.createContainer();
+      this.container =
+        document.getElementById('toast-container') || this.createContainer();
     }
 
     private createContainer(): HTMLElement {
@@ -273,12 +283,16 @@ import Layout from "@/layouts/Layout.astro";
       return container;
     }
 
-    show(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration: number = 4000): void {
+    show(
+      message: string,
+      type: 'success' | 'error' | 'info' | 'warning' = 'info',
+      duration: number = 4000
+    ): void {
       const toast = document.createElement('div');
-      
+
       let alertClass = '';
       let icon = '';
-      
+
       switch (type) {
         case 'success':
           alertClass = 'alert-success';
@@ -332,55 +346,54 @@ import Layout from "@/layouts/Layout.astro";
 
     // Check for duplicate IDs
     const allCartTotals: NodeListOf<HTMLElement> =
-      document.querySelectorAll("#cart-total");
+      document.querySelectorAll('#cart-total');
 
     // Find the cart total specifically within the checkout section
     const checkoutSection: HTMLElement | null =
-      document.getElementById("cart-summary");
+      document.getElementById('cart-summary');
     let cartTotalElement: HTMLElement | null = null;
 
     if (checkoutSection) {
       cartTotalElement = checkoutSection.querySelector(
-        "#cart-total"
+        '#cart-total'
       ) as HTMLElement | null;
     }
 
     // Get other elements
     const checkoutItemsContainer: HTMLElement | null = document.getElementById(
-      "checkout-items-container"
+      'checkout-items-container'
     );
     const emptyCartMessage: HTMLElement | null =
-      document.getElementById("empty-cart-message");
+      document.getElementById('empty-cart-message');
     const cartSubtotalElement: HTMLElement | null =
-      document.getElementById("cart-subtotal");
+      document.getElementById('cart-subtotal');
     const cartWeightElement: HTMLElement | null =
-      document.getElementById("cart-weight");
+      document.getElementById('cart-weight');
     const cartShippingElement: HTMLElement | null =
-      document.getElementById("cart-shipping");
+      document.getElementById('cart-shipping');
     const cartTaxElement: HTMLElement | null =
-      document.getElementById("cart-tax");
+      document.getElementById('cart-tax');
     const checkoutForm: HTMLFormElement | null = document.getElementById(
-      "checkout-form"
+      'checkout-form'
     ) as HTMLFormElement | null;
 
     // Coupon elements
     const couponCodeInput: HTMLInputElement | null = document.getElementById(
-      "coupon-code"
+      'coupon-code'
     ) as HTMLInputElement | null;
     const applyCouponBtn: HTMLButtonElement | null = document.getElementById(
-      "apply-coupon-btn"
+      'apply-coupon-btn'
     ) as HTMLButtonElement | null;
-    const couponStatus: HTMLElement | null = document.getElementById(
-      "coupon-status"
-    );
+    const couponStatus: HTMLElement | null =
+      document.getElementById('coupon-status');
     const couponDiscountRow: HTMLElement | null = document.getElementById(
-      "coupon-discount-row"
+      'coupon-discount-row'
     );
     const couponDiscountLabel: HTMLElement | null = document.getElementById(
-      "coupon-discount-label"
+      'coupon-discount-label'
     );
     const couponDiscountAmount: HTMLElement | null = document.getElementById(
-      "coupon-discount-amount"
+      'coupon-discount-amount'
     );
 
     // Early return if essential elements are missing
@@ -391,7 +404,7 @@ import Layout from "@/layouts/Layout.astro";
     // Verify cart total element is found - this is critical
     if (!cartTotalElement) {
       // Fallback: try direct selection as last resort
-      cartTotalElement = document.getElementById("cart-total");
+      cartTotalElement = document.getElementById('cart-total');
     }
 
     // Render cart initially
@@ -403,16 +416,16 @@ import Layout from "@/layouts/Layout.astro";
     });
 
     // Handle form submission
-    checkoutForm.addEventListener("submit", handleCheckout);
+    checkoutForm.addEventListener('submit', handleCheckout);
 
     // Handle coupon application
     if (applyCouponBtn) {
-      applyCouponBtn.addEventListener("click", handleApplyCoupon);
+      applyCouponBtn.addEventListener('click', handleApplyCoupon);
     }
 
     if (couponCodeInput) {
-      couponCodeInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
+      couponCodeInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
           e.preventDefault();
           handleApplyCoupon();
         }
@@ -423,10 +436,10 @@ import Layout from "@/layouts/Layout.astro";
     function cleanup(): void {
       unsubscribeCartListener();
       if (checkoutForm) {
-        checkoutForm.removeEventListener("submit", handleCheckout);
+        checkoutForm.removeEventListener('submit', handleCheckout);
       }
       if (applyCouponBtn) {
-        applyCouponBtn.removeEventListener("click", handleApplyCoupon);
+        applyCouponBtn.removeEventListener('click', handleApplyCoupon);
       }
     }
 
@@ -443,10 +456,9 @@ import Layout from "@/layouts/Layout.astro";
       const tax = getCartTax();
       const total = discountedSubtotal + shipping + tax;
 
-
       // Check for all cart-total elements again in case DOM changed
       const allTotalElements: NodeListOf<HTMLElement> =
-        document.querySelectorAll("#cart-total");
+        document.querySelectorAll('#cart-total');
 
       // Update totals with null checks
       if (cartSubtotalElement) {
@@ -466,14 +478,19 @@ import Layout from "@/layouts/Layout.astro";
       }
 
       // Update coupon discount display
-      if (couponDiscount > 0 && couponDiscountRow && couponDiscountAmount && couponDiscountLabel) {
-        couponDiscountRow.classList.remove("hidden");
+      if (
+        couponDiscount > 0 &&
+        couponDiscountRow &&
+        couponDiscountAmount &&
+        couponDiscountLabel
+      ) {
+        couponDiscountRow.classList.remove('hidden');
         couponDiscountAmount.textContent = `-₹${couponDiscount.toFixed(2)}`;
         if (appliedCoupon) {
           couponDiscountLabel.textContent = `Coupon Discount (${appliedCoupon.code})`;
         }
       } else if (couponDiscountRow) {
-        couponDiscountRow.classList.add("hidden");
+        couponDiscountRow.classList.add('hidden');
       }
 
       // Update ALL elements with id="cart-total" to ensure the visible one gets updated
@@ -489,24 +506,25 @@ import Layout from "@/layouts/Layout.astro";
       // Show empty message or render items
       if (items.length === 0) {
         if (emptyCartMessage) {
-          emptyCartMessage.classList.remove("hidden");
+          emptyCartMessage.classList.remove('hidden');
         }
         if (checkoutItemsContainer) {
-          checkoutItemsContainer.classList.add("hidden");
+          checkoutItemsContainer.classList.add('hidden');
         }
       } else {
         if (emptyCartMessage) {
-          emptyCartMessage.classList.add("hidden");
+          emptyCartMessage.classList.add('hidden');
         }
 
         if (checkoutItemsContainer) {
-          checkoutItemsContainer.classList.remove("hidden");
-          checkoutItemsContainer.innerHTML = "";
+          checkoutItemsContainer.classList.remove('hidden');
+          checkoutItemsContainer.innerHTML = '';
 
           // Render each item
           items.forEach((item) => {
-            const itemElement = document.createElement("div");
-            itemElement.className = "flex items-center p-4 border-b border-base-300 last:border-0";
+            const itemElement = document.createElement('div');
+            itemElement.className =
+              'flex items-center p-4 border-b border-base-300 last:border-0';
 
             itemElement.innerHTML = `   
             <div class="ml-4 flex-grow">
@@ -530,39 +548,39 @@ import Layout from "@/layouts/Layout.astro";
 
       const couponCode = couponCodeInput.value.trim();
       if (!couponCode) {
-        showCouponStatus("Please enter a coupon code", "error");
+        showCouponStatus('Please enter a coupon code', 'error');
         return;
       }
 
       // Disable apply button and show loading
       applyCouponBtn.disabled = true;
-      applyCouponBtn.textContent = "Applying...";
+      applyCouponBtn.textContent = 'Applying...';
 
       try {
         const subtotal = getCartTotal();
-        const response = await fetch("/api/coupons/validate", {
-          method: "POST",
+        const response = await fetch('/api/coupons/validate', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             code: couponCode,
-            orderAmount: subtotal
+            orderAmount: subtotal,
           }),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to validate coupon");
+          throw new Error('Failed to validate coupon');
         }
 
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Invalid coupon code");
+          throw new Error(result.error || 'Invalid coupon code');
         }
 
         if (!result.isValid) {
-          throw new Error(result.message || "Coupon is not valid");
+          throw new Error(result.message || 'Coupon is not valid');
         }
 
         // Apply the coupon
@@ -570,22 +588,24 @@ import Layout from "@/layouts/Layout.astro";
         couponDiscount = result.discountAmount;
 
         // Update UI
-        showCouponStatus(`Coupon applied! You saved ₹${couponDiscount.toFixed(2)}`, "success");
+        showCouponStatus(
+          `Coupon applied! You saved ₹${couponDiscount.toFixed(2)}`,
+          'success'
+        );
         renderCheckoutItems();
 
         // Update apply button to show remove option
-        applyCouponBtn.textContent = "Remove";
-        applyCouponBtn.classList.remove("btn-outline");
-        applyCouponBtn.classList.add("btn-error");
+        applyCouponBtn.textContent = 'Remove';
+        applyCouponBtn.classList.remove('btn-outline');
+        applyCouponBtn.classList.add('btn-error');
         applyCouponBtn.onclick = removeCoupon;
-
       } catch (error: any) {
-        console.error("Coupon application error:", error);
-        showCouponStatus(error.message || "Failed to apply coupon", "error");
+        console.error('Coupon application error:', error);
+        showCouponStatus(error.message || 'Failed to apply coupon', 'error');
       } finally {
         applyCouponBtn.disabled = false;
-        if (applyCouponBtn.textContent === "Applying...") {
-          applyCouponBtn.textContent = "Apply";
+        if (applyCouponBtn.textContent === 'Applying...') {
+          applyCouponBtn.textContent = 'Apply';
         }
       }
     }
@@ -596,39 +616,42 @@ import Layout from "@/layouts/Layout.astro";
 
       // Clear input and status
       if (couponCodeInput) {
-        couponCodeInput.value = "";
+        couponCodeInput.value = '';
       }
       hideCouponStatus();
 
       // Reset apply button
       if (applyCouponBtn) {
-        applyCouponBtn.textContent = "Apply";
-        applyCouponBtn.classList.add("btn-outline");
-        applyCouponBtn.classList.remove("btn-error");
+        applyCouponBtn.textContent = 'Apply';
+        applyCouponBtn.classList.add('btn-outline');
+        applyCouponBtn.classList.remove('btn-error');
         applyCouponBtn.onclick = handleApplyCoupon;
       }
 
       // Re-render totals
       renderCheckoutItems();
-      toastManager.show("Coupon removed", "info");
+      toastManager.show('Coupon removed', 'info');
     }
 
-    function showCouponStatus(message: string, type: "success" | "error"): void {
+    function showCouponStatus(
+      message: string,
+      type: 'success' | 'error'
+    ): void {
       if (!couponStatus) return;
 
       couponStatus.textContent = message;
-      couponStatus.classList.remove("hidden", "text-success", "text-error");
+      couponStatus.classList.remove('hidden', 'text-success', 'text-error');
 
-      if (type === "success") {
-        couponStatus.classList.add("text-success");
+      if (type === 'success') {
+        couponStatus.classList.add('text-success');
       } else {
-        couponStatus.classList.add("text-error");
+        couponStatus.classList.add('text-error');
       }
     }
 
     function hideCouponStatus(): void {
       if (couponStatus) {
-        couponStatus.classList.add("hidden");
+        couponStatus.classList.add('hidden');
       }
     }
 
@@ -637,19 +660,19 @@ import Layout from "@/layouts/Layout.astro";
 
       const items = cartItems.get();
       if (items.length === 0) {
-        toastManager.show("Your cart is empty.", "error");
+        toastManager.show('Your cart is empty.', 'error');
         return;
       }
 
       // Disable the submit button and show loading state
       const submitButton = document.getElementById(
-        "place-order-btn"
+        'place-order-btn'
       ) as HTMLButtonElement | null;
 
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.textContent = "Processing...";
-        submitButton.classList.add("loading");
+        submitButton.textContent = 'Processing...';
+        submitButton.classList.add('loading');
       }
 
       try {
@@ -662,7 +685,6 @@ import Layout from "@/layouts/Layout.astro";
         formData.forEach((value, key) => {
           formObject[key] = value.toString();
         });
-
 
         // Calculate totals
         const subtotal = getCartSubtotal();
@@ -682,42 +704,46 @@ import Layout from "@/layouts/Layout.astro";
           discountedSubtotal,
           shipping,
           tax,
-          total
+          total,
         };
 
-
         // Create Razorpay order
-        const razorpayOrderResponse = await fetch("/api/razorpay/create-order", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: total,
-            currency: "INR",
-            receipt: `order_${Date.now()}`,
-            notes: {
-              customerName: `${formObject.firstName} ${formObject.lastName}`,
-              customerEmail: formObject.email
-            }
-          }),
-        });
+        const razorpayOrderResponse = await fetch(
+          '/api/razorpay/create-order',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              amount: total,
+              currency: 'INR',
+              receipt: `order_${Date.now()}`,
+              notes: {
+                customerName: `${formObject.firstName} ${formObject.lastName}`,
+                customerEmail: formObject.email,
+              },
+            }),
+          }
+        );
 
         if (!razorpayOrderResponse.ok) {
-          throw new Error("Failed to create Razorpay order");
+          throw new Error('Failed to create Razorpay order');
         }
 
         const razorpayOrder = await razorpayOrderResponse.json();
 
         if (!razorpayOrder.success) {
-          throw new Error(razorpayOrder.error || "Failed to create payment order");
+          throw new Error(
+            razorpayOrder.error || 'Failed to create payment order'
+          );
         }
 
         // Re-enable the submit button
         if (submitButton) {
           submitButton.disabled = false;
-          submitButton.textContent = "Pay with Razorpay";
-          submitButton.classList.remove("loading");
+          submitButton.textContent = 'Pay with Razorpay';
+          submitButton.classList.remove('loading');
         }
 
         // Configure Razorpay options
@@ -725,8 +751,8 @@ import Layout from "@/layouts/Layout.astro";
           key: import.meta.env.PUBLIC_RAZORPAY_KEY_ID,
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: "Manubal",
-          description: "Order Payment",
+          name: 'Manubal',
+          description: 'Order Payment',
           order_id: razorpayOrder.orderId,
           handler: async function (response: any) {
             await handlePaymentSuccess(response, orderData);
@@ -737,11 +763,11 @@ import Layout from "@/layouts/Layout.astro";
             contact: formObject.phoneNumber,
           },
           theme: {
-            color: "#3B82F6",
+            color: '#3B82F6',
           },
           modal: {
             ondismiss: function () {
-              toastManager.show("Payment cancelled", "warning");
+              toastManager.show('Payment cancelled', 'warning');
             },
           },
         };
@@ -749,67 +775,74 @@ import Layout from "@/layouts/Layout.astro";
         // Open Razorpay checkout
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
-
       } catch (error: any) {
-        console.error("Checkout error:", error);
+        console.error('Checkout error:', error);
         toastManager.show(
-          error.message || "There was a problem processing your order",
-          "error"
+          error.message || 'There was a problem processing your order',
+          'error'
         );
 
         // Re-enable the submit button
         if (submitButton) {
           submitButton.disabled = false;
-          submitButton.textContent = "Pay with Razorpay";
-          submitButton.classList.remove("loading");
+          submitButton.textContent = 'Pay with Razorpay';
+          submitButton.classList.remove('loading');
         }
       }
     }
 
-    async function handlePaymentSuccess(paymentResponse: any, orderData: any): Promise<void> {
+    async function handlePaymentSuccess(
+      paymentResponse: any,
+      orderData: any
+    ): Promise<void> {
       try {
-
         // Verify payment with backend
-        const verificationResponse = await fetch("/api/razorpay/verify-payment", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            razorpay_order_id: paymentResponse.razorpay_order_id,
-            razorpay_payment_id: paymentResponse.razorpay_payment_id,
-            razorpay_signature: paymentResponse.razorpay_signature,
-            orderData: orderData,
-          }),
-        });
+        const verificationResponse = await fetch(
+          '/api/razorpay/verify-payment',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_order_id: paymentResponse.razorpay_order_id,
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_signature: paymentResponse.razorpay_signature,
+              orderData: orderData,
+            }),
+          }
+        );
 
         if (!verificationResponse.ok) {
-          throw new Error("Payment verification failed");
+          throw new Error('Payment verification failed');
         }
 
         const result = await verificationResponse.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Payment verification failed");
+          throw new Error(result.error || 'Payment verification failed');
         }
 
         // Clear cart
         clearCart();
 
         // Show success toast
-        toastManager.show("Payment successful! Redirecting...", "success", 1000);
+        toastManager.show(
+          'Payment successful! Redirecting...',
+          'success',
+          1000
+        );
 
         // Redirect to payment processing page first
         setTimeout(() => {
-          const processingUrl = `/payment-processing?redirectUrl=${encodeURIComponent(result.redirectUrl || "/order-success")}${result.orderId ? `&orderId=${result.orderId}` : ''}`;
+          const processingUrl = `/payment-processing?redirectUrl=${encodeURIComponent(result.redirectUrl || '/order-success')}${result.orderId ? `&orderId=${result.orderId}` : ''}`;
           window.location.href = processingUrl;
         }, 1000);
-
       } catch (error: any) {
-        console.error("Payment verification error:", error);
+        console.error('Payment verification error:', error);
         toastManager.show(
-          error.message || "Payment verification failed",
-          "error"
+          error.message || 'Payment verification failed',
+          'error'
         );
       }
     }
@@ -819,13 +852,13 @@ import Layout from "@/layouts/Layout.astro";
   }
 
   // Initialize when DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    const saved = localStorage.getItem("cart");
+  document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('cart');
     if (saved) {
       try {
         cartItems.set(JSON.parse(saved));
       } catch (e) {
-        console.error("Failed to restore cart from localStorage", e);
+        console.error('Failed to restore cart from localStorage', e);
       }
     }
 
@@ -834,7 +867,7 @@ import Layout from "@/layouts/Layout.astro";
   });
 
   // For Astro View Transitions
-  document.addEventListener("astro:page-load", () => {
+  document.addEventListener('astro:page-load', () => {
     // Initialize new instance
     const cleanupCheckout = initCheckoutPage();
   });

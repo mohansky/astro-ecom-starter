@@ -84,5 +84,5 @@ export function hasProductImages(subDirectory: string): boolean {
  * Get a placeholder image path for products without images
  */
 export function getPlaceholderImage(): string {
-  return '/placeholder-product.jpg';
+  return '/placeholder-product.svg';
 }

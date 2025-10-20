@@ -25,13 +25,13 @@ export function Button({
     accent: 'btn-accent',
     ghost: 'btn-ghost',
     outline: 'btn-outline',
-    error: 'btn-error'
+    error: 'btn-error',
   };
 
   const sizeClasses = {
     sm: 'btn-sm',
     md: 'btn-md',
-    lg: 'btn-lg'
+    lg: 'btn-lg',
   };
 
   return (
@@ -40,13 +40,21 @@ export function Button({
         baseClasses,
         variantClasses[variant],
         sizeClasses[size],
-        loading && 'loading',
+        loading && 'opacity-70 cursor-not-allowed',
         className
       )}
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? <span className="loading loading-spinner"></span> : children}
+      {loading ? (
+        <span className="flex items-center gap-2">
+          {/* {children} */}
+          Loading
+          <span className="loading loading-dots loading-md"></span>
+        </span>
+      ) : (
+        children
+      )}
     </button>
   );
 }

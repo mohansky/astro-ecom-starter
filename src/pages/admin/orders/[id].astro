@@ -4,7 +4,7 @@ import Container from '@/components/ui/Container.astro';
 import Layout from '@/layouts/Layout.astro';
 import ProfileLayout from '@/layouts/ProfileLayout.astro';
 import { StatusUpdateModal } from '@/components/Admin/StatusUpdateModal';
-import { formatCurrency, formatDate } from '@/lib/helpers';
+import { formatCurrency, formatDate, getStatusBadgeClass } from '@/lib/helpers';
 import { getOrderById, getOrderStatusHistory } from '@/lib/orders';
 import { getUser } from '@/lib/auth-utils';
 
@@ -25,23 +25,9 @@ const statusHistory = await getOrderStatusHistory(orderId);
 if (!order) {
   return Astro.redirect('/admin/orders');
 }
-
-const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
-
-const statusBadges: Record<string, string> = {
-  pending: 'badge-warning',
-  processing: 'badge-info',
-  shipped: 'badge-accent',
-  delivered: 'badge-success',
-  cancelled: 'badge-error',
-};
-
-function getStatusBadge(status: string): string {
-  return statusBadges[status] || 'badge-neutral';
-}
 ---
 
-<Layout title="Manobal | Order Details">
+<Layout title="Order Details">
   <ProfileLayout title={`Details for Order #${order.id}`}>
     <Container width="marginy">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -57,16 +43,15 @@ function getStatusBadge(status: string): string {
                 </p>
               </div>
               <div
-                class="flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                class="flex flex-col sm:flex-row items-start sm:items-center gap-6"
               >
                 <div class="flex flex-col">
+                  <label class="label text-xs mx-auto">Current Status</label>
                   <div
-                    class={`capitalize badge badge-md ${getStatusBadge(order.status)}`}
+                    class={`capitalize badge badge-md ${getStatusBadgeClass(order.status)}`}
                   >
                     {order.status}
                   </div>
-                  <label class="label text-xs text-center">Current Status</label
-                  >
                 </div>
 
                 <StatusUpdateModal
@@ -104,7 +89,7 @@ function getStatusBadge(status: string): string {
                             <td>
                               {entry.previousStatus ? (
                                 <span
-                                  class={`badge badge-xs ${getStatusBadge(entry.previousStatus)}`}
+                                  class={`badge badge-xs ${getStatusBadgeClass(entry.previousStatus)}`}
                                 >
                                   {entry.previousStatus}
                                 </span>
@@ -114,7 +99,7 @@ function getStatusBadge(status: string): string {
                             </td>
                             <td>
                               <span
-                                class={`badge badge-xs ${getStatusBadge(entry.newStatus)}`}
+                                class={`badge badge-xs ${getStatusBadgeClass(entry.newStatus)}`}
                               >
                                 {entry.newStatus}
                               </span>

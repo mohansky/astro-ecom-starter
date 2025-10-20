@@ -23,15 +23,18 @@ export function ProductImageSlider({
     dragFree: true,
   });
 
-  // Combine main image and additional images
+  // If there are additional images, show only those
+  // If no additional images, show the main image
   const allImages = [];
-  if (mainImage) {
-    allImages.push({ type: 'main', filename: mainImage });
-  }
+
   if (images && images.length > 0) {
+    // Show only additional images if they exist
     images.forEach(img => {
       allImages.push({ type: 'additional', filename: img });
     });
+  } else if (mainImage) {
+    // Show main image only if no additional images
+    allImages.push({ type: 'main', filename: mainImage });
   }
 
   const r2BucketUrl = 'https://pub-67b76734f5b543b9925c0870089929bb.r2.dev';

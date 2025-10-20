@@ -1,7 +1,7 @@
-// src/lib/coupons.ts
+// src/lib/discounts.ts
 import { rawDb as db } from './db';
 
-export interface Coupon {
+export interface Discount {
   id: number;
   code: string;
   description: string;
@@ -18,19 +18,19 @@ export interface Coupon {
   updatedAt: string;
 }
 
-export interface CouponApplication {
+export interface DiscountApplication {
   isValid: boolean;
-  coupon?: Coupon;
+  discount?: Discount;
   discountAmount: number;
   message: string;
 }
 
-// Create coupons table if it doesn't exist
-export async function initializeCouponsTable() {
+// Create discounts table if it doesn't exist
+export async function initializeDiscountsTable() {
   try {
     await db.execute({
       sql: `
-        CREATE TABLE IF NOT EXISTS coupons (
+        CREATE TABLE IF NOT EXISTS discounts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           code TEXT UNIQUE NOT NULL,
           description TEXT NOT NULL,
@@ -49,37 +49,37 @@ export async function initializeCouponsTable() {
       `
     });
 
-    // Create coupon_usage table to track individual coupon uses
+    // Create discount_usage table to track individual discount uses
     await db.execute({
       sql: `
-        CREATE TABLE IF NOT EXISTS coupon_usage (
+        CREATE TABLE IF NOT EXISTS discount_usage (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          coupon_id INTEGER NOT NULL,
+          discount_id INTEGER NOT NULL,
           order_id INTEGER NOT NULL,
           customer_email TEXT NOT NULL,
           discount_amount REAL NOT NULL,
           used_at TEXT NOT NULL DEFAULT (datetime('now')),
-          FOREIGN KEY (coupon_id) REFERENCES coupons(id)
+          FOREIGN KEY (discount_id) REFERENCES discounts(id)
         )
       `
     });
 
-    // console.log('Coupons tables initialized successfully');
+    // console.log('discounts tables initialized successfully');
   } catch (error) {
-    console.error('Error initializing coupons tables:', error);
+    console.error('Error initializing discounts tables:', error);
     throw error;
   }
 }
 
-// Get all coupons with optional filters
-export async function getAllCoupons(filters?: {
+// Get all discounts with optional filters
+export async function getAllDiscounts(filters?: {
   isActive?: boolean;
   search?: string;
   limit?: number;
   offset?: number;
-}): Promise<{ coupons: Coupon[]; total: number }> {
+}): Promise<{ discounts: Discount[]; total: number }> {
   try {
-    let sql = 'SELECT * FROM coupons WHERE 1=1';
+    let sql = 'SELECT * FROM discounts WHERE 1=1';
     const args: any[] = [];
 
     if (filters?.isActive !== undefined) {
@@ -115,7 +115,7 @@ export async function getAllCoupons(filters?: {
 
     const result = await db.execute({ sql, args });
 
-    const coupons = result.rows.map(row => ({
+    const discounts = result.rows.map(row => ({
       id: Number(row.id),
       code: String(row.code),
       description: String(row.description),
@@ -132,18 +132,53 @@ export async function getAllCoupons(filters?: {
       updatedAt: String(row.updated_at)
     }));
 
-    return { coupons, total };
+    return { discounts, total };
   } catch (error) {
-    console.error('Error fetching coupons:', error);
+    console.error('Error fetching discounts:', error);
     throw error;
   }
 }
 
-// Get coupon by code
-export async function getCouponByCode(code: string): Promise<Coupon | null> {
+// Get discount by ID
+export async function getDiscountById(id: number): Promise<Discount | null> {
   try {
     const result = await db.execute({
-      sql: 'SELECT * FROM coupons WHERE code = ? AND is_active = 1',
+      sql: 'SELECT * FROM discounts WHERE id = ?',
+      args: [id]
+    });
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    const row = result.rows[0];
+    return {
+      id: Number(row.id),
+      code: String(row.code),
+      description: String(row.description),
+      discountType: String(row.discount_type) as 'percentage' | 'fixed',
+      discountValue: Number(row.discount_value),
+      minimumOrderAmount: Number(row.minimum_order_amount),
+      maxDiscountAmount: row.max_discount_amount ? Number(row.max_discount_amount) : undefined,
+      isActive: Boolean(row.is_active),
+      validFrom: String(row.valid_from),
+      validTo: String(row.valid_to),
+      usageLimit: row.usage_limit ? Number(row.usage_limit) : undefined,
+      usedCount: Number(row.used_count),
+      createdAt: String(row.created_at),
+      updatedAt: String(row.updated_at)
+    };
+  } catch (error) {
+    console.error('Error fetching discount by ID:', error);
+    throw error;
+  }
+}
+
+// Get discount by code
+export async function getDiscountByCode(code: string): Promise<Discount | null> {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM discounts WHERE code = ? AND is_active = 1',
       args: [code.toUpperCase()]
     });
 
@@ -169,43 +204,43 @@ export async function getCouponByCode(code: string): Promise<Coupon | null> {
       updatedAt: String(row.updated_at)
     };
   } catch (error) {
-    console.error('Error fetching coupon by code:', error);
+    console.error('Error fetching discount by code:', error);
     throw error;
   }
 }
 
-// Validate and apply coupon
-export async function validateCoupon(code: string, orderAmount: number, customerEmail?: string): Promise<CouponApplication> {
+// Validate and apply discount
+export async function validateDiscount(code: string, orderAmount: number, customerEmail?: string): Promise<DiscountApplication> {
   try {
-    const coupon = await getCouponByCode(code);
+    const discount = await getDiscountByCode(code);
 
-    if (!coupon) {
+    if (!discount) {
       return {
         isValid: false,
         discountAmount: 0,
-        message: 'Invalid coupon code'
+        message: 'Invalid discount code'
       };
     }
 
-    // Check if coupon is active
-    if (!coupon.isActive) {
+    // Check if discount is active
+    if (!discount.isActive) {
       return {
         isValid: false,
         discountAmount: 0,
-        message: 'This coupon is not active'
+        message: 'This discount is not active'
       };
     }
 
     // Check validity dates
     const now = new Date();
-    const validFrom = new Date(coupon.validFrom);
-    const validTo = new Date(coupon.validTo);
+    const validFrom = new Date(discount.validFrom);
+    const validTo = new Date(discount.validTo);
 
     if (now < validFrom) {
       return {
         isValid: false,
         discountAmount: 0,
-        message: 'This coupon is not yet valid'
+        message: 'This discount is not yet valid'
       };
     }
 
@@ -213,39 +248,39 @@ export async function validateCoupon(code: string, orderAmount: number, customer
       return {
         isValid: false,
         discountAmount: 0,
-        message: 'This coupon has expired'
+        message: 'This discount has expired'
       };
     }
 
     // Check minimum order amount
-    if (orderAmount < coupon.minimumOrderAmount) {
+    if (orderAmount < discount.minimumOrderAmount) {
       return {
         isValid: false,
         discountAmount: 0,
-        message: `Minimum order amount of ₹${coupon.minimumOrderAmount} required`
+        message: `Minimum order amount of ₹${discount.minimumOrderAmount} required`
       };
     }
 
     // Check usage limit
-    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+    if (discount.usageLimit && discount.usedCount >= discount.usageLimit) {
       return {
         isValid: false,
         discountAmount: 0,
-        message: 'This coupon has reached its usage limit'
+        message: 'This discount has reached its usage limit'
       };
     }
 
     // Calculate discount amount
     let discountAmount = 0;
-    if (coupon.discountType === 'percentage') {
-      discountAmount = (orderAmount * coupon.discountValue) / 100;
+    if (discount.discountType === 'percentage') {
+      discountAmount = (orderAmount * discount.discountValue) / 100;
 
       // Apply max discount limit if specified
-      if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
-        discountAmount = coupon.maxDiscountAmount;
+      if (discount.maxDiscountAmount && discountAmount > discount.maxDiscountAmount) {
+        discountAmount = discount.maxDiscountAmount;
       }
     } else {
-      discountAmount = coupon.discountValue;
+      discountAmount = discount.discountValue;
     }
 
     // Ensure discount doesn't exceed order amount
@@ -253,23 +288,23 @@ export async function validateCoupon(code: string, orderAmount: number, customer
 
     return {
       isValid: true,
-      coupon,
+      discount,
       discountAmount: Math.round(discountAmount * 100) / 100, // Round to 2 decimal places
-      message: `Coupon applied! You saved ₹${discountAmount.toFixed(2)}`
+      message: `discount applied! You saved ₹${discountAmount.toFixed(2)}`
     };
 
   } catch (error) {
-    console.error('Error validating coupon:', error);
+    console.error('Error validating discount:', error);
     return {
       isValid: false,
       discountAmount: 0,
-      message: 'Error validating coupon'
+      message: 'Error validating discount'
     };
   }
 }
 
-// Create new coupon
-export async function createCoupon(couponData: {
+// Create new discount
+export async function createDiscount(discountData: {
   code: string;
   description: string;
   discountType: 'percentage' | 'fixed';
@@ -280,39 +315,44 @@ export async function createCoupon(couponData: {
   validFrom: string;
   validTo: string;
   usageLimit?: number;
-}): Promise<number> {
+}): Promise<Discount> {
   try {
     const result = await db.execute({
       sql: `
-        INSERT INTO coupons (
+        INSERT INTO discounts (
           code, description, discount_type, discount_value,
           minimum_order_amount, max_discount_amount, is_active,
           valid_from, valid_to, usage_limit
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
-        couponData.code.toUpperCase(),
-        couponData.description,
-        couponData.discountType,
-        couponData.discountValue,
-        couponData.minimumOrderAmount,
-        couponData.maxDiscountAmount || null,
-        couponData.isActive !== false ? 1 : 0,
-        couponData.validFrom,
-        couponData.validTo,
-        couponData.usageLimit || null
+        discountData.code.toUpperCase(),
+        discountData.description,
+        discountData.discountType,
+        discountData.discountValue,
+        discountData.minimumOrderAmount,
+        discountData.maxDiscountAmount || null,
+        discountData.isActive !== false ? 1 : 0,
+        discountData.validFrom,
+        discountData.validTo,
+        discountData.usageLimit || null
       ]
     });
 
-    return Number(result.lastInsertRowid);
+    const id = Number(result.lastInsertRowid);
+    const discount = await getDiscountById(id);
+    if (!discount) {
+      throw new Error('Failed to retrieve created discount');
+    }
+    return discount;
   } catch (error) {
-    console.error('Error creating coupon:', error);
+    console.error('Error creating discount:', error);
     throw error;
   }
 }
 
-// Update coupon
-export async function updateCoupon(id: number, couponData: Partial<{
+// Update discount
+export async function updateDiscount(id: number, discountData: Partial<{
   code: string;
   description: string;
   discountType: 'percentage' | 'fixed';
@@ -323,105 +363,109 @@ export async function updateCoupon(id: number, couponData: Partial<{
   validFrom: string;
   validTo: string;
   usageLimit: number;
-}>): Promise<boolean> {
+}>): Promise<Discount | null> {
   try {
     const updateFields = [];
     const args = [];
 
-    if (couponData.code !== undefined) {
+    if (discountData.code !== undefined) {
       updateFields.push('code = ?');
-      args.push(couponData.code.toUpperCase());
+      args.push(discountData.code.toUpperCase());
     }
-    if (couponData.description !== undefined) {
+    if (discountData.description !== undefined) {
       updateFields.push('description = ?');
-      args.push(couponData.description);
+      args.push(discountData.description);
     }
-    if (couponData.discountType !== undefined) {
+    if (discountData.discountType !== undefined) {
       updateFields.push('discount_type = ?');
-      args.push(couponData.discountType);
+      args.push(discountData.discountType);
     }
-    if (couponData.discountValue !== undefined) {
+    if (discountData.discountValue !== undefined) {
       updateFields.push('discount_value = ?');
-      args.push(couponData.discountValue);
+      args.push(discountData.discountValue);
     }
-    if (couponData.minimumOrderAmount !== undefined) {
+    if (discountData.minimumOrderAmount !== undefined) {
       updateFields.push('minimum_order_amount = ?');
-      args.push(couponData.minimumOrderAmount);
+      args.push(discountData.minimumOrderAmount);
     }
-    if (couponData.maxDiscountAmount !== undefined) {
+    if (discountData.maxDiscountAmount !== undefined) {
       updateFields.push('max_discount_amount = ?');
-      args.push(couponData.maxDiscountAmount);
+      args.push(discountData.maxDiscountAmount);
     }
-    if (couponData.isActive !== undefined) {
+    if (discountData.isActive !== undefined) {
       updateFields.push('is_active = ?');
-      args.push(couponData.isActive ? 1 : 0);
+      args.push(discountData.isActive ? 1 : 0);
     }
-    if (couponData.validFrom !== undefined) {
+    if (discountData.validFrom !== undefined) {
       updateFields.push('valid_from = ?');
-      args.push(couponData.validFrom);
+      args.push(discountData.validFrom);
     }
-    if (couponData.validTo !== undefined) {
+    if (discountData.validTo !== undefined) {
       updateFields.push('valid_to = ?');
-      args.push(couponData.validTo);
+      args.push(discountData.validTo);
     }
-    if (couponData.usageLimit !== undefined) {
+    if (discountData.usageLimit !== undefined) {
       updateFields.push('usage_limit = ?');
-      args.push(couponData.usageLimit);
+      args.push(discountData.usageLimit);
     }
 
     if (updateFields.length === 0) {
-      return false;
+      return null;
     }
 
     updateFields.push('updated_at = datetime("now")');
     args.push(id);
 
     const result = await db.execute({
-      sql: `UPDATE coupons SET ${updateFields.join(', ')} WHERE id = ?`,
+      sql: `UPDATE discounts SET ${updateFields.join(', ')} WHERE id = ?`,
       args
     });
 
-    return result.rowsAffected > 0;
+    if (result.rowsAffected === 0) {
+      return null;
+    }
+
+    return await getDiscountById(id);
   } catch (error) {
-    console.error('Error updating coupon:', error);
+    console.error('Error updating discount:', error);
     throw error;
   }
 }
 
-// Delete coupon
-export async function deleteCoupon(id: number): Promise<boolean> {
+// Delete discount
+export async function deleteDiscount(id: number): Promise<boolean> {
   try {
     const result = await db.execute({
-      sql: 'DELETE FROM coupons WHERE id = ?',
+      sql: 'DELETE FROM discounts WHERE id = ?',
       args: [id]
     });
 
     return result.rowsAffected > 0;
   } catch (error) {
-    console.error('Error deleting coupon:', error);
+    console.error('Error deleting discount:', error);
     throw error;
   }
 }
 
-// Record coupon usage
-export async function recordCouponUsage(couponId: number, orderId: number, customerEmail: string, discountAmount: number): Promise<void> {
+// Record discount usage
+export async function recordDiscountUsage(discountId: number, orderId: number, customerEmail: string, discountAmount: number): Promise<void> {
   try {
     // Record usage
     await db.execute({
       sql: `
-        INSERT INTO coupon_usage (coupon_id, order_id, customer_email, discount_amount)
+        INSERT INTO discount_usage (discount_id, order_id, customer_email, discount_amount)
         VALUES (?, ?, ?, ?)
       `,
-      args: [couponId, orderId, customerEmail, discountAmount]
+      args: [discountId, orderId, customerEmail, discountAmount]
     });
 
     // Update used count
     await db.execute({
-      sql: 'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
-      args: [couponId]
+      sql: 'UPDATE discounts SET used_count = used_count + 1 WHERE id = ?',
+      args: [discountId]
     });
   } catch (error) {
-    console.error('Error recording coupon usage:', error);
+    console.error('Error recording discount usage:', error);
     throw error;
   }
 }

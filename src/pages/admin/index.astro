@@ -2,8 +2,8 @@
 import Layout from '@/layouts/Layout.astro';
 import ProfileLayout from '@/layouts/ProfileLayout.astro';
 import Container from '@/components/ui/Container.astro';
-import OrdersChart from '@/components/ui/OrdersChart.astro';
-import RecentOrders from '@/components/ui/RecentOrders.astro';
+import { OrdersChart } from '@/components/Admin/OrdersChart';
+import { RecentOrders } from '@/components/Admin/RecentOrders';
 import { getUser } from '@/lib/auth-utils';
 import UserCard from '@/components/ui/UserCard.astro';
 
@@ -18,15 +18,13 @@ if (!user.emailVerified) {
 }
 ---
 
-<Layout title="Manobal | Dashboard">
+<Layout title="Dashboard">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-8xl mt-20 lg:mt-0 mx-auto space-y-8">
         <UserCard user={user} />
-
-        <OrdersChart />
-
-        <RecentOrders />
+        <RecentOrders client:only="react" />
+        <OrdersChart client:only="react" />
       </div>
     </Container>
   </ProfileLayout>

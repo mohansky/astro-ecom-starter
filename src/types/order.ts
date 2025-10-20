@@ -8,8 +8,9 @@ export interface Order {
   subtotal: number;
   tax: number;
   shipping: number;
-  couponCode?: string;
-  couponDiscount: number;
+  // kept mapped to DB columns `coupon_code` and `coupon_discount`
+  discountCode?: string | null;
+  discountAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   paymentMethod?: string;

@@ -12,7 +12,7 @@ if (authResult instanceof Response) {
 }
 ---
 
-<Layout title="Manobal | Customers">
+<Layout title="Customers">
   <ProfileLayout>
     <Container width="marginy">
       <AdminBreadcrumbs
@@ -22,7 +22,7 @@ if (authResult instanceof Response) {
       />
       <div class="card bg-base-100 shadow-sm w-full">
         <div class="card-body">
-          <CustomersDataTable client:load />
+          <CustomersDataTable client:only="react" />
         </div>
       </div>
     </Container>

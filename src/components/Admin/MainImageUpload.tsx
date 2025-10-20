@@ -118,13 +118,55 @@ export function MainImageUpload({
     }
   };
 
-  const handleRemove = () => {
-    setPreviewUrl('');
-    setUploadStatus('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const handleRemove = async () => {
+    if (!currentImage || !productName) {
+      // If no image is saved, just clear the preview
+      setPreviewUrl('');
+      setUploadStatus('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      onImageRemoved();
+      return;
     }
-    onImageRemoved();
+
+    // Generate slug for API call
+    const slug = productName
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    try {
+      setUploadStatus('Deleting image...');
+      setStatusType('info');
+
+      // Delete from R2
+      const response = await fetch(
+        `/api/products/delete-image?slug=${encodeURIComponent(slug)}&filename=${encodeURIComponent(currentImage)}`,
+        { method: 'DELETE' }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete image');
+      }
+
+      setPreviewUrl('');
+      setUploadStatus('Image deleted successfully');
+      setStatusType('success');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      onImageRemoved();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      setUploadStatus(
+        `Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      setStatusType('error');
+    }
   };
 
   const getStatusColor = () => {

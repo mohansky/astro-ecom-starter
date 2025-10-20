@@ -1,4 +1,4 @@
-export interface Coupon {
+export interface Discount {
   id: number;
   code: string;
   description: string;
@@ -15,16 +15,17 @@ export interface Coupon {
   updatedAt: string;
 }
 
-export interface CouponApplication {
+export interface DiscountApplication {
   isValid: boolean;
-  coupon?: Coupon;
+  discount?: Discount;
   discountAmount: number;
   message: string;
 }
 
-export interface CouponsResponse {
+export interface DiscountsResponse {
   success: boolean;
-  coupons: Coupon[];
+  coupons: Discount[]; // API returns 'coupons' key for backward compatibility
+  discounts?: Discount[]; // Optional property for transformed data in hooks
   pagination: {
     total: number;
     limit: number;

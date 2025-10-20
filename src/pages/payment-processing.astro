@@ -1,14 +1,15 @@
 ---
 // src/pages/payment-processing.astro
-import Layout from "@/layouts/Layout.astro";
-import Container from "@/components/ui/Container.astro";
+import Layout from '@/layouts/Layout.astro';
+import Container from '@/components/ui/Container.astro';
 
 // Get redirect URL from query params, default to order-success
-const redirectUrl = Astro.url.searchParams.get('redirectUrl') || '/order-success';
+const redirectUrl =
+  Astro.url.searchParams.get('redirectUrl') || '/order-success';
 const orderId = Astro.url.searchParams.get('orderId');
 ---
 
-<Layout title="Processing Payment | Manubal">
+<Layout title="Processing Payment">
   <Container>
     <div class="min-h-screen flex items-center justify-center bg-base-100">
       <div class="card bg-base-200 shadow-xl w-full max-w-lg">
@@ -17,33 +18,52 @@ const orderId = Astro.url.searchParams.get('orderId');
           <div class="flex justify-center mb-6">
             <div class="relative">
               <!-- Outer spinning circle -->
-              <div class="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+              <div
+                class="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"
+              >
+              </div>
 
               <!-- Inner pulsing circle -->
-              <div class="absolute inset-2 w-16 h-16 border-2 border-secondary/30 border-b-secondary rounded-full animate-pulse"></div>
+              <div
+                class="absolute inset-2 w-16 h-16 border-2 border-secondary/30 border-b-secondary rounded-full animate-pulse"
+              >
+              </div>
 
               <!-- Payment icon in center -->
               <div class="absolute inset-0 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-8 w-8 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  ></path>
                 </svg>
               </div>
             </div>
           </div>
 
           <!-- Main Message -->
-          <h1 class="text-2xl font-bold mb-4 text-primary">Processing Your Payment</h1>
+          <h1 class="text-2xl font-bold mb-4 text-primary">
+            Processing Your Payment
+          </h1>
 
           <div class="space-y-3 mb-8">
             <p class="text-base-content/80">
               Please wait while we confirm your payment details...
             </p>
 
-            {orderId && (
-              <p class="text-sm text-base-content/60">
-                Order #{orderId}
-              </p>
-            )}
+            {
+              orderId && (
+                <p class="text-sm text-base-content/60">Order #{orderId}</p>
+              )
+            }
           </div>
 
           <!-- Progress Steps -->
@@ -55,8 +75,18 @@ const orderId = Astro.url.searchParams.get('orderId');
 
           <!-- Important Instructions -->
           <div class="alert alert-warning shadow-lg mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              ></path>
             </svg>
             <div class="text-left">
               <h3 class="font-bold">Important!</h3>
@@ -69,9 +99,22 @@ const orderId = Astro.url.searchParams.get('orderId');
           </div>
 
           <!-- Security Badge -->
-          <div class="flex items-center justify-center gap-2 text-sm text-base-content/60">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <div
+            class="flex items-center justify-center gap-2 text-sm text-base-content/60"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-success"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              ></path>
             </svg>
             <span>Secured by SSL encryption</span>
           </div>
@@ -90,7 +133,8 @@ const orderId = Astro.url.searchParams.get('orderId');
   window.addEventListener('beforeunload', function (e) {
     if (!isRedirecting) {
       e.preventDefault();
-      e.returnValue = 'Your payment is being processed. Are you sure you want to leave?';
+      e.returnValue =
+        'Your payment is being processed. Are you sure you want to leave?';
       return e.returnValue;
     }
   });
@@ -103,7 +147,8 @@ const orderId = Astro.url.searchParams.get('orderId');
 
       // Show alert
       const alert = document.createElement('div');
-      alert.className = 'alert alert-warning fixed top-4 left-4 right-4 z-50 max-w-md mx-auto';
+      alert.className =
+        'alert alert-warning fixed top-4 left-4 right-4 z-50 max-w-md mx-auto';
       alert.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -165,8 +210,12 @@ const orderId = Astro.url.searchParams.get('orderId');
 
   /* Custom keyframe for smooth spinning */
   @keyframes smoothSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .animate-spin {

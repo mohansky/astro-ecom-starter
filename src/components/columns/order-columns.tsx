@@ -1,6 +1,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '../react-ui/Button';
 import type { Order } from '../../types/order';
+import { ViewIcon } from '../Icons/ViewIcon';
 
 interface OrderColumnsProps {
   onView?: (order: Order) => void;
@@ -63,8 +64,9 @@ export const createOrderColumns = ({
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
       const statusStyles = {
+        confirmed: 'badge-info',
         pending: 'badge-warning',
-        processing: 'badge-info',
+        processing: 'badge-accent',
         shipped: 'badge-primary',
         delivered: 'badge-success',
         cancelled: 'badge-error',
@@ -72,7 +74,7 @@ export const createOrderColumns = ({
 
       return (
         <div
-          className={`badge ${statusStyles[status as keyof typeof statusStyles]}`}
+          className={`badge badge-sm ${statusStyles[status as keyof typeof statusStyles]}`}
         >
           {status.charAt(0).toUpperCase() + status.slice(1)}
         </div>
@@ -107,6 +109,7 @@ export const createOrderColumns = ({
               }}
               className="btn-sm"
             >
+              <ViewIcon size={12} />
               View
             </Button>
           )}

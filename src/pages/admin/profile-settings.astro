@@ -17,7 +17,7 @@ if (!user.emailVerified) {
 }
 ---
 
-<Layout title="Manobal | Profile Settings">
+<Layout title="Profile Settings">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-4xl mt-20 lg:mt-0 mx-auto">
@@ -431,81 +431,8 @@ if (!user.emailVerified) {
   </ProfileLayout>
 </Layout>
 
-<!-- Toast Container -->
-<div class="toast toast-top toast-end z-50" id="toast-container"></div>
-
 <script>
-  // Toast Manager
-  class ToastManager {
-    private container: HTMLElement;
-
-    constructor() {
-      this.container =
-        document.getElementById('toast-container') || this.createContainer();
-    }
-
-    createContainer(): HTMLElement {
-      const container = document.createElement('div');
-      container.id = 'toast-container';
-      container.className = 'toast toast-top toast-end z-50';
-      document.body.appendChild(container);
-      return container;
-    }
-
-    show(
-      message: string,
-      type: 'info' | 'success' | 'error' | 'warning' = 'info',
-      duration: number = 4000
-    ): void {
-      const toast = document.createElement('div');
-
-      let alertClass = '';
-      let icon = '';
-
-      switch (type) {
-        case 'success':
-          alertClass = 'alert-success';
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-          break;
-        case 'error':
-          alertClass = 'alert-error';
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-          break;
-        case 'warning':
-          alertClass = 'alert-warning';
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>`;
-          break;
-        default:
-          alertClass = 'alert-info';
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-      }
-
-      toast.className = `alert ${alertClass} shadow-lg mb-2`;
-      toast.innerHTML = `
-        <div class="flex items-center">
-          ${icon}
-          <span class="ml-2">${message}</span>
-        </div>
-        <div class="flex-none">
-          <button class="btn btn-sm btn-ghost btn-circle" onclick="this.closest('.alert').remove()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      `;
-
-      this.container.appendChild(toast);
-
-      setTimeout(() => {
-        if (toast.parentElement) {
-          toast.remove();
-        }
-      }, duration);
-    }
-  }
-
-  const toastManager = new ToastManager();
+  import { toast } from 'sonner';
 
   // Define types for Better Auth response
   interface BetterAuthResponse<T = any> {
@@ -589,28 +516,28 @@ if (!user.emailVerified) {
         // Check for success
         if (result?.data && !result?.error) {
           successAlert?.classList.remove('hidden');
-          toastManager.show('Profile updated successfully!', 'success');
+          toast.success('Profile updated successfully!');
           setTimeout(() => window.location.reload(), 1500);
         } else if (result?.error) {
           const errorMsg = getErrorMessage(result.error);
           console.error('Update failed:', result.error);
           if (errorMessage) errorMessage.textContent = errorMsg;
           errorAlert?.classList.remove('hidden');
-          toastManager.show('Profile update failed', 'error');
+          toast.error('Profile update failed');
         } else {
           // Fallback for unexpected response format
           console.error('Unexpected response format:', result);
           if (errorMessage)
             errorMessage.textContent = 'Update failed with unexpected response';
           errorAlert?.classList.remove('hidden');
-          toastManager.show('Update failed with unexpected response', 'error');
+          toast.error('Update failed with unexpected response');
         }
       } catch (error) {
         console.error('Profile update error:', error);
         const errorMsg = getErrorMessage(error);
         if (errorMessage) errorMessage.textContent = errorMsg;
         errorAlert?.classList.remove('hidden');
-        toastManager.show('Profile update failed', 'error');
+        toast.error('Profile update failed');
       } finally {
         submitBtn?.classList.remove('loading');
         if (submitBtn) submitBtn.disabled = false;
@@ -647,7 +574,7 @@ if (!user.emailVerified) {
         if (errorMessage)
           errorMessage.textContent = 'New passwords do not match';
         errorAlert?.classList.remove('hidden');
-        toastManager.show('New passwords do not match', 'error');
+        toast.error('New passwords do not match');
         return;
       }
 
@@ -671,19 +598,19 @@ if (!user.emailVerified) {
 
         if (response.ok && !result.error) {
           successAlert?.classList.remove('hidden');
-          toastManager.show('Password updated successfully!', 'success');
+          toast.success('Password updated successfully!');
           form.reset();
         } else {
           const errorMsg = result.error?.message || 'Password update failed';
           if (errorMessage) errorMessage.textContent = errorMsg;
           errorAlert?.classList.remove('hidden');
-          toastManager.show(errorMsg, 'error');
+          toast.error(errorMsg);
         }
       } catch (error) {
         const errorMsg = 'An error occurred. Please try again.';
         if (errorMessage) errorMessage.textContent = errorMsg;
         errorAlert?.classList.remove('hidden');
-        toastManager.show(errorMsg, 'error');
+        toast.error(errorMsg);
       } finally {
         submitBtn?.classList.remove('loading');
         if (submitBtn) submitBtn.disabled = false;
@@ -701,25 +628,16 @@ if (!user.emailVerified) {
         });
 
         if (response.ok) {
-          toastManager.show(
-            'Account deleted successfully. Redirecting...',
-            'success'
-          );
+          toast.success('Account deleted successfully. Redirecting...');
           setTimeout(() => {
             window.location.href = '/';
           }, 2000);
         } else {
-          toastManager.show(
-            'Failed to delete account. Please try again.',
-            'error'
-          );
+          toast.error('Failed to delete account. Please try again.');
         }
       } catch (error) {
         console.error('Delete account failed:', error);
-        toastManager.show(
-          'Failed to delete account. Please try again.',
-          'error'
-        );
+        toast.error('Failed to delete account. Please try again.');
       }
     });
 
@@ -838,7 +756,7 @@ if (!user.emailVerified) {
           // Clear file input and reset button immediately
           avatarFileInput.value = '';
 
-          toastManager.show('Avatar uploaded successfully!', 'success');
+          toast.success('Avatar uploaded successfully!');
         } else {
           showAvatarStatus('Failed to update avatar.', 'error');
         }

@@ -1,52 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import React from 'react';
 import { DataTable } from '../react-ui/DataTable';
 import { createCustomerColumns } from '../columns/customer-columns';
-import type { Customer, CustomersResponse } from '../../types/customer';
+import { useCustomers, useDeleteCustomer } from '../../hooks/useCustomers';
+import { useAdminUIStore } from '../../stores/adminUIStore';
+import { toast } from 'sonner';
+import type { Customer } from '../../types/customer';
+import { QueryProvider } from '@/providers/QueryProvider';
 
-export function CustomersDataTable() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+function CustomersDataTableContent() {
+  // Get filter state from Zustand
+  const { customerSearch, customerLimit, customerOffset } = useAdminUIStore();
 
-  // Load customers on component mount
-  useEffect(() => {
-    loadCustomers();
-  }, []);
+  // Fetch customers with React Query
+  const { data, isLoading, error, refetch } = useCustomers({
+    search: customerSearch,
+    limit: customerLimit,
+    offset: customerOffset,
+  });
 
-  const loadCustomers = async (search?: string, offset = 0) => {
-    try {
-      setLoading(true);
+  const deleteMutation = useDeleteCustomer();
 
-      const params = new URLSearchParams({
-        limit: '20',
-        offset: offset.toString(),
-      });
-
-      if (search?.trim()) {
-        params.set('search', search.trim());
-      }
-
-      const response = await fetch(`/api/customers?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch customers');
-      }
-
-      const data: CustomersResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load customers');
-      }
-
-      setCustomers(data.customers || []);
-    } catch (error) {
-      console.error('Error loading customers:', error);
-      toast.error('Failed to load customers');
-      setCustomers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const customers = data?.customers || [];
 
   const handleViewCustomer = (customer: Customer) => {
     window.location.href = `/admin/customers/${customer.id}`;
@@ -67,42 +41,12 @@ export function CustomersDataTable() {
       return;
     }
 
-    try {
-      const response = await fetch(`/api/admin/delete-customer`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ customerId: customer.id }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('Customer deleted successfully!');
-        loadCustomers(); // Reload to show updated list
-      } else {
-        toast.error(result.error || 'Failed to delete customer');
-      }
-    } catch (error) {
-      console.error('Error deleting customer:', error);
-      toast.error('Failed to delete customer');
-    }
+    deleteMutation.mutate(customer.id);
   };
 
   const handleRowClick = (customer: Customer) => {
     handleViewCustomer(customer);
   };
-
-  // Expose loadCustomers globally for potential external use
-  useEffect(() => {
-    window.loadCustomers = loadCustomers;
-    return () => {
-      if (window.loadCustomers) {
-        window.loadCustomers = undefined;
-      }
-    };
-  }, []);
 
   const columns = createCustomerColumns({
     onView: handleViewCustomer,
@@ -194,11 +138,11 @@ export function CustomersDataTable() {
         data={customers}
         searchKey="firstName"
         searchPlaceholder="Search customers by name or email..."
-        loading={loading}
+        loading={isLoading}
         onRowClick={handleRowClick}
-        onRefresh={() => loadCustomers()}
+        onRefresh={() => { refetch(); }}
         showRefresh={true}
-        refreshDisabled={loading}
+        refreshDisabled={isLoading}
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
@@ -206,9 +150,10 @@ export function CustomersDataTable() {
   );
 }
 
-// Extend window type for TypeScript
-declare global {
-  interface Window {
-    loadCustomers?: (search?: string, offset?: number) => void;
-  }
+export function CustomersDataTable() {
+  return (
+    <QueryProvider>
+      <CustomersDataTableContent />
+    </QueryProvider>
+  );
 }

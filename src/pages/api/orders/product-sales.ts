@@ -6,8 +6,27 @@ export const GET: APIRoute = async ({ url }) => {
   try {
     // Get date range from query parameters, default to 365 days (1 year)
     const searchParams = new URL(url).searchParams;
-    const days = searchParams.get('days') || '365';
+    const daysParam = searchParams.get('days') || '365';
+    const days = parseInt(daysParam, 10);
 
+    if (isNaN(days) || days <= 0) {
+      return new Response(
+        JSON.stringify(
+          {
+            error: 'Invalid days parameter',
+            message: 'The days parameter must be a positive integer',
+          },
+          null,
+          2
+        ),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
     const result = await rawDb.execute({
       sql: `
         SELECT
@@ -17,18 +36,19 @@ export const GET: APIRoute = async ({ url }) => {
           COUNT(DISTINCT o.id) as order_count
         FROM order_items oi
         JOIN orders o ON oi.order_id = o.id
-        WHERE o.created_at >= date('now', '-${days} days')
+        WHERE o.created_at >= date('now', '-' || ? || ' days')
         GROUP BY oi.product_id, oi.product_name
         ORDER BY total_revenue DESC
         LIMIT 10
-      `
+      `,
+      args: [days],
     });
 
-    const productSales = result.rows.map(row => ({
+    const productSales = result.rows.map((row) => ({
       productName: String(row.product_name),
       totalQuantity: Number(row.total_quantity),
       totalRevenue: Number(row.total_revenue),
-      orderCount: Number(row.order_count)
+      orderCount: Number(row.order_count),
     }));
 
     return new Response(JSON.stringify(productSales, null, 2), {
@@ -40,14 +60,22 @@ export const GET: APIRoute = async ({ url }) => {
   } catch (error) {
     console.error('API Error:', error);
 
-    return new Response(JSON.stringify({
-      error: 'Failed to fetch product sales data',
-      message: error instanceof Error ? error.message : 'Unknown error occurred',
-    }, null, 2), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return new Response(
+      JSON.stringify(
+        {
+          error: 'Failed to fetch product sales data',
+          message:
+            error instanceof Error ? error.message : 'Unknown error occurred',
+        },
+        null,
+        2
+      ),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
 };

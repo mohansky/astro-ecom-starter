@@ -1,3 +1,110 @@
+# Astro E-commerce Starter
+
+A production-ready, full-stack e-commerce platform built with Astro, React, and TypeScript. Designed for small to medium businesses with a focus on maintainability, performance, and developer experience.
+
+## 🚀 Tech Stack
+
+- **Framework**: Astro 5.14 (SSR mode) + React 19
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4 + DaisyUI 5
+- **Database**: Turso (LibSQL) with Drizzle ORM
+- **Authentication**: Better Auth 1.2
+- **Payments**: Razorpay integration
+- **Storage**: Cloudflare R2 for product images
+- **Email**: Resend for transactional emails
+- **Deployment**: Cloudflare Pages
+- **Data Fetching**: TanStack React Query
+- **State Management**: Nanostores + Zustand
+- **Charts**: Chart.js
+
+## ✨ Features
+
+### Admin Panel
+- 📦 **Product Management** - Full CRUD with image uploads, slug generation, SKU support
+- 📊 **Analytics Dashboard** - Orders chart, revenue tracking, product sales analytics
+- 🛒 **Order Management** - Order tracking, status updates, order history
+- 👥 **Customer Management** - Customer profiles, order history
+- 💰 **Discount System** - Flexible discount codes with conditions and limits
+- 👤 **User Management** - Role-based access control (admin/customer)
+- 📁 **CSV Import** - Bulk product import functionality
+
+### Customer Features
+- 🛍️ **Product Catalog** - Responsive product grid with filtering
+- 🔍 **Search & Filter** - Category and search-based filtering
+- 🛒 **Shopping Cart** - Persistent cart with nanostores
+- 💳 **Razorpay Checkout** - Secure payment processing
+- 📧 **Email Notifications** - Order confirmations, email verification
+- 📱 **Responsive Design** - Mobile-first, works on all devices
+
+### Developer Features
+- ⚡ **Type Safety** - Full TypeScript coverage
+- 🔄 **React Query** - Optimistic updates, caching, and background refetching
+- 📊 **DataTable Component** - Reusable table with sorting, pagination, search
+- 🎨 **Component Library** - Consistent UI components with DaisyUI
+- 🖼️ **R2 Image Storage** - Cloudflare R2 for scalable image hosting
+- 🔐 **Auth System** - Email verification, password reset, session management
+
+## 📦 Installation
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+
+# Install dependencies (uses pnpm)
+pnpm install
+
+# Set up environment variables
+cp .env.example .env
+
+# Generate database schema
+pnpm db:generate
+
+# Run migrations
+pnpm db:migrate
+
+# Start development server
+pnpm dev
+```
+
+## 🛠️ Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview production build |
+| `pnpm db:generate` | Generate database migrations |
+| `pnpm db:migrate` | Run database migrations |
+| `pnpm db:studio` | Open Drizzle Studio |
+
+## 🌍 Environment Variables
+
+Create a `.env` file with the following:
+
+```bash
+# Database
+DATABASE_URL=your_turso_url
+DATABASE_AUTH_TOKEN=your_turso_token
+
+# Auth
+BETTER_AUTH_SECRET=your_secret_key
+BETTER_AUTH_URL=http://localhost:4321
+
+# Razorpay
+RAZORPAY_KEY_ID=your_key
+RAZORPAY_KEY_SECRET=your_secret
+
+# R2 Storage
+R2_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret
+R2_BUCKET_NAME=your_bucket
+R2_BUCKET_URL=your_bucket_url
+
+# Email
+RESEND_API_KEY=your_resend_key
+```
+
 ## 💳 Razorpay Test Cards
 
 Use these test card details in development mode:

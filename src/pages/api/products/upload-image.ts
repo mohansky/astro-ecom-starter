@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireUserOrAdminAuth } from '@/lib/auth-utils';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export const POST: APIRoute = async (context) => {
   try {
@@ -13,7 +13,7 @@ export const POST: APIRoute = async (context) => {
     const formData = await context.request.formData();
     const file = formData.get('image') as File;
     const productName = formData.get('productName') as string;
-    const isMainImage = formData.get('isMainImage') === 'true';
+    const originalFilename = formData.get('originalFilename') as string;
 
     if (!file || !productName) {
       return new Response(JSON.stringify({
@@ -67,11 +67,8 @@ export const POST: APIRoute = async (context) => {
       });
     }
 
-    // Get file extension
-    const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-
-    // Create R2 key based on whether it's main image or additional
-    const fileName = isMainImage ? `main.${fileExtension}` : `${slug}.${fileExtension}`;
+    // Use original filename (keep it as is)
+    const fileName = originalFilename || file.name;
     const r2Key = `products/${slug}/${fileName}`;
 
     // Get R2 credentials from environment
@@ -99,6 +96,9 @@ export const POST: APIRoute = async (context) => {
         secretAccessKey,
       },
     });
+
+    // If file with same name exists, it will be replaced automatically
+    // No need to explicitly delete - S3/R2 PutObject overwrites
 
     // Convert file to buffer
     const fileBuffer = await file.arrayBuffer();

@@ -45,9 +45,7 @@ export const OrderConfirmationEmail = ({
   customerEmail = 'john@example.com',
   orderId = '12345',
   orderDate = '2024-01-15',
-  items = [
-    { id: '1', name: 'Sample Product', price: 99.99, quantity: 1 }
-  ],
+  items = [{ id: '1', name: 'Sample Product', price: 99.99, quantity: 1 }],
   subtotal = '99.99',
   shipping = '50.00',
   tax = '4.99',
@@ -56,31 +54,33 @@ export const OrderConfirmationEmail = ({
     address: '123 Main St',
     city: 'Mumbai',
     state: 'MH',
-    zipCode: '400001'
-  }
+    zipCode: '400001',
+  },
 }: OrderConfirmationEmailProps) => {
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return `₹${num.toFixed(2)}`;
   };
-  
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   return (
     <Html>
       <Head />
-      <Preview>Order #{orderId} confirmed - Thank you for your purchase!</Preview>
+      <Preview>
+        Order #{orderId} confirmed - Thank you for your purchase!
+      </Preview>
       <Body style={main}>
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Heading style={h1}>Manubal</Heading>
+            <Heading style={h1}>Ecom Starter</Heading>
             <Text style={subtitle}>Order Confirmation</Text>
           </Section>
 
@@ -90,7 +90,7 @@ export const OrderConfirmationEmail = ({
               Thank you for your order, {customerName}!
             </Heading>
             <Text style={text}>
-              We've received your order and are preparing it for shipment. 
+              We've received your order and are preparing it for shipment.
               You'll receive a tracking email once your order is on its way.
             </Text>
           </Section>
@@ -113,7 +113,9 @@ export const OrderConfirmationEmail = ({
 
           {/* Order Items */}
           <Section style={section}>
-            <Heading as="h3" style={h3}>Order Items</Heading>
+            <Heading as="h3" style={h3}>
+              Order Items
+            </Heading>
             {items.map((item, index) => (
               <Row key={item.id} style={itemRow}>
                 <Column style={itemNameColumn}>
@@ -133,7 +135,9 @@ export const OrderConfirmationEmail = ({
 
           {/* Order Summary */}
           <Section style={section}>
-            <Heading as="h3" style={h3}>Order Summary</Heading>
+            <Heading as="h3" style={h3}>
+              Order Summary
+            </Heading>
             <Row style={summaryRow}>
               <Column style={summaryLabelColumn}>
                 <Text style={summaryLabel}>Subtotal</Text>
@@ -173,10 +177,14 @@ export const OrderConfirmationEmail = ({
 
           {/* Shipping Address */}
           <Section style={section}>
-            <Heading as="h3" style={h3}>Shipping Address</Heading>
+            <Heading as="h3" style={h3}>
+              Shipping Address
+            </Heading>
             <Text style={address}>
-              {shippingAddress.address}<br />
-              {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zipCode}
+              {shippingAddress.address}
+              <br />
+              {shippingAddress.city}, {shippingAddress.state}{' '}
+              {shippingAddress.zipCode}
             </Text>
           </Section>
 
@@ -206,7 +214,8 @@ export const OrderConfirmationEmail = ({
 // Styles
 const main = {
   backgroundColor: '#f6f9fc',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {

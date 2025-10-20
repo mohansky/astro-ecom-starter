@@ -1,15 +1,61 @@
-// src/pages/api/coupons/[id].ts
+// src/pages/api/discounts/[id].ts
 import type { APIRoute } from 'astro';
-import { updateCoupon, deleteCoupon } from '../../../lib/coupons';
+import { getDiscountById, updateDiscount, deleteDiscount } from '../../../lib/discounts';
+
+export const GET: APIRoute = async ({ params }) => {
+  try {
+    const discountId = parseInt(params.id || '0');
+
+    if (!discountId || isNaN(discountId)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid discount ID'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const discount = await getDiscountById(discountId);
+
+    if (!discount) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Discount not found'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      success: true,
+      coupon: discount // Return as 'coupon' for backward compatibility
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('API Error:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Failed to fetch discount'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
 
 export const PUT: APIRoute = async ({ params, request }) => {
   try {
-    const couponId = parseInt(params.id || '0');
+    const discountId = parseInt(params.id || '0');
 
-    if (!couponId || isNaN(couponId)) {
+    if (!discountId || isNaN(discountId)) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Invalid coupon ID'
+        error: 'Invalid discount ID'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -81,12 +127,12 @@ export const PUT: APIRoute = async ({ params, request }) => {
     if (data.validTo !== undefined) updateData.validTo = data.validTo;
     if (data.usageLimit !== undefined) updateData.usageLimit = data.usageLimit ? parseInt(data.usageLimit) : null;
 
-    const success = await updateCoupon(couponId, updateData);
+    const discount = await updateDiscount(discountId, updateData);
 
-    if (!success) {
+    if (!discount) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Coupon not found'
+        error: 'Discount not found'
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
@@ -95,7 +141,8 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Coupon updated successfully'
+      coupon: discount, // Return as 'coupon' for backward compatibility
+      message: 'Discount updated successfully'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -108,7 +155,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
     if (error.message && error.message.includes('UNIQUE constraint failed')) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'A coupon with this code already exists'
+        error: 'A discount with this code already exists'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -117,7 +164,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Failed to update coupon'
+      error: error.message || 'Failed to update discount'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -127,24 +174,24 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
 export const DELETE: APIRoute = async ({ params }) => {
   try {
-    const couponId = parseInt(params.id || '0');
+    const discountId = parseInt(params.id || '0');
 
-    if (!couponId || isNaN(couponId)) {
+    if (!discountId || isNaN(discountId)) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Invalid coupon ID'
+        error: 'Invalid discount ID'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const success = await deleteCoupon(couponId);
+    const success = await deleteDiscount(discountId);
 
     if (!success) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Coupon not found'
+        error: 'Discount not found'
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
@@ -153,7 +200,7 @@ export const DELETE: APIRoute = async ({ params }) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Coupon deleted successfully'
+      message: 'Discount deleted successfully'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -163,7 +210,7 @@ export const DELETE: APIRoute = async ({ params }) => {
     console.error('API Error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Failed to delete coupon'
+      error: error.message || 'Failed to delete discount'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

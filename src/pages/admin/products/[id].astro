@@ -24,9 +24,9 @@ if (!productId) {
 ---
 
 <Layout>
-  <ProfileLayout title="Manobal | Product Details">
+  <ProfileLayout title="Product Details">
     <Container width="marginy">
-      <ProductDetailPage productId={productId} client:load />
+      <ProductDetailPage productId={productId} client:only="react" />
     </Container>
   </ProfileLayout>
 </Layout>

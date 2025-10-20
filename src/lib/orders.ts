@@ -1,29 +1,37 @@
 // src/lib/orders.ts
 import { rawDb as db, processStockDeduction, restoreStock } from './db';
-import { recordCouponUsage, getCouponByCode } from './coupons';
+import { recordDiscountUsage, getDiscountByCode } from './discounts';
 
 // Helper function to get IST datetime string
 function getISTDatetime(): string {
   const now = new Date();
-  const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000)); // Add 5.5 hours for IST
-  return istTime.toISOString().replace('T', ' ').replace('Z', '').substring(0, 19);
+  const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000); // Add 5.5 hours for IST
+  return istTime
+    .toISOString()
+    .replace('T', ' ')
+    .replace('Z', '')
+    .substring(0, 19);
 }
 
 // Initialize orders table with coupon support
 export async function initializeOrdersTable() {
   try {
     // Add coupon columns to existing orders table if they don't exist
-    await db.execute({
-      sql: `
+    await db
+      .execute({
+        sql: `
         ALTER TABLE orders ADD COLUMN coupon_code TEXT;
-      `
-    }).catch(() => {}); // Ignore error if column already exists
+      `,
+      })
+      .catch(() => {}); // Ignore error if column already exists
 
-    await db.execute({
-      sql: `
+    await db
+      .execute({
+        sql: `
         ALTER TABLE orders ADD COLUMN coupon_discount REAL DEFAULT 0;
-      `
-    }).catch(() => {}); // Ignore error if column already exists
+      `,
+      })
+      .catch(() => {}); // Ignore error if column already exists
 
     // console.log('Orders table updated with coupon support');
   } catch (error) {
@@ -38,8 +46,8 @@ export interface OrderSummary {
   status: string;
   createdAt: string;
   itemCount: number;
-  couponCode?: string | null;
-  couponDiscount?: number;
+  discountCode?: string | null;
+  discountAmount?: number;
 }
 
 export interface OrderDetail {
@@ -53,8 +61,8 @@ export interface OrderDetail {
   state: string;
   zipCode: string;
   subtotal: number;
-  couponCode: string | null;
-  couponDiscount: number;
+  discountCode: string | null;
+  discountAmount: number;
   shipping: number;
   tax: number;
   total: number;
@@ -99,18 +107,19 @@ export async function getAllOrders(): Promise<OrderSummary[]> {
           o.id
         ORDER BY
           o.created_at DESC
-      `
+      `,
     });
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: Number(row.id),
       customerName: row.customer_name as string,
       total: Number(row.total),
       status: row.status as string,
       createdAt: row.created_at as string,
       itemCount: Number(row.item_count),
-      couponCode: row.coupon_code as string | null,
-      couponDiscount: Number(row.coupon_discount || 0)
+      // map DB columns coupon_code/coupon_discount to typed discount fields
+      discountCode: row.coupon_code as string | null,
+      discountAmount: Number(row.coupon_discount || 0),
     }));
   } catch (error) {
     console.error('Error fetching orders:', error);
@@ -173,7 +182,7 @@ export async function getOrdersPaginated(params: {
         JOIN customers c ON o.customer_id = c.id
         ${whereClause}
       `,
-      args: whereArgs
+      args: whereArgs,
     });
 
     const total = Number(countResult.rows[0].total);
@@ -203,26 +212,26 @@ export async function getOrdersPaginated(params: {
           o.created_at DESC
         LIMIT ? OFFSET ?
       `,
-      args: [...whereArgs, limit, offset]
+      args: [...whereArgs, limit, offset],
     });
 
     // Get all available statuses for filter
     const statusResult = await db.execute({
-      sql: `SELECT DISTINCT status FROM orders ORDER BY status`
+      sql: `SELECT DISTINCT status FROM orders ORDER BY status`,
     });
 
-    const orders = result.rows.map(row => ({
+    const orders = result.rows.map((row) => ({
       id: Number(row.id),
       customerName: row.customer_name as string,
       total: Number(row.total),
       status: row.status as string,
       createdAt: row.created_at as string,
       itemCount: Number(row.item_count),
-      couponCode: row.coupon_code as string | null,
-      couponDiscount: Number(row.coupon_discount || 0)
+      discountCode: row.coupon_code as string | null,
+      discountAmount: Number(row.coupon_discount || 0),
     }));
 
-    const statuses = statusResult.rows.map(row => row.status as string);
+    const statuses = statusResult.rows.map((row) => row.status as string);
 
     return {
       orders,
@@ -230,9 +239,9 @@ export async function getOrdersPaginated(params: {
         total,
         limit,
         offset,
-        hasMore: offset + limit < total
+        hasMore: offset + limit < total,
       },
-      statuses
+      statuses,
     };
   } catch (error) {
     console.error('Error fetching paginated orders:', error);
@@ -241,7 +250,9 @@ export async function getOrdersPaginated(params: {
 }
 
 // Function to get detailed order information
-export async function getOrderById(orderId: number): Promise<OrderDetail | null> {
+export async function getOrderById(
+  orderId: number
+): Promise<OrderDetail | null> {
   try {
     // Initialize orders table on first use
     await initializeOrdersTable();
@@ -265,7 +276,7 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
         WHERE
           o.id = ?
       `,
-      args: [orderId]
+      args: [orderId],
     });
 
     if (orderResult.rows.length === 0) {
@@ -282,17 +293,17 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
         LEFT JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = ?
       `,
-      args: [orderId]
+      args: [orderId],
     });
 
-    const items: OrderItem[] = itemsResult.rows.map(item => ({
+    const items: OrderItem[] = itemsResult.rows.map((item) => ({
       id: Number(item.id),
       productId: item.product_id as string,
       productName: item.product_name as string,
-      sku: item.sku as string || undefined,
+      sku: (item.sku as string) || undefined,
       price: Number(item.price),
       quantity: Number(item.quantity),
-      total: Number(item.total)
+      total: Number(item.total),
     }));
 
     return {
@@ -306,14 +317,14 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
       state: order.state as string,
       zipCode: order.zip_code as string,
       subtotal: Number(order.subtotal),
-      couponCode: order.coupon_code as string | null,
-      couponDiscount: Number(order.coupon_discount || 0),
+      discountCode: order.coupon_code as string | null,
+      discountAmount: Number(order.coupon_discount || 0),
       shipping: Number(order.shipping),
       tax: Number(order.tax),
       total: Number(order.total),
       status: order.status as string,
       createdAt: order.created_at as string,
-      items
+      items,
     };
   } catch (error) {
     console.error(`Error fetching order ${orderId}:`, error);
@@ -322,12 +333,17 @@ export async function getOrderById(orderId: number): Promise<OrderDetail | null>
 }
 
 // Function to update order status with history tracking
-export async function updateOrderStatus(orderId: number, status: string, changedBy: string, notes?: string): Promise<void> {
+export async function updateOrderStatus(
+  orderId: number,
+  status: string,
+  changedBy: string,
+  notes?: string
+): Promise<void> {
   try {
     // First, get the current order status
     const currentOrderResult = await db.execute({
       sql: 'SELECT status FROM orders WHERE id = ?',
-      args: [orderId]
+      args: [orderId],
     });
 
     if (currentOrderResult.rows.length === 0) {
@@ -343,12 +359,17 @@ export async function updateOrderStatus(orderId: number, status: string, changed
         SET status = ?, updated_at = ?
         WHERE id = ?
       `,
-      args: [status, getISTDatetime(), orderId]
+      args: [status, getISTDatetime(), orderId],
     });
 
     // Record the status change in history
-    await recordOrderStatusHistory(orderId, currentStatus, status, changedBy, notes);
-
+    await recordOrderStatusHistory(
+      orderId,
+      currentStatus,
+      status,
+      changedBy,
+      notes
+    );
   } catch (error) {
     console.error(`Error updating order ${orderId} status:`, error);
     throw error;
@@ -370,10 +391,21 @@ async function recordOrderStatusHistory(
         INSERT INTO order_status_history (id, orderId, previousStatus, newStatus, changedBy, notes, createdAt)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
-      args: [historyId, orderId, previousStatus, newStatus, changedBy, notes || null, getISTDatetime()]
+      args: [
+        historyId,
+        orderId,
+        previousStatus,
+        newStatus,
+        changedBy,
+        notes || null,
+        getISTDatetime(),
+      ],
     });
   } catch (error) {
-    console.error(`Error recording status history for order ${orderId}:`, error);
+    console.error(
+      `Error recording status history for order ${orderId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -389,10 +421,10 @@ export async function getOrderStatusHistory(orderId: number) {
         WHERE osh.orderId = ?
         ORDER BY osh.createdAt DESC
       `,
-      args: [orderId]
+      args: [orderId],
     });
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id as string,
       orderId: row.orderId as number,
       previousStatus: row.previousStatus as string | null,
@@ -416,21 +448,24 @@ export async function deleteOrder(orderId: number): Promise<boolean> {
     // First, get order items to restore stock
     const itemsResult = await db.execute({
       sql: `SELECT product_id, quantity FROM order_items WHERE order_id = ?`,
-      args: [orderId]
+      args: [orderId],
     });
 
     // Restore stock for all items
     if (itemsResult.rows.length > 0) {
-      const stockItems = itemsResult.rows.map(item => ({
+      const stockItems = itemsResult.rows.map((item) => ({
         id: item.product_id as string,
-        quantity: item.quantity as number
+        quantity: item.quantity as number,
       }));
 
       try {
         await restoreStock(stockItems);
         console.log(`Stock restored for deleted order ${orderId}`);
       } catch (stockError) {
-        console.error(`Failed to restore stock for deleted order ${orderId}:`, stockError);
+        console.error(
+          `Failed to restore stock for deleted order ${orderId}:`,
+          stockError
+        );
         // Continue with deletion even if stock restoration fails
       }
     }
@@ -438,13 +473,13 @@ export async function deleteOrder(orderId: number): Promise<boolean> {
     // Delete order items
     await db.execute({
       sql: `DELETE FROM order_items WHERE order_id = ?`,
-      args: [orderId]
+      args: [orderId],
     });
 
     // Then delete the order
     const result = await db.execute({
       sql: `DELETE FROM orders WHERE id = ?`,
-      args: [orderId]
+      args: [orderId],
     });
 
     return result.rowsAffected > 0;
@@ -460,7 +495,7 @@ export async function cancelOrder(orderId: number): Promise<boolean> {
     // First, check if order exists and is not already cancelled
     const orderResult = await db.execute({
       sql: `SELECT status FROM orders WHERE id = ?`,
-      args: [orderId]
+      args: [orderId],
     });
 
     if (orderResult.rows.length === 0) {
@@ -475,14 +510,14 @@ export async function cancelOrder(orderId: number): Promise<boolean> {
     // Get order items to restore stock
     const itemsResult = await db.execute({
       sql: `SELECT product_id, quantity FROM order_items WHERE order_id = ?`,
-      args: [orderId]
+      args: [orderId],
     });
 
     // Restore stock for all items
     if (itemsResult.rows.length > 0) {
-      const stockItems = itemsResult.rows.map(item => ({
+      const stockItems = itemsResult.rows.map((item) => ({
         id: item.product_id as string,
-        quantity: item.quantity as number
+        quantity: item.quantity as number,
       }));
 
       await restoreStock(stockItems);
@@ -496,7 +531,7 @@ export async function cancelOrder(orderId: number): Promise<boolean> {
         SET status = 'cancelled', updated_at = ?
         WHERE id = ?
       `,
-      args: [getISTDatetime(), orderId]
+      args: [getISTDatetime(), orderId],
     });
 
     return result.rowsAffected > 0;
@@ -526,7 +561,8 @@ export async function createOrder(orderData: {
   }>;
   subtotal: number;
   couponCode?: string | null;
-  couponDiscount?: number;
+  discountCode?: string | null;
+  discountAmount?: number;
   shipping: number;
   tax: number;
   total: number;
@@ -541,14 +577,16 @@ export async function createOrder(orderData: {
     await initializeOrdersTable();
 
     // First, validate and process stock deduction
-    const stockItems = orderData.cartItems.map(item => ({
+    const stockItems = orderData.cartItems.map((item) => ({
       id: item.id,
-      quantity: item.quantity
+      quantity: item.quantity,
     }));
 
     const stockResult = await processStockDeduction(stockItems);
     if (!stockResult.success) {
-      throw new Error(`Stock validation failed: ${stockResult.errors.join(', ')}`);
+      throw new Error(
+        `Stock validation failed: ${stockResult.errors.join(', ')}`
+      );
     }
 
     // Start a transaction-like approach by checking if customer exists first
@@ -557,12 +595,12 @@ export async function createOrder(orderData: {
     // Check if customer exists by email
     const existingCustomerResult = await db.execute({
       sql: `SELECT id FROM customers WHERE email = ?`,
-      args: [orderData.email]
+      args: [orderData.email],
     });
 
     if (existingCustomerResult.rows.length > 0) {
       customerId = Number(existingCustomerResult.rows[0].id);
-      
+
       // Update existing customer with new info (in case they changed address, phone, etc.)
       await db.execute({
         sql: `
@@ -579,8 +617,8 @@ export async function createOrder(orderData: {
           orderData.city,
           orderData.state,
           orderData.zipCode,
-          customerId
-        ]
+          customerId,
+        ],
       });
     } else {
       // Create new customer
@@ -600,15 +638,22 @@ export async function createOrder(orderData: {
           orderData.city,
           orderData.state,
           orderData.zipCode,
-          getISTDatetime()
-        ]
+          getISTDatetime(),
+        ],
       });
-      
+
       customerId = Number(customerResult.lastInsertRowid);
     }
 
     // Create the order with payment info
-    const orderStatus = orderData.paymentStatus === 'completed' ? 'confirmed' : 'pending';
+    const orderStatus =
+      orderData.paymentStatus === 'completed' ? 'confirmed' : 'pending';
+
+    // Normalize discount/coupon inputs: prefer discount* fields, fall back to coupon* for compatibility
+    const appliedDiscountCode =
+      orderData.discountCode ?? orderData.couponCode ?? null;
+    const appliedDiscountAmount =
+      orderData.discountAmount ?? 0;
 
     const orderResult = await db.execute({
       sql: `
@@ -620,14 +665,14 @@ export async function createOrder(orderData: {
       args: [
         customerId,
         orderData.subtotal,
-        orderData.couponCode || null,
-        orderData.couponDiscount || 0,
+        appliedDiscountCode,
+        appliedDiscountAmount,
         orderData.shipping,
         orderData.tax,
         orderData.total,
         orderStatus,
-        getISTDatetime()
-      ]
+        getISTDatetime(),
+      ],
     });
 
     const orderId = Number(orderResult.lastInsertRowid);
@@ -646,21 +691,30 @@ export async function createOrder(orderData: {
           item.name,
           item.price,
           item.quantity,
-          item.price * item.quantity
-        ]
+          item.price * item.quantity,
+        ],
       });
     }
 
-    // Record coupon usage if a coupon was applied
-    if (orderData.couponCode && orderData.couponDiscount && orderData.couponDiscount > 0) {
+    // Record discount usage if a discount was applied (use normalized values)
+    if (
+      appliedDiscountCode &&
+      appliedDiscountAmount &&
+      appliedDiscountAmount > 0
+    ) {
       try {
-        const coupon = await getCouponByCode(orderData.couponCode);
-        if (coupon) {
-          await recordCouponUsage(coupon.id, orderId, orderData.email, orderData.couponDiscount);
+        const discount = await getDiscountByCode(String(appliedDiscountCode));
+        if (discount) {
+          await recordDiscountUsage(
+            discount.id,
+            orderId,
+            orderData.email,
+            appliedDiscountAmount
+          );
         }
-      } catch (couponError) {
-        console.error('Error recording coupon usage:', couponError);
-        // Don't fail the order creation for coupon usage recording errors
+      } catch (discountError) {
+        console.error('Error recording discount usage:', discountError);
+        // Don't fail the order creation for discount usage recording errors
       }
     }
 
@@ -670,14 +724,17 @@ export async function createOrder(orderData: {
 
     // If order creation failed after stock was deducted, restore the stock
     try {
-      const stockItems = orderData.cartItems.map(item => ({
+      const stockItems = orderData.cartItems.map((item) => ({
         id: item.id,
-        quantity: item.quantity
+        quantity: item.quantity,
       }));
       await restoreStock(stockItems);
       console.log('Stock restored after order creation failure');
     } catch (restoreError) {
-      console.error('Failed to restore stock after order creation failure:', restoreError);
+      console.error(
+        'Failed to restore stock after order creation failure:',
+        restoreError
+      );
     }
 
     throw error;

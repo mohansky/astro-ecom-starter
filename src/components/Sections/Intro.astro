@@ -1,11 +1,11 @@
 ---
-import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
-import Container from "../ui/Container.astro";
-import Heading from "../ui/Heading.astro";
-import R2Image from "../ui/R2Image.astro";
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Container from '../ui/Container.astro';
+import Heading from '../ui/Heading.astro';
+import R2Image from '../ui/R2Image.astro';
 
-const siteData = await getCollection("siteData");
+const siteData = await getCollection('siteData');
 const siteInfo = siteData[0].data;
 const introTitle = siteInfo.introTitle;
 const introText = siteInfo.introText;
@@ -14,7 +14,7 @@ const introImage = siteInfo.introImage;
 
 <Container>
   <R2Image src={introImage} alt={introTitle} width={1920} height={1080} />
-  <Heading class="my-5">{introTitle}</Heading>
+  <Heading size="xl" class="my-5">{introTitle}</Heading>
   <p class="md:columns-2 gap-8 text-justify leading-loose">
     {introText}
   </p>

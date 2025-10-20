@@ -1,11 +1,11 @@
-// src/pages/api/coupons/index.ts
+// src/pages/api/discounts/index.ts
 import type { APIRoute } from 'astro';
-import { getAllCoupons, createCoupon, initializeCouponsTable } from '../../../lib/coupons';
+import { getAllDiscounts, createDiscount, initializeDiscountsTable } from '../../../lib/discounts';
 
 export const GET: APIRoute = async ({ url }) => {
   try {
     // Initialize tables on first request
-    await initializeCouponsTable();
+    await initializeDiscountsTable();
 
     const searchParams = new URL(url).searchParams;
     const search = searchParams.get('search') || '';
@@ -20,11 +20,11 @@ export const GET: APIRoute = async ({ url }) => {
       offset
     };
 
-    const { coupons, total } = await getAllCoupons(filters);
+    const { discounts, total } = await getAllDiscounts(filters);
 
     return new Response(JSON.stringify({
       success: true,
-      coupons,
+      coupons: discounts, // Keep 'coupons' key for backward compatibility
       pagination: {
         total,
         limit,
@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ url }) => {
     console.error('API Error:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Failed to fetch coupons'
+      error: error.message || 'Failed to fetch discounts'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -113,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const couponId = await createCoupon({
+    const discount = await createDiscount({
       code: data.code.trim().toUpperCase(),
       description: data.description.trim(),
       discountType: data.discountType,
@@ -128,8 +128,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify({
       success: true,
-      couponId,
-      message: 'Coupon created successfully'
+      coupon: discount, // Return as 'coupon' for backward compatibility
+      message: 'Discount created successfully'
     }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' }
@@ -142,7 +142,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (error.message && error.message.includes('UNIQUE constraint failed')) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'A coupon with this code already exists'
+        error: 'A discount with this code already exists'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
@@ -151,7 +151,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Failed to create coupon'
+      error: error.message || 'Failed to create discount'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

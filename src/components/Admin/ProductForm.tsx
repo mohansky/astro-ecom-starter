@@ -6,8 +6,7 @@ import { Input } from '../react-ui/Input';
 import { Textarea } from '../react-ui/Textarea';
 import { Button } from '../react-ui/Button';
 import { Checkbox } from '../react-ui/Checkbox';
-import { ImageUpload } from './ImageUpload';
-import { MainImageUpload } from './MainImageUpload';
+import { ProductImagesUpload } from './ProductImagesUpload';
 import {
   productFormSchema,
   defaultProductFormValues,
@@ -133,25 +132,10 @@ export function ProductForm({
     }
   };
 
-  // Handle main image upload/removal
-  const handleMainImageUploaded = (imagePath: string, imageUrl: string) => {
-    setValue('mainImage', imagePath);
-  };
-
-  const handleMainImageRemoved = () => {
-    setValue('mainImage', '');
-  };
-
-  // Handle additional images upload/removal (BULK REPLACE)
-  const handleImagesUploaded = (newImages: string[], imageUrls: string[]) => {
-    // Replace ALL additional images with the new ones
-    setValue('images', newImages);
-  };
-
-  const handleImageRemoved = (index: number) => {
-    const currentImages = watchedValues.images || [];
-    const newImages = currentImages.filter((_, i) => i !== index);
-    setValue('images', newImages);
+  // Handle images change from unified component
+  const handleImagesChange = (images: string[], mainImage: string) => {
+    setValue('images', images);
+    setValue('mainImage', mainImage);
   };
 
   // Handle action state changes (success/error)
@@ -237,23 +221,17 @@ export function ProductForm({
           placeholder="Auto-generated from name + category + ID"
         />
 
-        {/* Main product image full row */}
-        <MainImageUpload
-          onImageUploaded={handleMainImageUploaded}
-          onImageRemoved={handleMainImageRemoved}
-          currentImage={watchedValues.mainImage}
-          productName={watchedValues.name}
-          className="sm:col-span-2 lg:col-span-3"
-        />
-
-        {/* Additional images full row */}
-        <ImageUpload
-          onImagesUploaded={handleImagesUploaded}
-          onImageRemoved={handleImageRemoved}
-          currentImages={watchedValues.images}
-          productName={watchedValues.name}
-          className="sm:col-span-2 lg:col-span-3"
-        />
+        {/* Product images full row */}
+        <div className="sm:col-span-2 lg:col-span-3">
+          <ProductImagesUpload
+            onImagesChange={handleImagesChange}
+            currentImages={watchedValues.images}
+            currentMainImage={watchedValues.mainImage}
+            productSlug={watchedValues.slug || ''}
+            productName={watchedValues.name}
+            maxImages={5}
+          />
+        </div>
 
         {/* Category, Subcategory, Tags row */}
         <Input

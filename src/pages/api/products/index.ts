@@ -2,6 +2,8 @@
 import type { APIRoute } from 'astro';
 import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, type Product } from '@/lib/db';
 import { requireUserOrAdminAuth } from '@/lib/auth-utils';
+import { moveProductImagesInR2 } from '@/lib/r2-utils';
+import { generateSlug } from '@/lib/slug-utils';
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -87,8 +89,12 @@ export const POST: APIRoute = async (context) => {
     // Create product
     const productId = await createProduct(productData);
 
+    // Fetch the created product to return full details
+    const product = await getProductById(productId);
+
     return new Response(JSON.stringify({
       success: true,
+      product,
       productId,
       message: 'Product created successfully'
     }), {
@@ -131,6 +137,45 @@ export const PUT: APIRoute = async (context) => {
 
     const productData = await context.request.json();
 
+    // Get current product to check if slug changed
+    const currentProduct = await getProductById(id);
+    if (!currentProduct) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Product not found'
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check if slug changed
+    const newSlug = productData.slug || generateSlug(productData.name);
+    const oldSlug = currentProduct.slug;
+    const slugChanged = newSlug !== oldSlug;
+
+    // If slug changed, move images in R2
+    if (slugChanged && currentProduct.images && currentProduct.images.length > 0) {
+      console.log(`Slug changed from "${oldSlug}" to "${newSlug}", moving images...`);
+
+      const r2Config = {
+        accountId: import.meta.env.CLOUDFLARE_ACCOUNT_ID,
+        accessKeyId: import.meta.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: import.meta.env.R2_SECRET_ACCESS_KEY,
+        bucketName: import.meta.env.R2_BUCKET_NAME,
+      };
+
+      const moveResult = await moveProductImagesInR2(oldSlug, newSlug, r2Config);
+
+      if (!moveResult.success) {
+        console.error('Failed to move images:', moveResult.error);
+        // Continue with update even if image move fails
+        // User can re-upload images if needed
+      } else {
+        console.log(`Successfully moved ${moveResult.movedCount} images`);
+      }
+    }
+
     // Update product
     const success = await updateProduct(id, productData);
 
@@ -144,9 +189,15 @@ export const PUT: APIRoute = async (context) => {
       });
     }
 
+    // Fetch updated product to return
+    const updatedProduct = await getProductById(id);
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'Product updated successfully'
+      product: updatedProduct,
+      message: slugChanged
+        ? 'Product updated and images moved successfully'
+        : 'Product updated successfully'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

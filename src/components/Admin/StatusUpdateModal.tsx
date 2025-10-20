@@ -118,86 +118,78 @@ export function StatusUpdateModal({
 
   return (
     <>
-      {!autoOpen && (
-        <Button
-          onClick={handleOpen}
-          className="btn btn-primary btn-lg"
-        >
-          Update Status
-        </Button>
-      )}
+      {!autoOpen && <Button onClick={handleOpen}>Update Status</Button>}
 
       <dialog ref={modalRef} className="modal">
         <div className="modal-box w-full max-w-lg mx-4 md:max-w-2xl md:w-11/12 max-h-[90vh] overflow-y-auto">
           <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={handleClose}>
+            <button
+              className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              onClick={handleClose}
+            >
               ✕
             </button>
           </form>
           <h3 className="font-bold text-lg mb-6 pr-8">Update Order Status</h3>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">New Status</span>
-            </label>
-            <select
-              {...register('status', { required: 'Please select a status' })}
-              className={`select select-bordered w-full ${
-                errors.status ? 'select-error' : ''
-              }`}
-            >
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {statusLabels[status]}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="form-control">
               <label className="label">
-                <span className="label-text-alt text-error">
-                  {errors.status.message}
-                </span>
+                <span className="label-text font-medium">New Status</span>
               </label>
-            )}
-          </div>
-
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Notes (Optional)</span>
-            </label>
-            <textarea
-              {...register('notes')}
-              className="textarea textarea-bordered w-full"
-              rows={3}
-              placeholder="Optional notes about this status change..."
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  Updating...
-                </>
-              ) : (
-                'Update Status'
+              <select
+                {...register('status', { required: 'Please select a status' })}
+                className={`select select-bordered w-full ${
+                  errors.status ? 'select-error' : ''
+                }`}
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabels[status]}
+                  </option>
+                ))}
+              </select>
+              {errors.status && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {errors.status.message}
+                  </span>
+                </label>
               )}
-            </Button>
-          </div>
-        </form>
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-medium">Notes (Optional)</span>
+              </label>
+              <textarea
+                {...register('notes')}
+                className="textarea textarea-bordered w-full"
+                rows={3}
+                placeholder="Optional notes about this status change..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Updating...
+                  </>
+                ) : (
+                  'Update Status'
+                )}
+              </Button>
+            </div>
+          </form>
         </div>
       </dialog>
     </>

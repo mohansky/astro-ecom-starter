@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { requireUserOrAdminAuth } from '@/lib/auth-utils';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export const POST: APIRoute = async (context) => {
   try {
@@ -104,6 +104,25 @@ export const POST: APIRoute = async (context) => {
         secretAccessKey,
       },
     });
+
+    // Delete old additional images (image-1.*, image-2.*, etc.) before uploading new ones
+    // Try common extensions for up to 5 images
+    for (let i = 1; i <= 5; i++) {
+      const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+      for (const ext of extensions) {
+        try {
+          const oldKey = `products/${slug}/image-${i}.${ext}`;
+          const deleteCommand = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: oldKey,
+          });
+          await s3Client.send(deleteCommand);
+          console.log(`Deleted old additional image: ${oldKey}`);
+        } catch (err) {
+          // Ignore errors - file might not exist
+        }
+      }
+    }
 
     const uploadedImages: string[] = [];
     const uploadedUrls: string[] = [];

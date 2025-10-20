@@ -1,88 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import React from 'react';
 import { DataTable } from '../react-ui/DataTable';
 import { createOrderColumns } from '../columns/order-columns';
-import type { Order, OrdersResponse } from '../../types/order';
+import { useOrders } from '../../hooks/useOrders';
+import { useAdminUIStore } from '../../stores/adminUIStore';
+import type { Order } from '../../types/order';
+import { getStatusBadgeClass } from '@/lib/helpers';
+import { QueryProvider } from '@/providers/QueryProvider';
 
-export function OrdersDataTable() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+function OrdersDataTableContent() {
+  // Get filter state from Zustand
+  const { orderSearch, orderStatus, orderLimit, orderOffset } =
+    useAdminUIStore();
 
-  // Load orders on component mount
-  useEffect(() => {
-    loadOrders();
-  }, []);
+  // Fetch orders with React Query
+  const { data, isLoading, error, refetch } = useOrders({
+    search: orderSearch,
+    status: orderStatus,
+    limit: orderLimit,
+    offset: orderOffset,
+  });
 
-  const loadOrders = async (search?: string, status?: string, offset = 0) => {
-    try {
-      setLoading(true);
-
-      const params = new URLSearchParams({
-        limit: '20',
-        offset: offset.toString(),
-      });
-
-      if (search?.trim()) {
-        params.set('search', search.trim());
-      }
-
-      if (status?.trim()) {
-        params.set('status', status.trim());
-      }
-
-      const response = await fetch(`/api/orders?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-
-      const data: OrdersResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load orders');
-      }
-
-      setOrders(data.orders || []);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-      toast.error('Failed to load orders');
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const orders = data?.orders || [];
 
   const handleViewOrder = (order: Order) => {
     window.location.href = `/admin/orders/${order.id}`;
   };
 
-
   const handleRowClick = (order: Order) => {
     handleViewOrder(order);
   };
-
-  // Expose loadOrders globally for potential external use
-  useEffect(() => {
-    window.loadOrders = loadOrders;
-    return () => {
-      if (window.loadOrders) {
-        window.loadOrders = undefined;
-      }
-    };
-  }, []);
 
   const columns = createOrderColumns({
     onView: handleViewOrder,
   });
 
-  const renderMobileCard = (order: any, index: number) => {
-    const statusBadgeClass = {
-      pending: 'badge-warning',
-      processing: 'badge-info',
-      shipped: 'badge-primary',
-      delivered: 'badge-success',
-      cancelled: 'badge-error'
-    }[order.status] || 'badge-neutral';
+  const renderMobileCard = (order: Order, index: number) => {
+    const badgeClass = getStatusBadgeClass || 'badge-neutral';
 
     return (
       <div
@@ -93,16 +46,16 @@ export function OrdersDataTable() {
           {/* Header with order number and status */}
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-base">#{order.orderNumber || order.id}</h3>
+              <h3 className="font-semibold text-base">
+                #{order.orderNumber || order.id}
+              </h3>
               <p className="text-sm opacity-60">{order.customerName}</p>
               {order.customerEmail && (
                 <p className="text-xs opacity-50">{order.customerEmail}</p>
               )}
             </div>
             <div className="flex flex-col items-end space-y-1">
-              <div className={`badge ${statusBadgeClass}`}>
-                {order.status}
-              </div>
+              <div className={`badge ${badgeClass}`}>{order.status}</div>
             </div>
           </div>
 
@@ -110,15 +63,19 @@ export function OrdersDataTable() {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="font-medium opacity-70">Total:</span>
-              <p className="mt-1 font-bold text-primary">₹{Number(order.total).toFixed(2)}</p>
+              <p className="mt-1 font-bold text-primary">
+                ₹{Number(order.total).toFixed(2)}
+              </p>
             </div>
             <div>
               <span className="font-medium opacity-70">Items:</span>
-              <p className="mt-1">{order.items?.length || order.itemCount || 0} item(s)</p>
+              <p className="mt-1">{order.items?.length || 0} item(s)</p>
             </div>
             <div>
               <span className="font-medium opacity-70">Date:</span>
-              <p className="mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
+              <p className="mt-1">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </p>
             </div>
             <div>
               <span className="font-medium opacity-70">Status:</span>
@@ -129,7 +86,8 @@ export function OrdersDataTable() {
                 <span className="font-medium opacity-70">Coupon:</span>
                 <p className="mt-1">
                   {order.couponCode}
-                  {order.couponDiscount && ` (-₹${Number(order.couponDiscount).toFixed(2)})`}
+                  {order.couponDiscount &&
+                    ` (-₹${Number(order.couponDiscount).toFixed(2)})`}
                 </p>
               </div>
             )}
@@ -160,22 +118,24 @@ export function OrdersDataTable() {
         data={orders}
         searchKey="orderNumber"
         searchPlaceholder="Search orders by order number, customer name, or email..."
-        loading={loading}
+        loading={isLoading}
         onRowClick={handleRowClick}
-        onRefresh={() => loadOrders()}
+        onRefresh={() => {
+          refetch();
+        }}
         showRefresh={true}
-        refreshDisabled={loading}
+        refreshDisabled={isLoading}
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
-
     </div>
   );
 }
 
-// Extend window type for TypeScript
-declare global {
-  interface Window {
-    loadOrders?: (search?: string, status?: string, offset?: number) => void;
-  }
+export function OrdersDataTable() {
+  return (
+    <QueryProvider>
+      <OrdersDataTableContent />
+    </QueryProvider>
+  );
 }

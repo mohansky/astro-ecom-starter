@@ -1,97 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
 import { DataTable } from '../react-ui/DataTable';
 import { createProductColumns } from '../columns/product-columns';
-import { ProductModal } from './ProductModal';
+import { AddProductNameModal } from './AddProductNameModal';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
-import type { Product } from '../../types/product';
-
-interface ProductsResponse {
-  success: boolean;
-  products: Product[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  };
-  categories: string[];
-  error?: string;
-}
+import { useProducts, useDeleteProduct } from '@/hooks/useProducts';
+import { useAdminUIStore } from '@/stores/adminUIStore';
+import type { Product } from '@/types/product';
+import { AddIcon } from '../Icons/AddIcon';
+import { UploadIcon } from '../Icons/UploadIcon';
+import Button from '../react-ui/Button';
+import { QueryProvider } from '@/providers/QueryProvider';
 
 interface ProductsDataTableProps {
   r2BucketUrl?: string;
 }
 
-export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<string | undefined>();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingProduct, setDeletingProduct] = useState<{id: string, name: string} | null>(null);
+function ProductsDataTableContent({
+  r2BucketUrl,
+}: ProductsDataTableProps = {}) {
+  const [deletingProduct, setDeletingProduct] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
-  // Load products on component mount
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  // Get UI state from Zustand store
+  const {
+    isAddProductModalOpen,
+    isDeleteModalOpen,
+    productSearch,
+    productCategory,
+    productLimit,
+    productOffset,
+    openAddProductModal,
+    closeAddProductModal,
+    openDeleteModal,
+    closeDeleteModal,
+  } = useAdminUIStore();
 
-  const loadProducts = async (search?: string, category?: string, offset = 0) => {
-    try {
-      setLoading(true);
+  // Fetch products with React Query
+  const { data, isLoading, error, refetch } = useProducts({
+    search: productSearch,
+    category: productCategory,
+    limit: productLimit,
+    offset: productOffset,
+  });
 
-      const params = new URLSearchParams({
-        limit: '20',
-        offset: offset.toString(),
-        // Don't set isActive parameter to show ALL products (active and inactive) in admin panel
-      });
+  // Delete mutation
+  const deleteMutation = useDeleteProduct();
 
-      if (search?.trim()) {
-        params.set('search', search.trim());
-      }
-
-      if (category?.trim()) {
-        params.set('category', category.trim());
-      }
-
-      const response = await fetch(`/api/products?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-
-      const data: ProductsResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load products');
-      }
-
-      setProducts(data.products || []);
-
-      // Update global variables for backward compatibility
-      if (typeof window !== 'undefined') {
-        window.currentProductSearch = search || '';
-        window.currentProductCategory = category || '';
-        window.productsPagination = data.pagination;
-      }
-
-    } catch (error) {
-      console.error('Error loading products:', error);
-      toast.error('Failed to load products');
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const products = data?.products || [];
 
   const handleAddProduct = () => {
-    setEditingProductId(undefined);
-    setIsModalOpen(true);
+    openAddProductModal();
+  };
+
+  const handleProductCreated = (productId: string) => {
+    window.location.href = `/admin/products/${productId}`;
   };
 
   const handleEditProduct = (product: Product) => {
-    setEditingProductId(product.id);
-    setIsModalOpen(true);
+    window.location.href = `/admin/products/${product.id}`;
   };
 
   const handleViewProduct = (product: Product) => {
@@ -100,36 +68,23 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
 
   const handleDeleteProduct = (product: Product) => {
     setDeletingProduct({ id: product.id, name: product.name });
-    setShowDeleteModal(true);
-  };
-
-  const handleProductSaved = (product: Product) => {
-    setIsModalOpen(false);
-    setEditingProductId(undefined);
-    // Reload the products to show updated data
-    loadProducts();
+    openDeleteModal();
   };
 
   const handleDeleteSuccess = () => {
-    setShowDeleteModal(false);
-    setDeletingProduct(null);
-    // Reload the products to show updated data
-    loadProducts();
+    if (deletingProduct) {
+      deleteMutation.mutate(deletingProduct.id, {
+        onSuccess: () => {
+          closeDeleteModal();
+          setDeletingProduct(null);
+        },
+      });
+    }
   };
 
   const handleRowClick = (product: Product) => {
     handleViewProduct(product);
   };
-
-  // Expose loadProducts globally for backward compatibility
-  useEffect(() => {
-    window.loadProducts = loadProducts;
-    return () => {
-      if (window.loadProducts) {
-        window.loadProducts = undefined;
-      }
-    };
-  }, []);
 
   const columns = createProductColumns({
     onEdit: handleEditProduct,
@@ -139,9 +94,10 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
   });
 
   const renderMobileCard = (product: Product, index: number) => {
-    const imageUrl = product.imagePath
-      ? `${r2BucketUrl}/products/${product.imagePath}/${product.imagePath}.jpg`
-      : '/placeholder-product.jpg';
+    const imageUrl =
+      product.mainImage && product.slug
+        ? `${r2BucketUrl}/products/${product.slug}/${product.mainImage}`
+        : '/placeholder-product.svg';
 
     const finalPrice = product.taxInclusive
       ? product.price
@@ -162,15 +118,19 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder-product.jpg';
+                  target.src = '/placeholder-product.svg';
                 }}
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base line-clamp-2">{product.name}</h3>
+              <h3 className="font-semibold text-base line-clamp-2">
+                {product.name}
+              </h3>
               <p className="text-sm opacity-60">{product.sku}</p>
               <div className="flex items-center space-x-2 mt-1">
-                <div className={`badge ${product.isActive ? 'badge-success' : 'badge-error'}`}>
+                <div
+                  className={`badge ${product.isActive ? 'badge-success' : 'badge-error'}`}
+                >
                   {product.isActive ? 'Active' : 'Inactive'}
                 </div>
                 {product.featured && (
@@ -193,20 +153,29 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
             <div>
               <span className="font-medium opacity-70">Price:</span>
               <div className="mt-1">
-                <p className="font-bold text-primary">₹{finalPrice.toFixed(2)}</p>
+                <p className="font-bold text-primary">
+                  ₹{finalPrice.toFixed(2)}
+                </p>
                 {product.price !== product.mrp && (
-                  <p className="text-xs line-through opacity-60">₹{product.mrp.toFixed(2)}</p>
+                  <p className="text-xs line-through opacity-60">
+                    ₹{product.mrp.toFixed(2)}
+                  </p>
                 )}
               </div>
             </div>
             <div>
               <span className="font-medium opacity-70">GST:</span>
-              <p className="mt-1">{product.gstPercentage}% {product.taxInclusive ? '(Incl.)' : '(Excl.)'}</p>
+              <p className="mt-1">
+                {product.gstPercentage}%{' '}
+                {product.taxInclusive ? '(Incl.)' : '(Excl.)'}
+              </p>
             </div>
             {product.description && (
               <div className="col-span-2">
                 <span className="font-medium opacity-70">Description:</span>
-                <p className="mt-1 text-sm line-clamp-2">{product.description}</p>
+                <p className="mt-1 text-sm line-clamp-2">
+                  {product.description}
+                </p>
               </div>
             )}
           </div>
@@ -237,52 +206,35 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
     );
   };
 
+  // Show error state
+  if (error) {
+    return (
+      <div className="alert alert-error">
+        <span>Error loading products: {error.message}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Action Buttons */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex gap-2">
-          <button
-            onClick={handleAddProduct}
-            className="btn btn-primary"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Add Product
-          </button>
-          <button
+          <Button size="sm" onClick={handleAddProduct}>
+            <AddIcon size={18} /> Add Product
+          </Button>
+          <Button
+            size="sm"
+            variant="accent"
             onClick={() => {
-              const modal = document.getElementById('csvModal') as HTMLDialogElement;
+              const modal = document.getElementById(
+                'csvModal'
+              ) as HTMLDialogElement;
               modal?.showModal();
             }}
-            className="btn btn-secondary"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            Upload CSV
-          </button>
+            <UploadIcon size={18} /> Upload CSV
+          </Button>
         </div>
       </div>
 
@@ -292,39 +244,47 @@ export function ProductsDataTable({ r2BucketUrl }: ProductsDataTableProps = {}) 
         data={products}
         searchKey="name"
         searchPlaceholder="Search products by name, description, or category..."
-        loading={loading}
+        loading={isLoading}
         onRowClick={handleRowClick}
-        onRefresh={() => loadProducts()}
+        onRefresh={() => {
+          refetch();
+        }}
         showRefresh={true}
-        refreshDisabled={loading}
+        refreshDisabled={isLoading}
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
 
-      {/* Product Modal */}
-      <ProductModal
-        isOpen={isModalOpen}
-        productId={editingProductId}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingProductId(undefined);
-        }}
-        onSuccess={handleProductSaved}
+      {/* Add Product Modal */}
+      <AddProductNameModal
+        isOpen={isAddProductModalOpen}
+        onClose={closeAddProductModal}
+        onSuccess={handleProductCreated}
       />
 
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
         <DeleteConfirmModal
-          isOpen={showDeleteModal}
+          isOpen={isDeleteModalOpen}
           productId={deletingProduct.id}
           productName={deletingProduct.name}
           onClose={() => {
-            setShowDeleteModal(false);
+            closeDeleteModal();
             setDeletingProduct(null);
           }}
           onSuccess={handleDeleteSuccess}
         />
       )}
     </div>
+  );
+}
+
+export function ProductsDataTable({
+  r2BucketUrl,
+}: ProductsDataTableProps = {}) {
+  return (
+    <QueryProvider>
+      <ProductsDataTableContent r2BucketUrl={r2BucketUrl} />
+    </QueryProvider>
   );
 }

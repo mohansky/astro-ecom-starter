@@ -1,7 +1,7 @@
 ---
 import Container from '@/components/ui/Container.astro';
-import OrdersChart from '@/components/ui/OrdersChart.astro';
-import ProductSalesChart from '@/components/ui/ProductSalesChart.astro';
+import { OrdersChart } from '@/components/Admin/OrdersChart';
+import { ProductSalesChart } from '@/components/Admin/ProductSalesChart';
 import Layout from '@/layouts/Layout.astro';
 import ProfileLayout from '@/layouts/ProfileLayout.astro';
 import AdminBreadcrumbs from '@/components/Admin/AdminBreadcrumbs.astro';
@@ -13,7 +13,7 @@ if (authResult instanceof Response) {
 }
 ---
 
-<Layout title="Manobal | Analytics Dashboard">
+<Layout title="Analytics Dashboard">
   <ProfileLayout title="Analytics Dashboard">
     <Container width="marginy">
       <AdminBreadcrumbs
@@ -21,9 +21,9 @@ if (authResult instanceof Response) {
         pageTitle="Order Analytics"
         pageDescription="Track your store's performance and sales metrics"
       />
-      <div class="space-y-4">
-        <OrdersChart />
-        <ProductSalesChart />
+      <div class="flex flex-col gap-4">
+        <OrdersChart client:only="react" />
+        <ProductSalesChart client:only="react" />
       </div>
     </Container>
   </ProfileLayout>

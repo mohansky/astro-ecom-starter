@@ -17,11 +17,11 @@ if (!id) {
 }
 ---
 
-<Layout title="Manobal | Customer Details">
+<Layout title="Customer Details">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-8xl mt-20 lg:mt-0 mx-auto">
-        <CustomerDetailPage client:load customerId={id} />
+        <CustomerDetailPage client:only="react" customerId={id} />
       </div>
     </Container>
   </ProfileLayout>

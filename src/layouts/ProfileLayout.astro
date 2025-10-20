@@ -1,5 +1,9 @@
 ---
 import { getUser } from "@/lib/auth-utils";
+import { NavigationMenu } from "@/components/Admin/NavigationMenu";
+import { LogoutIcon } from "@/components/Icons/LogoutIcon"; 
+import Button from "@/components/react-ui/Button";
+import DrawerTrigger from "@/components/Icons/DrawerTrigger.astro";
 
 const user = await getUser(Astro);
 ---
@@ -13,33 +17,8 @@ const user = await getUser(Astro);
       for="my-drawer" 
       class="btn btn-ghost drawer-button fixed top-18 left-0 lg:hidden z-50"
     >
-    <svg 
-        id="drawer-icon" 
-        xmlns="http://www.w3.org/2000/svg" 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        stroke-width="2" 
-        stroke-linecap="round" 
-        stroke-linejoin="round" 
-        class="transition-transform duration-200"
-      >
-        <!-- Default: Panel Open (when drawer is closed) -->
-        <g id="open-icon">
-          <rect width="18" height="18" x="3" y="3" rx="2"/>
-          <path d="M9 3v18"/>
-          <path d="m14 9 3 3-3 3"/>
-        </g>
-        <!-- Close icon (when drawer is open) -->
-        <g id="close-icon" class="hidden">
-          <rect width="18" height="18" x="3" y="3" rx="2"/>
-          <path d="M9 3v18"/>
-          <path d="m16 9-3 3 3 3"/>
-        </g>
-      </svg>
-     <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-left-open-icon lucide-panel-left-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg> -->
+    <DrawerTrigger/>
+   
     </label>
   </div>
   
@@ -47,7 +26,7 @@ const user = await getUser(Astro);
   <div class="drawer-side">
     <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
     {user ? (
-      <aside class="menu bg-base-200 text-base-content min-h-full w-82 py-20 px-3">
+      <aside class="menu bg-base-200 text-base-content min-h-full w-64 py-20 px-3">
         {/* <!-- User Profile Section --> */}
         <div class="mb-3 p-3 bg-base-100 rounded-lg shadow-sm">
           <div class="flex items-center space-x-3">
@@ -79,82 +58,18 @@ const user = await getUser(Astro);
         </div>
 
         {/* <!-- Navigation Menu --> */}
-        <ul class="space-y-1" id="nav-menu">
-          <li>
-            <a href="/admin" data-route="/admin" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-base-100 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-              <span>Dashboard</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="/admin/analytics" data-route="/admin/analytics" class="nav-link flex items-center space-x-3 px-3 py-2  rounded-lg hover:bg-base-100 transition-colors">
-             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-line-icon lucide-chart-line"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
-              <span>Analytics</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="/admin/orders" data-route="/admin/orders" class="nav-link flex items-center space-x-3 px-3 py-2  rounded-lg hover:bg-base-100 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-bag-icon lucide-shopping-bag"><path d="M16 10a4 4 0 0 1-8 0"/><path d="M3.103 6.034h17.794"/><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/></svg>
-              <span>Orders</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="/admin/customers" data-route="/admin/customers" class="nav-link flex items-center space-x-3 px-3 py-2  rounded-lg hover:bg-base-100 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
-              <span>Customers</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="/admin/products" data-route="/admin/products" class="nav-link flex items-center space-x-3 px-3 py-2  rounded-lg hover:bg-base-100 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-box-icon lucide-box"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-              <span>Products</span>
-            </a>
-          </li>
-
-          <li>
-            <a href="/admin/discounts" data-route="/admin/discounts" class="nav-link flex items-center space-x-3 px-3 py-2  rounded-lg hover:bg-base-100 transition-colors">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent-icon lucide-percent">
-              <line x1="19" x2="5" y1="5" y2="19"/>
-              <circle cx="6.5" cy="6.5" r="2.5"/>
-              <circle cx="17.5" cy="17.5" r="2.5"/>
-              </svg>
-              <span>Discounts</span>
-            </a>
-          </li>
-
-          {/* <!-- Divider --> */}
-          <div class="divider my-4"></div>
-          
-          <li>
-            <a href="/admin/profile-settings" data-route="/admin/profile-settings" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-base-100 transition-colors">
- 
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
-              <span>Profile Settings</span>
-            </a>
-          </li>
-          {user.role === 'admin' && (
-            <li>
-              <a href="/admin/users" data-route="/admin/users" class="nav-link flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-base-100 transition-colors">
-   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <span>Users</span>
-              </a>
-            </li>
-          )}
-        </ul>
+        <NavigationMenu client:load userRole={user.role} />
  
         {/* <!-- Logout Button --> */}
         <div class="mt-auto pt-4">
-          <button 
-            id="logoutBtn" 
-            class="btn btn-error btn-outline w-full flex items-center justify-center space-x-2"
-          >
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
-            <span>Logout</span>
-          </button>
+          <Button
+            id="logoutBtn"
+            variant="error"
+            className="w-full"
+            >
+            <LogoutIcon size={14} />
+            Logout
+          </Button>
         </div>
       </aside>
     ) : (

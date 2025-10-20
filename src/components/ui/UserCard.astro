@@ -1,6 +1,6 @@
 ---
-import Heading from "./Heading.astro";
-import Paragraph from "./Paragraph.astro";
+import Heading from './Heading.astro';
+import Paragraph from './Paragraph.astro';
 
 // src/components/ui/UserCard.astro
 export interface Props {
@@ -18,11 +18,11 @@ export interface Props {
 const { user } = Astro.props;
 ---
 
-<div class="card bg-base-200/30 rounded-box shadow-sm">
+<div class="card bg-base-100 w-fit border rounded-box shadow-sm">
   <div class="card-body flex flex-col lg:flex-row justify-between gap-6">
     <div class="flex-1 max-w-md">
       <Heading size="xl" class="mb-4">Welcome back!</Heading>
-      <Paragraph> Hello {user.name}, you're successfully logged in.</Paragraph> 
+      <Paragraph> Hello {user.name}, you're successfully logged in.</Paragraph>
       <div class="flex flex-row items-center gap-3 my-3">
         <div class="avatar">
           <div
@@ -37,7 +37,7 @@ const { user } = Astro.props;
                 />
               ) : (
                 <span class="text-lg font-semibold capitalize">
-                  {user.name?.charAt(0) || "U"}
+                  {user.name?.charAt(0) || 'U'}
                 </span>
               )
             }
@@ -46,7 +46,7 @@ const { user } = Astro.props;
         <Paragraph>{user.email}</Paragraph>
       </div>
       <div class="stats flex flex-row gap-6">
-        <div class="stat">
+        <div class="stat bg-base-200">
           <Heading size="xxs" fontweight="light" class="opacity-50"
             >Account Status</Heading
           >
@@ -58,15 +58,15 @@ const { user } = Astro.props;
           >
         </div>
 
-        <div class="stat">
+        <div class="stat bg-base-200">
           <Heading size="xxs" fontweight="light" class="opacity-50"
             >Email Status</Heading
           >
           <Heading size="xl" fontweight="black" class="text-accent"
-            >{user.emailVerified ? "Verified" : "Pending"}</Heading
+            >{user.emailVerified ? 'Verified' : 'Pending'}</Heading
           >
           <Heading size="xxs" fontweight="light" class="opacity-50"
-            >{user.emailVerified ? "All good!" : "Check your inbox"}</Heading
+            >{user.emailVerified ? 'All good!' : 'Check your inbox'}</Heading
           >
         </div>
       </div>

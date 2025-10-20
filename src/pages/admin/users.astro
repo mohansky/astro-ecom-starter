@@ -15,7 +15,7 @@ if (authResult instanceof Response) {
 const R2_BUCKET_URL = import.meta.env.R2_BUCKET_URL;
 ---
 
-<Layout title="Manobal | User Management">
+<Layout title="User Management">
   <ProfileLayout>
     <Container width="marginy">
       <AdminBreadcrumbs
@@ -25,7 +25,7 @@ const R2_BUCKET_URL = import.meta.env.R2_BUCKET_URL;
       />
       <div class="card bg-base-100 shadow-sm w-full">
         <div class="card-body">
-          <UsersDataTable client:load r2BucketUrl={R2_BUCKET_URL} />
+          <UsersDataTable client:only="react" r2BucketUrl={R2_BUCKET_URL} />
         </div>
       </div>
     </Container>

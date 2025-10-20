@@ -1,78 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { DataTable } from '../react-ui/DataTable';
 import { createUserColumns } from '../columns/user-columns';
-// import { useErrorHandler, SessionExpiredPrompt } from '../react-ui/ErrorBoundary'; // TODO: Fix ErrorBoundary utilities
-import type { User, UsersResponse } from '../../types/user';
+import { useUsers, useDeleteUser, useUpdateUser } from '../../hooks/useUsers';
+import { useAdminUIStore } from '../../stores/adminUIStore';
+import type { User } from '../../types/user';
 import { getInitialsAvatar } from '../../lib/helpers';
+import { QueryProvider } from '@/providers/QueryProvider';
 
 interface UsersDataTableProps {
   r2BucketUrl?: string;
 }
 
-export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+function UsersDataTableContent({ r2BucketUrl }: UsersDataTableProps) {
   const [hasSessionError, setHasSessionError] = useState(false);
-  // const { handleError } = useErrorHandler(); // TODO: Fix ErrorBoundary utilities
 
-  // Load users on component mount
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  // Get filter state from Zustand
+  const { userSearch, userRole, userLimit, userOffset } = useAdminUIStore();
 
-  const loadUsers = async (search?: string, role?: string, offset = 0) => {
-    try {
-      setLoading(true);
+  // Fetch users with React Query
+  const { data, isLoading, error, refetch } = useUsers({
+    search: userSearch,
+    role: userRole,
+    limit: userLimit,
+    offset: userOffset,
+  });
 
-      const params = new URLSearchParams({
-        limit: '20',
-        offset: offset.toString(),
-      });
+  const deleteMutation = useDeleteUser();
+  const updateMutation = useUpdateUser();
 
-      if (search?.trim()) {
-        params.set('search', search.trim());
-      }
-
-      if (role?.trim()) {
-        params.set('role', role.trim());
-      }
-
-      const response = await fetch(`/api/users?${params}`);
-
-      if (!response.ok) {
-        // Create error with status for better handling
-        const error = new Error(
-          `Failed to fetch users: ${response.status} ${response.statusText}`
-        );
-        (error as any).status = response.status;
-        throw error;
-      }
-
-      const data: UsersResponse = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load users');
-      }
-
-      setUsers(data.users || []);
-    } catch (error: any) {
-      console.error('Error loading users:', error);
-
-      // Check if it's a 500 error or session-related
-      if (error?.status === 500 || error?.message?.includes('500')) {
-        setHasSessionError(true);
-        // handleError(error); // TODO: Fix ErrorBoundary utilities
-        console.error('Error loading users:', error);
-      } else {
-        toast.error('Failed to load users');
-      }
-
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const users = data?.users || [];
 
   const handleEditUser = (user: User) => {
     // You can implement a user edit modal here
@@ -89,57 +46,16 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
       return;
     }
 
-    try {
-      const response = await fetch(`/api/admin/delete-user`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success('User deleted successfully!');
-        loadUsers(); // Reload to show updated list
-      } else {
-        toast.error(result.error || 'Failed to delete user');
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
-    }
+    deleteMutation.mutate(user.id);
   };
 
   const handleToggleStatus = async (user: User) => {
-    const action = user.emailVerified ? 'suspend' : 'activate';
     const newStatus = !user.emailVerified;
 
-    try {
-      const response = await fetch(`/api/admin/verify-user`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          emailVerified: newStatus,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(`User ${action}d successfully!`);
-        loadUsers(); // Reload to show updated status
-      } else {
-        toast.error(result.error || `Failed to ${action} user`);
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing user:`, error);
-      toast.error(`Failed to ${action} user`);
-    }
+    updateMutation.mutate({
+      id: user.id,
+      data: { emailVerified: newStatus }
+    });
   };
 
   const handleChangeRole = async (user: User, newRole: string) => {
@@ -147,46 +63,22 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
       return; // No change needed
     }
 
-    try {
-      const response = await fetch(`/api/admin/change-user-role`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          newRole: newRole,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(`User role changed to ${newRole} successfully!`);
-        loadUsers(); // Reload to show updated role
-      } else {
-        toast.error(result.error || 'Failed to change user role');
-      }
-    } catch (error) {
-      console.error('Error changing user role:', error);
-      toast.error('Failed to change user role');
+    // Validate role is either 'admin' or 'user'
+    if (newRole !== 'admin' && newRole !== 'user') {
+      toast.error('Invalid role selected');
+      return;
     }
+
+    updateMutation.mutate({
+      id: user.id,
+      data: { role: newRole as 'admin' | 'user' }
+    });
   };
 
   const handleRowClick = (user: User) => {
     // Navigate to user detail page if it exists
     console.log('View user details:', user);
   };
-
-  // Expose loadUsers globally for potential external use
-  useEffect(() => {
-    window.loadUsers = loadUsers;
-    return () => {
-      if (window.loadUsers) {
-        window.loadUsers = undefined;
-      }
-    };
-  }, []);
 
   const columns = createUserColumns({
     onEdit: handleEditUser,
@@ -239,8 +131,8 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
           {/* User details */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="font-medium opacity-70">Username:</span>
-              <p className="mt-1">{user.username || 'N/A'}</p>
+              <span className="font-medium opacity-70">Email:</span>
+              <p className="mt-1 truncate">{user.email}</p>
             </div>
             <div>
               <span className="font-medium opacity-70">Role:</span>
@@ -254,7 +146,6 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <option value="customer">Customer</option>
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -309,7 +200,6 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
     return (
       <div className="space-y-6">
         <div className="flex justify-center items-center min-h-64">
-          {/* <SessionExpiredPrompt onRefresh={() => window.location.reload()} /> TODO: Fix ErrorBoundary utilities */}
           <div className="alert alert-warning">
             <span>Session expired. Please refresh the page.</span>
             <button
@@ -332,11 +222,11 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
         data={users}
         searchKey="name"
         searchPlaceholder="Search users by name or email..."
-        loading={loading}
+        loading={isLoading}
         onRowClick={handleRowClick}
-        onRefresh={() => loadUsers()}
+        onRefresh={() => { refetch(); }}
         showRefresh={true}
-        refreshDisabled={loading}
+        refreshDisabled={isLoading}
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
@@ -344,9 +234,10 @@ export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
   );
 }
 
-// Extend window type for TypeScript
-declare global {
-  interface Window {
-    loadUsers?: (search?: string, role?: string, offset?: number) => void;
-  }
+export function UsersDataTable({ r2BucketUrl }: UsersDataTableProps) {
+  return (
+    <QueryProvider>
+      <UsersDataTableContent r2BucketUrl={r2BucketUrl} />
+    </QueryProvider>
+  );
 }

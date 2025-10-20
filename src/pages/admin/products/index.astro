@@ -6,7 +6,6 @@ import { getUser } from '@/lib/auth-utils';
 import { migrateTaxFields, migrateSlugField, migrateSKUField } from '@/lib/db';
 import { ProductsDataTable } from '@/components/Admin/ProductsDataTable';
 import AdminBreadcrumbs from '@/components/Admin/AdminBreadcrumbs.astro';
-import { ProductManager } from '@/components/Admin/ProductManager';
 
 const user = await getUser(Astro);
 
@@ -24,7 +23,7 @@ if (!user.emailVerified) {
 }
 ---
 
-<Layout title="Manobal | Products">
+<Layout title="Products">
   <ProfileLayout>
     <Container width="marginy">
       <div class="max-w-8xl mt-20 lg:mt-0 mx-auto">
@@ -37,7 +36,7 @@ if (!user.emailVerified) {
         <div class="card bg-base-100 shadow-sm w-full">
           <div class="card-body">
             <ProductsDataTable
-              client:load
+              client:only="react"
               r2BucketUrl={import.meta.env.R2_BUCKET_URL}
             />
           </div>
@@ -46,9 +45,6 @@ if (!user.emailVerified) {
     </Container>
   </ProfileLayout>
 </Layout>
-
-<!-- React Product Manager with integrated Sonner Toasts -->
-<ProductManager client:load />
 
 <!-- CSV Upload Modal -->
 <dialog id="csvModal" class="modal">
@@ -75,8 +71,13 @@ if (!user.emailVerified) {
           ></path></svg
         >
         <div>
-          <div class="font-semibold">⚠️ WARNING: This may replace existing products!</div>
-          <div class="text-sm mt-1">Products with the same name may be overwritten. This action cannot be undone.</div>
+          <div class="font-semibold">
+            ⚠️ WARNING: This may replace existing products!
+          </div>
+          <div class="text-sm mt-1">
+            Products with the same name may be overwritten. This action cannot
+            be undone.
+          </div>
         </div>
       </div>
 
@@ -94,7 +95,9 @@ if (!user.emailVerified) {
           ></path></svg
         >
         <div>
-          <div class="font-semibold mb-2">Required CSV Headers (* required):</div>
+          <div class="font-semibold mb-2">
+            Required CSV Headers (* required):
+          </div>
           <div class="text-sm space-y-1">
             <div><strong>name*</strong> - Product name</div>
             <div><strong>category*</strong> - Product category</div>
@@ -105,17 +108,29 @@ if (!user.emailVerified) {
           <div class="text-sm space-y-1">
             <div><strong>description</strong> - Product description</div>
             <div><strong>subcategory</strong> - Product subcategory</div>
-            <div><strong>stock</strong> - Stock quantity (number, default: 0)</div>
+            <div>
+              <strong>stock</strong> - Stock quantity (number, default: 0)
+            </div>
             <div><strong>weight</strong> - Weight in grams (number)</div>
             <div><strong>dimensions</strong> - Product dimensions</div>
             <div><strong>tags</strong> - Comma-separated tags</div>
-            <div><strong>active</strong> - Is active (true/false, default: true)</div>
-            <div><strong>featured</strong> - Is featured (true/false, default: false)</div>
-            <div><strong>gstPercentage</strong> - GST percentage (number, default: 5)</div>
-            <div><strong>taxInclusive</strong> - Price includes tax (true/false, default: false)</div>
+            <div>
+              <strong>active</strong> - Is active (true/false, default: true)
+            </div>
+            <div>
+              <strong>featured</strong> - Is featured (true/false, default: false)
+            </div>
+            <div>
+              <strong>gstPercentage</strong> - GST percentage (number, default: 5)
+            </div>
+            <div>
+              <strong>taxInclusive</strong> - Price includes tax (true/false, default:
+              false)
+            </div>
           </div>
           <div class="text-xs mt-3 opacity-75">
-            Note: mainImage and images arrays cannot be set via CSV. Use the image upload after import.
+            Note: mainImage and images arrays cannot be set via CSV. Use the
+            image upload after import.
           </div>
         </div>
       </div>

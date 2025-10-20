@@ -1,7 +1,6 @@
 ---
-import type { Product } from "@/lib/db";
-import ProductCard from "./ProductCard.astro";
-import { calculateDiscountPercent } from "@/lib/pricing-utils";
+import type { Product } from '@/lib/db';
+import { ProductCard } from './ProductCard';
 
 interface Props {
   products: Product[];
@@ -13,25 +12,7 @@ const { products } = Astro.props;
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   {
     products.map((product) => (
-      <ProductCard
-        id={product.id}
-        slug={product.slug}
-        published={product.isActive}
-        name={product.name}
-        quantity={product.stock}
-        dimensions={product.dimensions}
-        weight={product.weight}
-        description={product.description || ""}
-        mainImage={product.mainImage}
-        images={product.images}
-        category={product.category}
-        mrp={product.mrp}
-        total={product.price}
-        price={product.price}
-        discount={calculateDiscountPercent(product.mrp, product.price)}
-        subcategory={product.subcategory}
-        featured={product.featured}
-      />
+      <ProductCard product={product} client:load />
     ))
   }
 </div>

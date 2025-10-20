@@ -31,7 +31,7 @@ export function EmailVerificationEmail({
       <Body style={main}>
         <Container style={container}>
           <Section style={logoContainer}>
-            <Text style={logo}>Manubal</Text>
+            <Text style={logo}>Ecom Starter</Text>
           </Section>
 
           <Section style={content}>

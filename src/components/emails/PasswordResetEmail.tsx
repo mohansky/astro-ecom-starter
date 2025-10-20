@@ -22,17 +22,16 @@ function getResetBaseURL(): string {
     if (import.meta.env.PUBLIC_BETTER_AUTH_URL) {
       return import.meta.env.PUBLIC_BETTER_AUTH_URL;
     }
-    
+
     if (import.meta.env.BETTER_AUTH_URL) {
       return import.meta.env.BETTER_AUTH_URL;
     }
-    
+
     if (import.meta.env.NETLIFY_URL) {
       return import.meta.env.NETLIFY_URL;
     }
-    
   }
-  
+
   return 'http://localhost:4321';
 }
 
@@ -42,43 +41,43 @@ export const PasswordResetEmail = ({
 }: PasswordResetEmailProps) => (
   <Html>
     <Head />
-    <Preview>Reset your password for Manobal</Preview>
+    <Preview>Reset your password</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoContainer}>
-          <Text style={title}>Manobal</Text>
+          <Text style={title}>Ecom Starter</Text>
         </Section>
-        
+
         <Section style={section}>
           <Text style={greeting}>Hi {userName},</Text>
-          
+
           <Text style={paragraph}>
-            We received a request to reset your password. If you didn't make this request,
-            you can safely ignore this email.
+            We received a request to reset your password. If you didn't make
+            this request, you can safely ignore this email.
           </Text>
-          
+
           <Text style={paragraph}>
             To reset your password, click the button below:
           </Text>
-          
+
           <Section style={buttonContainer}>
             <Button style={button} href={resetUrl}>
               Reset Password
             </Button>
           </Section>
-          
+
           <Text style={paragraph}>
             Or copy and paste this URL into your browser:
           </Text>
-          
+
           <Link href={resetUrl} style={link}>
             {resetUrl}
           </Link>
-          
+
           <Text style={paragraph}>
             This link will expire in 1 hour for security reasons.
           </Text>
-          
+
           <Text style={footer}>
             If you have any questions, please contact our support team.
           </Text>
