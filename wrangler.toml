@@ -1,7 +1,7 @@
 name = "astro-ecom-starter"
 main = "./dist/_worker.js/index.js"
 compatibility_date = "2025-10-19"
-compatibility_flags = [ "nodejs_compat", "expose_global_message_channel" ]
+compatibility_flags = [ "nodejs_compat" ]
 
 [assets]
 binding = "ASSETS"
