@@ -50,8 +50,9 @@ const user = await getUser(Astro);
               <h3 class="font-semibold text-base truncate">
                 {user.name || 'User'}
               </h3>
-              <p class="text-sm opacity-70 truncate">
-                {user.email}
+              <p class="text-xs opacity-70 truncate">
+                {user.username || ''}
+                {/* {user.email || ''} */}
               </p>
             </div>
           </div>

@@ -1,9 +1,9 @@
 // src/lib/email.ts
-import { Resend } from "resend";
-import { render } from "@react-email/render";
-import OrderConfirmationEmail from "@/components/emails/OrderConfirmationEmail";
-import { PasswordResetEmail } from "@/components/emails/PasswordResetEmail";
-import { EmailVerificationEmail } from "@/components/emails/EmailVerificationEmail";
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
+import OrderConfirmationEmail from '@/components/emails/OrderConfirmationEmail';
+import { PasswordResetEmail } from '@/components/emails/PasswordResetEmail';
+import { EmailVerificationEmail } from '@/components/emails/EmailVerificationEmail';
 
 interface SendPasswordResetEmailProps {
   to: string;
@@ -70,7 +70,7 @@ export async function sendOrderConfirmationEmail(
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: "Manubal<mail@mohankumar.dev>", // Use your verified domain
+      from: 'MK <mail@mohankumar.dev>', // Use your verified domain
       to: [orderData.customerEmail],
       subject: `Order Confirmation #${orderData.orderId} - Thank you for your purchase!`,
       html: emailHtml,
@@ -85,30 +85,30 @@ export async function sendOrderConfirmationEmail(
         We've received your order and are preparing it for shipment.
         You'll receive a tracking email once your order is on its way.
         
-        Questions? Contact us at support@manubal.com
+        Questions? Contact us.
       `,
       // Optional: Add tags for tracking
       tags: [
         {
-          name: "category",
-          value: "order_confirmation",
+          name: 'category',
+          value: 'order_confirmation',
         },
         {
-          name: "order_id",
+          name: 'order_id',
           value: orderData.orderId.toString(),
         },
       ],
     });
 
     if (error) {
-      console.error("Error sending email:", error);
+      console.error('Error sending email:', error);
       return false;
     }
 
-    console.log("Order confirmation email sent successfully:", data);
+    console.log('Order confirmation email sent successfully:', data);
     return true;
   } catch (error) {
-    console.error("Failed to send order confirmation email:", error);
+    console.error('Failed to send order confirmation email:', error);
     return false;
   }
 }
@@ -124,7 +124,7 @@ export async function sendOrderShippedEmail(orderData: {
 }): Promise<boolean> {
   try {
     const { data, error } = await resend.emails.send({
-      from: "Manubal <shipping@manubal.com>",
+      from: 'MK <mail@mohankumar.dev>',
       to: [orderData.customerEmail],
       subject: `Your order #${orderData.orderId} has shipped!`,
       html: `
@@ -134,26 +134,26 @@ export async function sendOrderShippedEmail(orderData: {
           <p>Great news! Your order #${orderData.orderId} has been shipped and is on its way to you.</p>
           <p><strong>Tracking Number:</strong> ${orderData.trackingNumber}</p>
           <p><a href="${orderData.trackingUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Track Your Package</a></p>
-          <p>Thank you for shopping with Manubal!</p>
+          <p>Thank you for shopping with us!</p>
         </div>
       `,
       tags: [
         {
-          name: "category",
-          value: "order_shipped",
+          name: 'category',
+          value: 'order_shipped',
         },
       ],
     });
 
     if (error) {
-      console.error("Error sending shipping email:", error);
+      console.error('Error sending shipping email:', error);
       return false;
     }
 
-    console.log("Shipping notification email sent successfully:", data);
+    console.log('Shipping notification email sent successfully:', data);
     return true;
   } catch (error) {
-    console.error("Failed to send shipping notification email:", error);
+    console.error('Failed to send shipping notification email:', error);
     return false;
   }
 }
@@ -165,9 +165,9 @@ export async function sendPasswordResetEmail({
   token,
 }: SendPasswordResetEmailProps) {
   try {
-    console.log("Preparing to send password reset email...");
-    console.log("To:", to);
-    console.log("Reset URL:", resetUrl);
+    console.log('Preparing to send password reset email...');
+    console.log('To:', to);
+    console.log('Reset URL:', resetUrl);
 
     // Render the React email template
     const emailHtml = await render(
@@ -179,21 +179,21 @@ export async function sendPasswordResetEmail({
 
     // Send email via Resend
     const { data, error } = await resend.emails.send({
-      from: "Manubal <mail@mohankumar.dev>", // Update with your domain
+      from: 'MK <mail@mohankumar.dev>', // Update with your domain
       to: [to],
-      subject: "Reset your password",
+      subject: 'Reset your password',
       html: emailHtml,
     });
 
     if (error) {
-      console.error("Resend error:", error);
+      console.error('Resend error:', error);
       throw new Error(`Failed to send email: ${error.message}`);
     }
 
-    console.log("Password reset email sent successfully:", data);
+    console.log('Password reset email sent successfully:', data);
     return data;
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    console.error('Error sending password reset email:', error);
     throw error;
   }
 }
@@ -205,9 +205,9 @@ export async function sendVerificationEmail({
   token,
 }: SendVerificationEmailProps) {
   try {
-    console.log("Preparing to send verification email...");
-    console.log("To:", to);
-    console.log("Verification URL:", verificationUrl);
+    console.log('Preparing to send verification email...');
+    console.log('To:', to);
+    console.log('Verification URL:', verificationUrl);
 
     // Render the React email template
     const emailHtml = await render(
@@ -219,42 +219,42 @@ export async function sendVerificationEmail({
 
     // Send email via Resend
     const { data, error } = await resend.emails.send({
-      from: "Manubal <mail@mohankumar.dev>",
+      from: 'MK <mail@mohankumar.dev>',
       to: [to],
-      subject: "Verify your email address - Manubal",
+      subject: 'Verify your email address',
       html: emailHtml,
       // Add plain text version for better deliverability
       text: `
         Hi ${userName},
 
-        Welcome to Manubal! Please verify your email address by clicking the link below:
+        Welcome! Please verify your email address by clicking the link below:
 
         ${verificationUrl}
 
         This verification link will expire in 24 hours for security reasons.
 
-        If you didn't create an account with Manubal, you can safely ignore this email.
+        If you didn't create an account with MK, you can safely ignore this email.
 
         Best regards,
-        The Manubal Team
+        The MK Team
       `,
       tags: [
         {
-          name: "category",
-          value: "email_verification",
+          name: 'category',
+          value: 'email_verification',
         },
       ],
     });
 
     if (error) {
-      console.error("Resend error:", error);
+      console.error('Resend error:', error);
       throw new Error(`Failed to send verification email: ${error.message}`);
     }
 
-    console.log("Email verification sent successfully:", data);
+    console.log('Email verification sent successfully:', data);
     return data;
   } catch (error) {
-    console.error("Error sending verification email:", error);
+    console.error('Error sending verification email:', error);
     throw error;
   }
 }

@@ -65,8 +65,29 @@ export function ProductImagesUpload({
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
+    // Validate max images count
     if (images.length + files.length > maxImages) {
-      setUploadStatus(`Maximum ${maxImages} images allowed`);
+      setUploadStatus(`Maximum ${maxImages} images allowed. You can upload ${maxImages - images.length} more image(s).`);
+      setStatusType('error');
+      return;
+    }
+
+    // Validate file sizes and types before uploading
+    const errors: string[] = [];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name}: Invalid file type (only JPEG, PNG, and WebP allowed)`);
+      } else if (file.size > maxSize) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        errors.push(`${file.name}: File too large (${sizeMB}MB, maximum is 5MB)`);
+      }
+    }
+
+    if (errors.length > 0) {
+      setUploadStatus(errors.join(' • '));
       setStatusType('error');
       return;
     }
@@ -84,7 +105,7 @@ export function ProductImagesUpload({
     const shouldSetFeatured = images.length === 0 && !featuredImage;
     let uploadedCount = 0;
 
-    // Add all placeholders at once
+    // Add all placeholders at once (validation already done in handleFileSelect)
     const newPlaceholders: ImageItem[] = [];
     for (const file of files) {
       // Check if filename already exists
@@ -94,23 +115,6 @@ export function ProductImagesUpload({
           `Image "${file.name}" already exists. Replace it?`
         );
         if (!confirm) continue;
-      }
-
-      // Validate file
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
-        setUploadStatus(
-          `Invalid file type for ${file.name}. Only JPEG, PNG, and WebP allowed.`
-        );
-        setStatusType('error');
-        continue;
-      }
-
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        setUploadStatus(`File ${file.name} too large. Maximum size is 5MB.`);
-        setStatusType('error');
-        continue;
       }
 
       // Add placeholder with preview

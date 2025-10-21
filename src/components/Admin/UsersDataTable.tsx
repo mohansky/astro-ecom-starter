@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { DataTable } from '../react-ui/DataTable';
+import { Modal } from '../react-ui/Modal';
+import { Button } from '../react-ui/Button';
 import { createUserColumns } from '../columns/user-columns';
 import { useUsers, useDeleteUser, useUpdateUser } from '../../hooks/useUsers';
 import { useAdminUIStore } from '../../stores/adminUIStore';
@@ -14,6 +16,8 @@ interface UsersDataTableProps {
 
 function UsersDataTableContent({ r2BucketUrl }: UsersDataTableProps) {
   const [hasSessionError, setHasSessionError] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   // Get filter state from Zustand
   const { userSearch, userRole, userLimit, userOffset } = useAdminUIStore();
@@ -37,16 +41,20 @@ function UsersDataTableContent({ r2BucketUrl }: UsersDataTableProps) {
     toast.info('User edit functionality not implemented yet');
   };
 
-  const handleDeleteUser = async (user: User) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete user "${user.name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
 
-    deleteMutation.mutate(user.id);
+  const handleConfirmDelete = () => {
+    if (!userToDelete) return;
+
+    deleteMutation.mutate(userToDelete.id, {
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+        setUserToDelete(null);
+      },
+    });
   };
 
   const handleToggleStatus = async (user: User) => {
@@ -230,6 +238,48 @@ function UsersDataTableContent({ r2BucketUrl }: UsersDataTableProps) {
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete User"
+        size="sm"
+      >
+        <div className="py-4">
+          <p className="mb-4">
+            Are you sure you want to delete user{' '}
+            <strong>{userToDelete?.name}</strong> ({userToDelete?.email})?
+          </p>
+          <p className="text-sm opacity-70 mb-4">
+            This action cannot be undone and will also delete:
+          </p>
+          <ul className="list-disc list-inside text-sm opacity-70 mb-6 space-y-1">
+            <li>All user sessions</li>
+            <li>All linked accounts (OAuth, etc.)</li>
+            <li>Order status change history authored by this user</li>
+          </ul>
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="error"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete User'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -1,10 +1,11 @@
 export interface User {
   id: string;
   name: string;
+  username?: string | null;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'customer';
   emailVerified: boolean;
-  image?: string;
+  image?: string | null;
   phone?: string;
   address?: {
     street?: string;
@@ -15,7 +16,7 @@ export interface User {
   };
   createdAt: string;
   updatedAt?: string;
-  lastLoginAt?: string;
+  lastLoginAt?: string | null;
   isActive?: boolean;
 }
 

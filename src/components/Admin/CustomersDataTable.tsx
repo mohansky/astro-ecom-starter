@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DataTable } from '../react-ui/DataTable';
+import { Modal } from '../react-ui/Modal';
+import { Button } from '../react-ui/Button';
 import { createCustomerColumns } from '../columns/customer-columns';
 import { useCustomers, useDeleteCustomer } from '../../hooks/useCustomers';
 import { useAdminUIStore } from '../../stores/adminUIStore';
@@ -8,6 +10,9 @@ import type { Customer } from '../../types/customer';
 import { QueryProvider } from '@/providers/QueryProvider';
 
 function CustomersDataTableContent() {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+
   // Get filter state from Zustand
   const { customerSearch, customerLimit, customerOffset } = useAdminUIStore();
 
@@ -32,16 +37,20 @@ function CustomersDataTableContent() {
     toast.info('Customer edit functionality not implemented yet');
   };
 
-  const handleDeleteCustomer = async (customer: Customer) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete customer "${customer.firstName} ${customer.lastName}"? This action cannot be undone and will also delete all associated orders.`
-      )
-    ) {
-      return;
-    }
+  const handleDeleteCustomer = (customer: Customer) => {
+    setCustomerToDelete(customer);
+    setIsDeleteModalOpen(true);
+  };
 
-    deleteMutation.mutate(customer.id);
+  const handleConfirmDelete = () => {
+    if (!customerToDelete) return;
+
+    deleteMutation.mutate(customerToDelete.id, {
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+        setCustomerToDelete(null);
+      },
+    });
   };
 
   const handleRowClick = (customer: Customer) => {
@@ -146,6 +155,51 @@ function CustomersDataTableContent() {
         refreshText="Refresh"
         renderMobileCard={renderMobileCard}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Customer"
+        size="sm"
+      >
+        <div className="py-4">
+          <p className="mb-4">
+            Are you sure you want to delete customer{' '}
+            <strong>
+              {customerToDelete?.firstName} {customerToDelete?.lastName}
+            </strong>
+            ?
+          </p>
+          <p className="text-sm opacity-70 mb-4">
+            This action cannot be undone and will also delete:
+          </p>
+          <ul className="list-disc list-inside text-sm opacity-70 mb-6 space-y-1">
+            <li>{customerToDelete?.orderCount || 0} associated order(s)</li>
+            <li>All order items and history</li>
+            <li>Customer contact information</li>
+          </ul>
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="error"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Customer'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

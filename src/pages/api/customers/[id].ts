@@ -2,6 +2,85 @@
 import { rawDb } from '../../../lib/db';
 import type { APIRoute } from 'astro';
 
+export const DELETE: APIRoute = async ({ params }) => {
+  try {
+    const customerId = parseInt(params.id || '0');
+
+    if (!customerId || isNaN(customerId)) {
+      return new Response(JSON.stringify({
+        error: 'Invalid customer ID',
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if customer exists
+    const customerResult = await rawDb.execute({
+      sql: 'SELECT id FROM customers WHERE id = ?',
+      args: [customerId]
+    });
+
+    if (customerResult.rows.length === 0) {
+      return new Response(JSON.stringify({
+        error: 'Customer not found',
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Delete associated orders first (cascade delete)
+    // First delete order_items (uses snake_case order_id)
+    await rawDb.execute({
+      sql: `
+        DELETE FROM order_items
+        WHERE order_id IN (SELECT id FROM orders WHERE customer_id = ?)
+      `,
+      args: [customerId]
+    });
+
+    // Delete order_status_history (uses camelCase orderId)
+    await rawDb.execute({
+      sql: `
+        DELETE FROM order_status_history
+        WHERE orderId IN (SELECT id FROM orders WHERE customer_id = ?)
+      `,
+      args: [customerId]
+    });
+
+    // Then delete orders
+    await rawDb.execute({
+      sql: 'DELETE FROM orders WHERE customer_id = ?',
+      args: [customerId]
+    });
+
+    // Finally delete the customer
+    await rawDb.execute({
+      sql: 'DELETE FROM customers WHERE id = ?',
+      args: [customerId]
+    });
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Customer and associated orders deleted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Delete customer error:', error);
+
+    return new Response(JSON.stringify({
+      error: 'Failed to delete customer',
+      message: error instanceof Error ? error.message : 'Unknown error occurred',
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+};
+
 export const GET: APIRoute = async ({ params }) => {
   try {
     const customerId = parseInt(params.id || '0');

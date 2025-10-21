@@ -1,6 +1,6 @@
 name = "astro-ecom-starter"
 main = "./dist/_worker.js/index.js"
-compatibility_date = "2025-10-19"
+compatibility_date = "2025-10-21"
 compatibility_flags = [ "nodejs_compat" ]
 
 [assets]

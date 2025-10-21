@@ -192,10 +192,26 @@
         });
 
         if (result.error) {
-          showError(result.error.message || "Login failed");
-        } else {
+          // Handle different error types
+          const errorMsg = typeof result.error === 'string'
+            ? result.error
+            : result.error.message || 'Login failed';
+
+          // Map common errors to user-friendly messages
+          if (errorMsg.toLowerCase().includes('invalid') || errorMsg.toLowerCase().includes('credentials')) {
+            showError('Invalid email or password');
+          } else if (errorMsg.toLowerCase().includes('not found')) {
+            showError('No account found with this email');
+          } else if (errorMsg.toLowerCase().includes('verify')) {
+            showError('Please verify your email before logging in');
+          } else {
+            showError(errorMsg);
+          }
+        } else if (result.data) {
           // Redirect to dashboard on success
           window.location.href = "/admin";
+        } else {
+          showError("Login failed. Please try again.");
         }
       } else {
         // Sign up
@@ -206,15 +222,38 @@
         });
 
         if (result.error) {
-          showError(result.error.message || "Signup failed");
+          // Handle different error types
+          const errorMsg = typeof result.error === 'string'
+            ? result.error
+            : result.error.message || 'Signup failed';
+
+          // Map common errors to user-friendly messages
+          if (errorMsg.toLowerCase().includes('already') || errorMsg.toLowerCase().includes('exists')) {
+            showError('An account with this email already exists');
+          } else if (errorMsg.toLowerCase().includes('password')) {
+            showError('Password must be at least 6 characters');
+          } else {
+            showError(errorMsg);
+          }
+        } else if (result.data) {
+          // Redirect to email verification page
+          showError('Please check your email to verify your account');
+          setTimeout(() => {
+            window.location.href = "/emailVerification";
+          }, 2000);
         } else {
-          // Redirect to dashboard on success
-          window.location.href = "/admin";
+          showError("Signup failed. Please try again.");
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Auth error:", err);
-      showError("An unexpected error occurred");
+
+      // Handle network errors
+      if (err.message && err.message.includes('fetch')) {
+        showError('Network error. Please check your connection and try again.');
+      } else {
+        showError(err.message || "An unexpected error occurred");
+      }
     } finally {
       showLoading(false);
     }

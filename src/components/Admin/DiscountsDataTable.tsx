@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { DiscountModal } from './DiscountModal';
+import { Modal } from '../react-ui/Modal';
+import { Button } from '../react-ui/Button';
 import { useDiscounts, useDeleteDiscount, useUpdateDiscount } from '../../hooks/useDiscounts';
 import { useAdminUIStore } from '../../stores/adminUIStore';
 import type { Discount } from '../../types/discount';
@@ -12,6 +14,8 @@ interface DiscountsDataTableProps {
 
 function DiscountsDataTableContent({ onAddDiscount }: DiscountsDataTableProps) {
   const [selectedDiscountId, setSelectedDiscountId] = useState<number | undefined>(undefined);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [discountToDelete, setDiscountToDelete] = useState<Discount | null>(null);
 
   // Get filter state and modal state from Zustand
   const {
@@ -59,16 +63,20 @@ function DiscountsDataTableContent({ onAddDiscount }: DiscountsDataTableProps) {
     refetch();
   };
 
-  const handleDeleteDiscount = async (discount: Discount) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete discount "${discount.code}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  const handleDeleteDiscount = (discount: Discount) => {
+    setDiscountToDelete(discount);
+    setIsDeleteModalOpen(true);
+  };
 
-    deleteMutation.mutate(discount.id.toString());
+  const handleConfirmDelete = () => {
+    if (!discountToDelete) return;
+
+    deleteMutation.mutate(discountToDelete.id.toString(), {
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+        setDiscountToDelete(null);
+      },
+    });
   };
 
   const handleToggleStatus = async (discount: Discount) => {
@@ -393,6 +401,55 @@ function DiscountsDataTableContent({ onAddDiscount }: DiscountsDataTableProps) {
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Delete Discount"
+        size="sm"
+      >
+        <div className="py-4">
+          <p className="mb-4">
+            Are you sure you want to delete discount code{' '}
+            <strong>{discountToDelete?.code}</strong>?
+          </p>
+          <p className="text-sm opacity-70 mb-4">
+            This action cannot be undone and will permanently remove:
+          </p>
+          <ul className="list-disc list-inside text-sm opacity-70 mb-6 space-y-1">
+            <li>Discount code: {discountToDelete?.code}</li>
+            <li>
+              Discount value:{' '}
+              {discountToDelete?.discountType === 'percentage'
+                ? `${discountToDelete?.discountValue}%`
+                : formatCurrency(discountToDelete?.discountValue || 0)}
+            </li>
+            <li>
+              Usage history: {discountToDelete?.usedCount || 0} times used
+            </li>
+          </ul>
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="error"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Discount'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
